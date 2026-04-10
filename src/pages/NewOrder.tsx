@@ -1,0 +1,232 @@
+import React, { useState } from 'react';
+import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const InputGroup = ({ label, type = "text", placeholder = "", disabled = false, value, onChange }: { label: string, type?: string, placeholder?: string, disabled?: boolean, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
+  <div className="space-y-2">
+    <label className="label-text text-gray-500">{label}</label>
+    <input 
+      type={type} 
+      disabled={disabled}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`} 
+      placeholder={placeholder} 
+    />
+  </div>
+);
+
+const SelectGroup = ({ label, options, value, onChange }: { label: string, options: string[], value?: string, onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void }) => (
+  <div className="space-y-2">
+    <label className="label-text text-gray-500">{label}</label>
+    <select 
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+    >
+      <option value="">Select...</option>
+      {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+    </select>
+  </div>
+);
+
+const NewOrder = () => {
+  const [isPreProvision, setIsPreProvision] = useState(false);
+  const [serviceNo, setServiceNo] = useState('');
+  const [productSubscribe, setProductSubscribe] = useState('');
+  const [orderType, setOrderType] = useState('');
+
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/orders" className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-serif font-bold text-gray-900">Create New Order</h1>
+            <p className="text-gray-500 mt-1">Fill in the details for cloud service provisioning.</p>
+          </div>
+        </div>
+        <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
+          <Save className="w-4 h-4" />
+          Save Order
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        
+        {/* Order Information */}
+        <div className="card p-8">
+          <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+            <h2 className="text-xl font-serif font-bold text-gray-900">Order Information</h2>
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="preProvision" 
+                checked={isPreProvision}
+                onChange={(e) => setIsPreProvision(e.target.checked)}
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              />
+              <label htmlFor="preProvision" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Pre-Provision Order (No Service No. yet)
+              </label>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <InputGroup 
+              label="Service No." 
+              placeholder="e.g. CL549486" 
+              disabled={isPreProvision} 
+              value={isPreProvision ? 'TBC' : serviceNo}
+              onChange={(e) => setServiceNo(e.target.value)}
+            />
+            <SelectGroup label="Status" options={['Completed', 'Account Created', 'Pending for order issued', 'Processing', 'Cancelled', 'Pending Closure', 'Pending for other parties']} />
+            <SelectGroup 
+              label="Order Type" 
+              options={['New Install', 'Misc Change', 'Contract Renewal', 'Termination', 'Pre-Pro']} 
+              value={orderType}
+              onChange={(e) => setOrderType(e.target.value)}
+            />
+            <InputGroup label="Service Type" placeholder="e.g. Offset Amount" />
+            <InputGroup label="OASIS Number" placeholder="e.g. CB23-00007546\1" />
+            <InputGroup label="Order Receive Date" placeholder="DD-MMM-YY" />
+            <InputGroup label="SRD" placeholder="DD-MMM-YY" />
+            <InputGroup label="CxS Complete Date" placeholder="DD-MMM-YY" />
+          </div>
+
+          {orderType === 'Termination' && (
+            <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-medium text-red-800">Termination Order</h3>
+                <p className="text-sm text-red-600 mt-1">When this order is saved, any existing active orders matching this Account ID will be automatically marked as Terminated (highlighted in red) in the registry.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Customer Information */}
+        <div className="card p-8">
+          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Customer Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <InputGroup label="Company Name" placeholder="e.g. New World Corporate Services Limited" />
+            </div>
+            <InputGroup label="Contact Person" placeholder="e.g. Don Ng" />
+            <InputGroup label="Contact No." placeholder="e.g. 67594210" />
+            <div className="md:col-span-2">
+              <InputGroup label="Contact Email (If have)" type="email" placeholder="email@example.com" />
+            </div>
+            <div className="md:col-span-3 space-y-2">
+              <label className="label-text text-gray-500">Billing Address</label>
+              <textarea className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[80px]" placeholder="Enter full billing address"></textarea>
+            </div>
+          </div>
+        </div>
+
+        {/* Cloud Service Details */}
+        <div className="card p-8">
+          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Cloud Service Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <SelectGroup 
+                label="Product Subscribe" 
+                options={['AWS (Amazon Web Service)', 'Microsoft Azure', 'Huawei Cloud', 'Google Cloud Platform (GCP)', 'AliCloud', 'Tencent']} 
+                value={productSubscribe}
+                onChange={(e) => setProductSubscribe(e.target.value)}
+              />
+            </div>
+
+            {productSubscribe === 'AWS (Amazon Web Service)' && (
+              <>
+                <InputGroup label="Billing Account / Master Account" placeholder="e.g. 7.59168E+11" />
+                <InputGroup label="Account ID / Root ID" placeholder="e.g. 74430167128" />
+                <InputGroup label="Account Name / Cloud Checker Name" placeholder="e.g. CL545725" />
+                <InputGroup label="Account Login Email" type="email" placeholder="admin@example.com" />
+              </>
+            )}
+
+            {productSubscribe === 'AliCloud' && (
+              <>
+                <InputGroup label="UID" placeholder="e.g. 5.04886E+15" />
+                <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
+              </>
+            )}
+
+            {productSubscribe === 'Microsoft Azure' && (
+              <>
+                <InputGroup label="Tenant ID" placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194" />
+                <InputGroup label="Azure Subscription ID" placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128" />
+                <InputGroup label="Primary Domain" placeholder="e.g. example.onmicrosoft.com" />
+                <InputGroup label="Admin Email" type="email" placeholder="admin@example.onmicrosoft.com" />
+              </>
+            )}
+
+            {productSubscribe === 'Huawei Cloud' && (
+              <>
+                <InputGroup label="Huawei ID" placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573" />
+                <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
+              </>
+            )}
+
+            {productSubscribe === 'Google Cloud Platform (GCP)' && (
+              <>
+                <InputGroup label="Billing Account ID" placeholder="e.g. 013933-F2938A-CC207B" />
+                <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
+              </>
+            )}
+
+            {productSubscribe === 'Tencent' && (
+              <>
+                <InputGroup label="Tenant ID" placeholder="e.g. 200019722598" />
+                <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
+              </>
+            )}
+
+            {!productSubscribe && (
+              <div className="md:col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 text-center">
+                Please select a Product Subscribe to view specific fields.
+              </div>
+            )}
+
+            {productSubscribe && (
+              <>
+                <InputGroup label="Password" type="password" placeholder="••••••••" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className="label-text text-gray-500">Other Account Information</label>
+                  <textarea className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[80px]" placeholder="Domain names, additional IDs, etc."></textarea>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Provisioning & Tracking */}
+        <div className="card p-8">
+          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Provisioning & Tracking</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <InputGroup label="CxS Request No." placeholder="e.g. RN822908/1-2" />
+            <InputGroup label="TID" placeholder="e.g. 103690" />
+            <InputGroup label="SD Number" placeholder="e.g. SD11652876" />
+            <SelectGroup label="PS Job (Y/N)" options={['Y', 'N', 'Yes', 'No']} />
+            <SelectGroup label="T2/ T3" options={['T1', 'T2', 'T3', 'N/A']} />
+            <SelectGroup label="Welcome Letter (Yes / No)" options={['Yes', 'No']} />
+            <InputGroup label="By" placeholder="e.g. Kilson, Helen, Hin" />
+            <div className="md:col-span-2">
+              <InputGroup label="Order Form (URL)" placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..." />
+            </div>
+            <div className="md:col-span-3 space-y-2">
+              <label className="label-text text-gray-500">Remark</label>
+              <textarea className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[120px]" placeholder="Enter timeline, log updates, or special instructions..."></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default NewOrder;
