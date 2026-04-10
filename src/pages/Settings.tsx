@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePermission } from '../contexts/PermissionContext';
 import { Shield, User, Bell, Users, Settings as SettingsIcon, Database, Key, Server, Lock } from 'lucide-react';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const Settings = () => {
   const { currentRole, hasPermission } = usePermission();
@@ -31,22 +32,24 @@ const Settings = () => {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Settings Navigation */}
         <div className="w-full md:w-64 shrink-0">
-          <div className="card p-2 flex flex-col gap-1">
-            {visibleTabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
-                  activeTab === tab.id 
-                    ? 'bg-primary-light text-primary' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <TutorTooltip text="Navigate between different settings categories. The available categories depend on your current role." position="right">
+            <div className="card p-2 flex flex-col gap-1">
+              {visibleTabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
+                    activeTab === tab.id 
+                      ? 'bg-primary-light text-primary' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </TutorTooltip>
           
           <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
             <div className="flex items-center gap-2 text-blue-800 font-medium mb-1">

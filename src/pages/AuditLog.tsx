@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, PlusCircle, Edit, Trash2, Clock, User, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const AuditLog = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,29 +64,33 @@ const AuditLog = () => {
       <div className="card overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-80">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search by User, Service No, or Details..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <select 
-                value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-                className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="All">All Actions</option>
-                <option value="Create">Create</option>
-                <option value="Update">Update</option>
-                <option value="Delete">Delete</option>
-              </select>
-            </div>
+            <TutorTooltip text="Search logs by user name, service number, or specific details." position="bottom" wrapperClass="relative flex-1 sm:w-80">
+              <div className="relative flex-1 sm:w-full">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search by User, Service No, or Details..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+            </TutorTooltip>
+            <TutorTooltip text="Filter logs to show only specific actions like creations, updates, or deletions." position="bottom">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-400" />
+                <select 
+                  value={actionFilter}
+                  onChange={(e) => setActionFilter(e.target.value)}
+                  className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="All">All Actions</option>
+                  <option value="Create">Create</option>
+                  <option value="Update">Update</option>
+                  <option value="Delete">Delete</option>
+                </select>
+              </div>
+            </TutorTooltip>
           </div>
         </div>
         

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePermission } from '../contexts/PermissionContext';
 import { ExternalLink, Plus, Edit2, Trash2, Cloud, X } from 'lucide-react';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 interface QuickLink {
   id: number;
@@ -69,13 +70,15 @@ const QuickLinks = () => {
           <p className="text-gray-500 mt-1">Access external service portals and management consoles.</p>
         </div>
         {canEdit && (
-          <button 
-            onClick={() => handleOpenModal()}
-            className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Link
-          </button>
+          <TutorTooltip text="Global Admins and Developers can add new quick links here." position="bottom">
+            <button 
+              onClick={() => handleOpenModal()}
+              className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Link
+            </button>
+          </TutorTooltip>
         )}
       </div>
 
@@ -109,15 +112,17 @@ const QuickLinks = () => {
             <h3 className="text-lg font-bold text-gray-900 mb-2">{link.title}</h3>
             <p className="text-sm text-gray-500 flex-1 mb-6">{link.description}</p>
             
-            <a 
-              href={link.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-colors border border-gray-200"
-            >
-              Open Portal
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            <TutorTooltip text={`Click here to open the ${link.title} in a new tab.`} position="top">
+              <a 
+                href={link.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-colors border border-gray-200"
+              >
+                Open Portal
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </TutorTooltip>
           </div>
         ))}
       </div>

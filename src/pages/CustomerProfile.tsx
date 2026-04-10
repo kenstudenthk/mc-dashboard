@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Edit, ShoppingBag, DollarSign, Clock, Cloud, Save, X, StickyNote } from 'lucide-react';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const CustomerProfile = () => {
   const { id } = useParams();
@@ -76,13 +77,17 @@ const CustomerProfile = () => {
               </button>
             </>
           ) : (
-            <button onClick={() => setIsEditing(true)} className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600" title="Edit Profile">
-              <Edit className="w-5 h-5" />
-            </button>
+            <TutorTooltip text="Click here to edit the customer's contact information." position="bottom">
+              <button onClick={() => setIsEditing(true)} className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600" title="Edit Profile">
+                <Edit className="w-5 h-5" />
+              </button>
+            </TutorTooltip>
           )}
-          <Link to="/orders/new" className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 inline-flex items-center">
-            New Order
-          </Link>
+          <TutorTooltip text="Quickly start a new order specifically for this customer." position="bottom">
+            <Link to="/orders/new" className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 inline-flex items-center">
+              New Order
+            </Link>
+          </TutorTooltip>
         </div>
       </div>
 
@@ -169,20 +174,24 @@ const CustomerProfile = () => {
           </div>
 
           <div className="card p-6 grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="flex items-center gap-2 text-gray-500 mb-2">
-                <ShoppingBag className="w-4 h-4" />
-                <span className="text-xs font-medium uppercase tracking-wider">Orders</span>
+            <TutorTooltip text="Total number of orders placed by this customer." position="bottom">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2 text-gray-500 mb-2">
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Orders</span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{customer.totalOrders}</div>
               </div>
-              <div className="text-2xl font-bold text-gray-900">{customer.totalOrders}</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="flex items-center gap-2 text-gray-500 mb-2">
-                <DollarSign className="w-4 h-4" />
-                <span className="text-xs font-medium uppercase tracking-wider">Spent</span>
+            </TutorTooltip>
+            <TutorTooltip text="Total amount spent by this customer across all orders." position="bottom">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2 text-gray-500 mb-2">
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Spent</span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{customer.totalSpent}</div>
               </div>
-              <div className="text-2xl font-bold text-gray-900">{customer.totalSpent}</div>
-            </div>
+            </TutorTooltip>
           </div>
         </div>
 
@@ -190,9 +199,10 @@ const CustomerProfile = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Special Notes Section */}
-          <div className="card p-6 border-l-4 border-l-amber-400">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-amber-700">
+          <TutorTooltip text="Use this section to store important, customer-specific information, such as special billing instructions or SLA requirements." position="left">
+            <div className="card p-6 border-l-4 border-l-amber-400">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-amber-700">
                 <StickyNote className="w-5 h-5" />
                 <h2 className="text-lg font-serif font-bold">Special Notes & Instructions</h2>
               </div>
@@ -229,47 +239,50 @@ const CustomerProfile = () => {
               )}
             </div>
           </div>
+          </TutorTooltip>
 
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-serif font-bold text-gray-900">Order History</h2>
-              <Link to="/orders" className="text-sm font-medium text-primary hover:underline">View All</Link>
-            </div>
-            
-            <div className="space-y-4">
-              {customer.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:shadow-sm transition-all">
-                      <ShoppingBag className="w-4 h-4" />
+          <TutorTooltip text="A quick view of the customer's most recent orders. Click 'View All' to see their complete order history." position="left">
+            <div className="card p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-serif font-bold text-gray-900">Order History</h2>
+                <Link to="/orders" className="text-sm font-medium text-primary hover:underline">View All</Link>
+              </div>
+              
+              <div className="space-y-4">
+                {customer.recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:shadow-sm transition-all">
+                        <ShoppingBag className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <Link to={`/orders/${order.id}`} className="font-medium text-gray-900 hover:text-primary transition-colors">
+                          {order.id}
+                        </Link>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {order.date}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <Link to={`/orders/${order.id}`} className="font-medium text-gray-900 hover:text-primary transition-colors">
-                        {order.id}
-                      </Link>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {order.date}
+                    <div className="text-right">
+                      <div className="font-medium text-gray-900">{order.amount}</div>
+                      <div className="mt-1">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                          order.status === 'Completed' ? 'bg-green-100 text-green-700' : 
+                          order.status === 'Processing' ? 'bg-yellow-100 text-yellow-700' : 
+                          order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {order.status}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium text-gray-900">{order.amount}</div>
-                    <div className="mt-1">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                        order.status === 'Completed' ? 'bg-green-100 text-green-700' : 
-                        order.status === 'Processing' ? 'bg-yellow-100 text-yellow-700' : 
-                        order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </TutorTooltip>
         </div>
       </div>
     </div>

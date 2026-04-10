@@ -1,11 +1,13 @@
 import React from 'react';
-import { Search, Bell, ChevronRight, Shield } from 'lucide-react';
+import { Search, Bell, ChevronRight, Shield, GraduationCap } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import { usePermission, Role } from '../contexts/PermissionContext';
+import { useTutor } from '../contexts/TutorContext';
 
 const TopNav = () => {
   const location = useLocation();
   const { currentRole, setCurrentRole } = usePermission();
+  const { isTutorMode, toggleTutorMode } = useTutor();
   
   // Simple breadcrumb logic based on path
   const getBreadcrumbs = () => {
@@ -48,6 +50,18 @@ const TopNav = () => {
       </div>
 
       <div className="flex items-center gap-6">
+        <button 
+          onClick={toggleTutorMode}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors border ${
+            isTutorMode 
+              ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-inner' 
+              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          {isTutorMode ? 'Tutor Mode: ON' : 'Tutor Mode: OFF'}
+        </button>
+
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
           <Shield className="w-4 h-4 text-primary" />
           <select 

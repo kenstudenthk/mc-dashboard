@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Filter, Mail, Phone, MoreHorizontal, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const Customers = () => {
   const customers = [
@@ -18,21 +19,25 @@ const Customers = () => {
           <h1 className="text-3xl font-serif font-bold text-gray-900">Customers</h1>
           <p className="text-gray-500 mt-1">Manage your customer database and view their history.</p>
         </div>
-        <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20">
-          Add Customer
-        </button>
+        <TutorTooltip text="Click here to add a new customer to the database." position="bottom">
+          <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20">
+            Add Customer
+          </button>
+        </TutorTooltip>
       </div>
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search customers..." 
-              className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-64 transition-all"
-            />
-          </div>
+          <TutorTooltip text="Search for a customer by their name, ID, email, or phone number." position="bottom" wrapperClass="relative">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search customers..." 
+                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-64 transition-all"
+              />
+            </div>
+          </TutorTooltip>
           <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <Filter className="w-4 h-4" />
             Filter
@@ -59,10 +64,12 @@ const Customers = () => {
                       <div className="w-10 h-10 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-sm">
                         {customer.name.substring(0, 2).toUpperCase()}
                       </div>
-                      <div>
-                        <Link to={`/customers/${customer.id}`} className="font-medium text-primary hover:underline">{customer.name}</Link>
-                        <div className="text-xs text-gray-500">{customer.id}</div>
-                      </div>
+                      <TutorTooltip text="Click the customer name to view their detailed profile, including order history and special notes." position="right">
+                        <div>
+                          <Link to={`/customers/${customer.id}`} className="font-medium text-primary hover:underline">{customer.name}</Link>
+                          <div className="text-xs text-gray-500">{customer.id}</div>
+                        </div>
+                      </TutorTooltip>
                     </div>
                   </td>
                   <td className="px-6 py-4">

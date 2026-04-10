@@ -1,13 +1,14 @@
 import React from 'react';
 import { Clock, Calendar, Cloud, List, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const Dashboard = () => {
   const stats = [
-    { label: 'Incomplete Orders', value: '45', icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-100' },
-    { label: 'SRD Today', value: '12', icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: 'Pre-Provision Orders', value: '8', icon: Cloud, color: 'text-purple-600', bg: 'bg-purple-100' },
-    { label: 'Total Completed', value: '1,204', icon: List, color: 'text-green-600', bg: 'bg-green-100' },
+    { label: 'Incomplete Orders', value: '45', icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-100', tooltip: 'Total number of orders that are currently being processed and are not yet completed.' },
+    { label: 'SRD Today', value: '12', icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-100', tooltip: 'Orders that have a Service Ready Date (SRD) matching today\'s date.' },
+    { label: 'Pre-Provision Orders', value: '8', icon: Cloud, color: 'text-purple-600', bg: 'bg-purple-100', tooltip: 'Cloud accounts created in advance without an official Service No. yet.' },
+    { label: 'Total Completed', value: '1,204', icon: List, color: 'text-green-600', bg: 'bg-green-100', tooltip: 'Total number of successfully completed orders in the system.' },
   ];
 
   const incompleteOrders = [
@@ -48,64 +49,70 @@ const Dashboard = () => {
           <h1 className="text-3xl font-serif font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">Welcome back. Here's your cloud provisioning overview.</p>
         </div>
-        <Link to="/orders/new" className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20">
-          Create New Order
-        </Link>
+        <TutorTooltip text="Click here to start provisioning a new cloud service order." position="bottom" wrapperClass="inline-block">
+          <Link to="/orders/new" className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 block">
+            Create New Order
+          </Link>
+        </TutorTooltip>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <div key={index} className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-10 h-10 rounded-full ${stat.bg} flex items-center justify-center ${stat.color}`}>
-                <stat.icon className="w-5 h-5" />
+          <TutorTooltip key={index} text={stat.tooltip} position="bottom">
+            <div className="card p-6 h-full">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 rounded-full ${stat.bg} flex items-center justify-center ${stat.color}`}>
+                  <stat.icon className="w-5 h-5" />
+                </div>
               </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
-            <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
-          </div>
+          </TutorTooltip>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Incomplete Orders */}
-        <div className="card p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-serif font-bold text-gray-900 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-yellow-600" />
-              Incomplete Orders
-            </h2>
-            <Link to="/orders" className="text-sm font-medium text-primary hover:underline">View All</Link>
-          </div>
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="pb-3 label-text text-gray-400">Service No.</th>
-                  <th className="pb-3 label-text text-gray-400">Customer</th>
-                  <th className="pb-3 label-text text-gray-400">Status</th>
-                  <th className="pb-3 label-text text-gray-400">SRD</th>
-                </tr>
-              </thead>
-              <tbody>
-                {incompleteOrders.map((order, i) => (
-                  <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 font-medium text-primary hover:underline">
-                      <Link to={`/orders/${order.id}`}>{order.id}</Link>
-                    </td>
-                    <td className="py-3 text-gray-600 text-sm truncate max-w-[150px]">{order.customer}</td>
-                    <td className="py-3">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-sm text-gray-500">{order.srd}</td>
+        <TutorTooltip text="A quick view of orders that need attention. Click 'View All' to see the full list in the Order Registry." position="top">
+          <div className="card p-6 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-serif font-bold text-gray-900 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-yellow-600" />
+                Incomplete Orders
+              </h2>
+              <Link to="/orders" className="text-sm font-medium text-primary hover:underline">View All</Link>
+            </div>
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="pb-3 label-text text-gray-400">Service No.</th>
+                    <th className="pb-3 label-text text-gray-400">Customer</th>
+                    <th className="pb-3 label-text text-gray-400">Status</th>
+                    <th className="pb-3 label-text text-gray-400">SRD</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {incompleteOrders.map((order, i) => (
+                    <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                      <td className="py-3 font-medium text-primary hover:underline">
+                        <Link to={`/orders/${order.id}`}>{order.id}</Link>
+                      </td>
+                      <td className="py-3 text-gray-600 text-sm truncate max-w-[150px]">{order.customer}</td>
+                      <td className="py-3">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-gray-500 text-sm">{order.srd}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </TutorTooltip>
 
         <div className="space-y-6 flex flex-col">
           {/* SRD Today */}

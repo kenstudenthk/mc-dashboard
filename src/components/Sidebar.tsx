@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink } from 'lucide-react';
 import { usePermission } from '../contexts/PermissionContext';
+import { TutorTooltip } from './TutorTooltip';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -47,21 +48,22 @@ const Sidebar = () => {
         {!isCollapsed && <div className="label-text text-gray-400 mb-4 px-2 whitespace-nowrap">Main Menu</div>}
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              title={isCollapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-primary-light text-primary font-medium'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
-            </NavLink>
+            <TutorTooltip key={item.path} text={`Navigate to the ${item.label} page.`} position="right" wrapperClass="w-full block">
+              <NavLink
+                to={item.path}
+                title={isCollapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary-light text-primary font-medium'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5 shrink-0" />
+                {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
+              </NavLink>
+            </TutorTooltip>
           ))}
         </nav>
       </div>
@@ -70,21 +72,22 @@ const Sidebar = () => {
         {!isCollapsed && <div className="label-text text-gray-400 mb-4 px-2 whitespace-nowrap">Preferences</div>}
         <nav className="flex flex-col gap-1 mb-6">
           {bottomNavItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              title={isCollapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-primary-light text-primary font-medium'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
-            </NavLink>
+            <TutorTooltip key={item.path} text={`Navigate to ${item.label}.`} position="right" wrapperClass="w-full block">
+              <NavLink
+                to={item.path}
+                title={isCollapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary-light text-primary font-medium'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5 shrink-0" />
+                {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
+              </NavLink>
+            </TutorTooltip>
           ))}
         </nav>
         

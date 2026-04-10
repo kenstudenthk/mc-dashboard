@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Filter, MoreHorizontal, Eye, Search } from 'lucide-react';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const OrderRegistry = () => {
   const [activeTab, setActiveTab] = useState('All');
@@ -70,51 +71,60 @@ const OrderRegistry = () => {
           <h1 className="text-3xl font-serif font-bold text-gray-900">Order Registry</h1>
           <p className="text-gray-500 mt-1">Manage and track all cloud provisioning orders.</p>
         </div>
-        <Link to="/orders/new" className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          New Order
-        </Link>
+        <TutorTooltip text="Click here to create a new cloud service order. You will be asked to fill out customer and service details." position="bottom" wrapperClass="inline-block">
+          <Link to="/orders/new" className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            New Order
+          </Link>
+        </TutorTooltip>
       </div>
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
-          <div className="flex gap-2">
-            {['All', 'Pending', 'Completed'].map(tab => (
+          <TutorTooltip text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders." position="bottom" wrapperClass="flex-1 sm:flex-none">
+            <div className="flex gap-2">
+              {['All', 'Pending', 'Completed'].map(tab => (
+                <button 
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    activeTab === tab 
+                      ? 'bg-white border border-gray-200 text-gray-900 shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {tab === 'All' ? 'All Orders' : tab}
+                </button>
+              ))}
+            </div>
+          </TutorTooltip>
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <TutorTooltip text="Search for a specific order by typing the Service No, Customer Name, or Account ID." position="bottom" wrapperClass="relative flex-1 sm:w-64">
+              <div className="relative flex-1 sm:w-full">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search by Service No, Account ID, Customer..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+            </TutorTooltip>
+            <TutorTooltip text="Click here to show or hide additional filters, such as filtering by Cloud Provider." position="bottom">
               <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === tab 
-                    ? 'bg-white border border-gray-200 text-gray-900 shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                  showFilters 
+                    ? 'bg-primary-light text-primary border-primary/20' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                 }`}
               >
-                {tab === 'All' ? 'All Orders' : tab}
+                <Filter className="w-4 h-4" />
+                Filter
               </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search by Service No, Account ID, Customer..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-            </div>
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
-                showFilters 
-                  ? 'bg-primary-light text-primary border-primary/20' 
-                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              Filter
-            </button>
+            </TutorTooltip>
           </div>
         </div>
 

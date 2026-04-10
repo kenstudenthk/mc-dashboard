@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const InputGroup = ({ label, type = "text", placeholder = "", disabled = false, value, onChange }: { label: string, type?: string, placeholder?: string, disabled?: boolean, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
   <div className="space-y-2">
@@ -48,10 +49,12 @@ const NewOrder = () => {
             <p className="text-gray-500 mt-1">Fill in the details for cloud service provisioning.</p>
           </div>
         </div>
-        <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
-          <Save className="w-4 h-4" />
-          Save Order
-        </button>
+        <TutorTooltip text="Click here to save the new order to the registry once all required fields are filled." position="bottom">
+          <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
+            <Save className="w-4 h-4" />
+            Save Order
+          </button>
+        </TutorTooltip>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
@@ -60,18 +63,20 @@ const NewOrder = () => {
         <div className="card p-8">
           <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
             <h2 className="text-xl font-serif font-bold text-gray-900">Order Information</h2>
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="preProvision" 
-                checked={isPreProvision}
-                onChange={(e) => setIsPreProvision(e.target.checked)}
-                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-              />
-              <label htmlFor="preProvision" className="text-sm font-medium text-gray-700 cursor-pointer">
-                Pre-Provision Order (No Service No. yet)
-              </label>
-            </div>
+            <TutorTooltip text="Check this box if you are creating an account before receiving an official Service No. The Service No. will be set to 'TBC'." position="left">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="preProvision" 
+                  checked={isPreProvision}
+                  onChange={(e) => setIsPreProvision(e.target.checked)}
+                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                />
+                <label htmlFor="preProvision" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  Pre-Provision Order (No Service No. yet)
+                </label>
+              </div>
+            </TutorTooltip>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -83,12 +88,14 @@ const NewOrder = () => {
               onChange={(e) => setServiceNo(e.target.value)}
             />
             <SelectGroup label="Status" options={['Completed', 'Account Created', 'Pending for order issued', 'Processing', 'Cancelled', 'Pending Closure', 'Pending for other parties']} />
-            <SelectGroup 
-              label="Order Type" 
-              options={['New Install', 'Misc Change', 'Contract Renewal', 'Termination', 'Pre-Pro']} 
-              value={orderType}
-              onChange={(e) => setOrderType(e.target.value)}
-            />
+            <TutorTooltip text="Select 'Termination' if you are closing an existing account. This will prompt the system to check for existing records." position="bottom" wrapperClass="block">
+              <SelectGroup 
+                label="Order Type" 
+                options={['New Install', 'Misc Change', 'Contract Renewal', 'Termination', 'Pre-Pro']} 
+                value={orderType}
+                onChange={(e) => setOrderType(e.target.value)}
+              />
+            </TutorTooltip>
             <InputGroup label="Service Type" placeholder="e.g. Offset Amount" />
             <InputGroup label="OASIS Number" placeholder="e.g. CB23-00007546\1" />
             <InputGroup label="Order Receive Date" placeholder="DD-MMM-YY" />
