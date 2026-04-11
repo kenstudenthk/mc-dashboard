@@ -55,6 +55,12 @@ const Settings = () => {
   const [profileName, setProfileName] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  const [editingTeamIndex, setEditingTeamIndex] = useState<number | null>(null);
+  const [teamStatusEdits, setTeamStatusEdits] = useState<
+    Record<number, string>
+  >({});
+  const [roleEdits, setRoleEdits] = useState<Record<number, string>>({});
+  const [roleSavedIndex, setRoleSavedIndex] = useState<number | null>(null);
 
   const handleSaveProfile = () => {
     if (!profileEmail) return;
@@ -342,19 +348,56 @@ const Settings = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
-                          >
-                            {user.status}
-                          </span>
+                          {editingTeamIndex === i ? (
+                            <select
+                              value={teamStatusEdits[i] ?? user.status}
+                              onChange={(e) =>
+                                setTeamStatusEdits({
+                                  ...teamStatusEdits,
+                                  [i]: e.target.value,
+                                })
+                              }
+                              className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option value="Active">Active</option>
+                              <option value="Pending">Pending</option>
+                              <option value="Inactive">Inactive</option>
+                            </select>
+                          ) : (
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${(teamStatusEdits[i] ?? user.status) === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                            >
+                              {teamStatusEdits[i] ?? user.status}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            className="text-primary hover:underline"
-                          >
-                            Edit
-                          </button>
+                          {editingTeamIndex === i ? (
+                            <div className="flex items-center justify-end gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setEditingTeamIndex(null)}
+                                className="text-xs text-gray-500 hover:underline"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingTeamIndex(null)}
+                                className="text-xs text-green-600 font-medium hover:underline"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setEditingTeamIndex(i)}
+                              className="text-primary hover:underline"
+                            >
+                              Edit
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -413,7 +456,13 @@ const Settings = () => {
                         </td>
                         <td className="px-4 py-3">
                           <select
-                            defaultValue={user.role}
+                            value={roleEdits[i] ?? user.role}
+                            onChange={(e) =>
+                              setRoleEdits({
+                                ...roleEdits,
+                                [i]: e.target.value,
+                              })
+                            }
                             className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                           >
                             <option value="User">User</option>
@@ -423,16 +472,35 @@ const Settings = () => {
                           </select>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              alert(`Password reset link sent to ${user.email}`)
-                            }
-                            className="text-sm text-primary hover:text-primary/80 font-medium flex items-center justify-end gap-1.5 ml-auto"
-                          >
-                            <Key className="w-3.5 h-3.5" />
-                            Reset Password
-                          </button>
+                          <div className="flex flex-col items-end gap-2">
+                            {roleEdits[i] && roleEdits[i] !== user.role && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRoleSavedIndex(i);
+                                  setTimeout(
+                                    () => setRoleSavedIndex(null),
+                                    2000,
+                                  );
+                                }}
+                                className="text-xs bg-primary text-white px-3 py-1 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                              >
+                                {roleSavedIndex === i ? "Saved!" : "Save Role"}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                alert(
+                                  `Password reset link sent to ${user.email}`,
+                                )
+                              }
+                              className="text-sm text-primary hover:text-primary/80 font-medium flex items-center justify-end gap-1.5"
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                              Reset Password
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

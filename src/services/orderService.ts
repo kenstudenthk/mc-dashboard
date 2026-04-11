@@ -32,7 +32,13 @@ async function call<T>(body: object): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`orderService error: ${res.status}`);
-  return res.json() as Promise<T>;
+  const json = await res.json();
+  if (json != null && typeof json === "object" && "success" in json) {
+    if (!json.success) throw new Error(json.error?.message ?? "API error");
+    if (Array.isArray(json.data?.value)) return json.data.value as T;
+    if (json.data != null) return json.data as T;
+  }
+  return json as T;
 }
 
 export const orderService = {
