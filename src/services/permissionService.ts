@@ -44,11 +44,18 @@ export async function getAllUsers(): Promise<SPUser[]> {
     : [];
   return items.map((item: unknown) => {
     const i = item as Record<string, string>;
+    // SPO choice fields return { "@odata.type": "...", "Id": n, "Value": "..." }
+    const roleRaw = i.Role ?? i.role;
+    const statusRaw = i.Status ?? i.status;
     return {
       email: i.Title ?? i.title ?? "",
       displayName: i.DisplayName ?? i.displayName ?? i.Title ?? "",
-      role: (i.Role ?? i.role ?? "User") as UserRole,
-      status: (i.Status ?? i.status ?? "Active") as UserStatus,
+      role: ((roleRaw as { Value?: string })?.Value ??
+        roleRaw ??
+        "User") as UserRole,
+      status: ((statusRaw as { Value?: string })?.Value ??
+        statusRaw ??
+        "Active") as UserStatus,
     };
   });
 }
