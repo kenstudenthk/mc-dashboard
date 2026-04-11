@@ -29,7 +29,7 @@ const OrderRegistry = () => {
   useEffect(() => {
     orderService
       .findAll()
-      .then(setAllOrders)
+      .then((result) => setAllOrders(Array.isArray(result) ? result : []))
       .catch(() => setError("Failed to load orders. Please try again."))
       .finally(() => setLoading(false));
   }, []);

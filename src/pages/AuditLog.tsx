@@ -39,7 +39,7 @@ const AuditLog = () => {
   useEffect(() => {
     auditLogService
       .findAll()
-      .then(setAllLogs)
+      .then((result) => setAllLogs(Array.isArray(result) ? result : []))
       .catch(() => setError("Failed to load audit logs."))
       .finally(() => setLoading(false));
   }, []);

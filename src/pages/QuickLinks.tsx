@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { usePermission } from "../contexts/PermissionContext";
 import { ExternalLink, Plus, Edit2, Trash2, Cloud, X } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
-import {
-  quickLinkService,
-  QuickLink,
-} from "../services/quickLinkService";
+import { quickLinkService, QuickLink } from "../services/quickLinkService";
 
 const QuickLinks = () => {
   const { hasPermission, userEmail } = usePermission();
@@ -16,12 +13,16 @@ const QuickLinks = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<QuickLink | null>(null);
-  const [formData, setFormData] = useState({ Title: "", URL: "", Description: "" });
+  const [formData, setFormData] = useState({
+    Title: "",
+    URL: "",
+    Description: "",
+  });
 
   useEffect(() => {
     quickLinkService
       .findAll()
-      .then(setLinks)
+      .then((result) => setLinks(Array.isArray(result) ? result : []))
       .catch(() => setError("Failed to load quick links."))
       .finally(() => setLoading(false));
   }, []);
@@ -29,7 +30,11 @@ const QuickLinks = () => {
   const handleOpenModal = (link?: QuickLink) => {
     if (link) {
       setEditingLink(link);
-      setFormData({ Title: link.Title, URL: link.URL, Description: link.Description });
+      setFormData({
+        Title: link.Title,
+        URL: link.URL,
+        Description: link.Description,
+      });
     } else {
       setEditingLink(null);
       setFormData({ Title: "", URL: "", Description: "" });
@@ -46,7 +51,11 @@ const QuickLinks = () => {
     e.preventDefault();
     try {
       if (editingLink) {
-        const updated = await quickLinkService.update(editingLink.id, formData, userEmail);
+        const updated = await quickLinkService.update(
+          editingLink.id,
+          formData,
+          userEmail,
+        );
         setLinks(links.map((l) => (l.id === editingLink.id ? updated : l)));
       } else {
         const created = await quickLinkService.create(formData, userEmail);
@@ -59,7 +68,8 @@ const QuickLinks = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this quick link?")) return;
+    if (!window.confirm("Are you sure you want to delete this quick link?"))
+      return;
     try {
       await quickLinkService.delete(id, userEmail);
       setLinks(links.filter((l) => l.id !== id));
@@ -72,11 +82,18 @@ const QuickLinks = () => {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900">Quick Links</h1>
-          <p className="text-gray-500 mt-1">Access external service portals and management consoles.</p>
+          <h1 className="text-3xl font-serif font-bold text-gray-900">
+            Quick Links
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Access external service portals and management consoles.
+          </p>
         </div>
         {canEdit && (
-          <TutorTooltip text="Global Admins and Developers can add new quick links here." position="bottom">
+          <TutorTooltip
+            text="Global Admins and Developers can add new quick links here."
+            position="bottom"
+          >
             <button
               onClick={() => handleOpenModal()}
               className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2"
@@ -99,7 +116,10 @@ const QuickLinks = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {links.map((link) => (
-            <div key={link.id} className="card p-6 flex flex-col h-full hover:border-primary/30 transition-colors group">
+            <div
+              key={link.id}
+              className="card p-6 flex flex-col h-full hover:border-primary/30 transition-colors group"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                   <Cloud className="w-6 h-6" />
@@ -124,10 +144,17 @@ const QuickLinks = () => {
                 )}
               </div>
 
-              <h3 className="text-lg font-bold text-gray-900 mb-2">{link.Title}</h3>
-              <p className="text-sm text-gray-500 flex-1 mb-6">{link.Description}</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                {link.Title}
+              </h3>
+              <p className="text-sm text-gray-500 flex-1 mb-6">
+                {link.Description}
+              </p>
 
-              <TutorTooltip text={`Click here to open the ${link.Title} in a new tab.`} position="top">
+              <TutorTooltip
+                text={`Click here to open the ${link.Title} in a new tab.`}
+                position="top"
+              >
                 <a
                   href={link.URL}
                   target="_blank"
@@ -150,19 +177,26 @@ const QuickLinks = () => {
               <h2 className="text-xl font-serif font-bold text-gray-900">
                 {editingLink ? "Edit Quick Link" : "Add Quick Link"}
               </h2>
-              <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Portal Name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Portal Name
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.Title}
-                  onChange={(e) => setFormData({ ...formData, Title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Title: e.target.value })
+                  }
                   placeholder="e.g. AWS Management Console"
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
@@ -173,17 +207,23 @@ const QuickLinks = () => {
                   type="url"
                   required
                   value={formData.URL}
-                  onChange={(e) => setFormData({ ...formData, URL: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, URL: e.target.value })
+                  }
                   placeholder="https://..."
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Description</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Description
+                </label>
                 <textarea
                   required
                   value={formData.Description}
-                  onChange={(e) => setFormData({ ...formData, Description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Description: e.target.value })
+                  }
                   placeholder="Brief description of what this portal is used for..."
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[100px]"
                 />

@@ -13,7 +13,7 @@ const Customers = () => {
   useEffect(() => {
     customerService
       .findAll()
-      .then(setCustomers)
+      .then((result) => setCustomers(Array.isArray(result) ? result : []))
       .catch(() => setError("Failed to load customers. Please try again."))
       .finally(() => setLoading(false));
   }, []);
