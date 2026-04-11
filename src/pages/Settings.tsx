@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePermission } from "../contexts/PermissionContext";
 import {
   Shield,
@@ -12,40 +12,13 @@ import {
   Lock,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
-
-// Shared mock users for Team Management and Role Management tabs
-const MOCK_USERS = [
-  {
-    name: "Eleanor Pena",
-    email: "eleanor@example.com",
-    role: "Global Admin",
-    status: "Active",
-  },
-  {
-    name: "Michael Realman",
-    email: "michael@example.com",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    name: "Janet Huang",
-    email: "janet@example.com",
-    role: "Developer",
-    status: "Active",
-  },
-  {
-    name: "Jason Mendoza",
-    email: "jason@example.com",
-    role: "User",
-    status: "Active",
-  },
-  {
-    name: "Chidi Anagonye",
-    email: "chidi@example.com",
-    role: "User",
-    status: "Pending",
-  },
-];
+import {
+  getAllUsers,
+  updateUser,
+  type SPUser,
+  type UserRole,
+  type UserStatus,
+} from "../services/permissionService";
 
 const Settings = () => {
   const { currentRole, userEmail, setUserEmail, hasPermission } =
@@ -57,10 +30,25 @@ const Settings = () => {
   const [inviteSent, setInviteSent] = useState(false);
   const [editingTeamIndex, setEditingTeamIndex] = useState<number | null>(null);
   const [teamStatusEdits, setTeamStatusEdits] = useState<
-    Record<number, string>
+    Record<number, UserStatus>
   >({});
-  const [roleEdits, setRoleEdits] = useState<Record<number, string>>({});
+  const [roleEdits, setRoleEdits] = useState<Record<number, UserRole>>({});
   const [roleSavedIndex, setRoleSavedIndex] = useState<number | null>(null);
+  const [users, setUsers] = useState<SPUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [savingIndex, setSavingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (activeTab === "team" || activeTab === "roles") {
+      setUsersLoading(true);
+      setUsersError(null);
+      getAllUsers()
+        .then(setUsers)
+        .catch(() => setUsersError("Failed to load users. Please try again."))
+        .finally(() => setUsersLoading(false));
+    }
+  }, [activeTab]);
 
   const handleSaveProfile = () => {
     if (!profileEmail) return;
@@ -74,23 +62,52 @@ const Settings = () => {
     setTimeout(() => setInviteSent(false), 3000);
   };
 
-  // Build the user list: put the logged-in user at the top (if email is set),
-  // then append mock users whose email doesn't match the logged-in user.
+  const handleSaveTeamStatus = async (index: number, user: SPUser) => {
+    const newStatus = teamStatusEdits[index];
+    if (!newStatus) return;
+    setSavingIndex(index);
+    try {
+      await updateUser(user.email, { status: newStatus });
+      setUsers((prev) =>
+        prev.map((u, i) => (i === index ? { ...u, status: newStatus } : u)),
+      );
+      setEditingTeamIndex(null);
+    } catch {
+      setUsersError("Failed to save. Please try again.");
+    } finally {
+      setSavingIndex(null);
+    }
+  };
+
+  const handleSaveRole = async (index: number, user: SPUser) => {
+    const newRole = roleEdits[index];
+    if (!newRole) return;
+    setSavingIndex(index);
+    try {
+      await updateUser(user.email, { role: newRole });
+      setUsers((prev) =>
+        prev.map((u, i) => (i === index ? { ...u, role: newRole } : u)),
+      );
+      setRoleSavedIndex(index);
+      setTimeout(() => setRoleSavedIndex(null), 2000);
+    } catch {
+      setUsersError("Failed to save role. Please try again.");
+    } finally {
+      setSavingIndex(null);
+    }
+  };
+
+  // Put logged-in user at top
   const displayUsers = userEmail
     ? [
-        {
-          name: userEmail,
-          email: userEmail,
-          role: currentRole,
-          status: "Active",
-          isMe: true,
-        },
-        ...MOCK_USERS.filter((u) => u.email !== userEmail).map((u) => ({
-          ...u,
-          isMe: false,
-        })),
+        ...users
+          .filter((u) => u.email === userEmail)
+          .map((u) => ({ ...u, isMe: true })),
+        ...users
+          .filter((u) => u.email !== userEmail)
+          .map((u) => ({ ...u, isMe: false })),
       ]
-    : MOCK_USERS.map((u) => ({ ...u, isMe: false }));
+    : users.map((u) => ({ ...u, isMe: false }));
 
   const tabs = [
     {
@@ -305,105 +322,117 @@ const Settings = () => {
                 access.
               </p>
 
-              <div className="border border-gray-100 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        Name
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        Email
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        Role
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500 text-right">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {displayUsers.map((user, i) => (
-                      <tr key={i} className={user.isMe ? "bg-blue-50/40" : ""}>
-                        <td className="px-4 py-3 font-medium text-gray-900">
-                          <span className="flex items-center gap-2">
-                            {user.name}
-                            {user.isMe && (
-                              <span className="px-1.5 py-0.5 bg-primary text-white rounded text-xs font-medium">
-                                You
+              {usersError && (
+                <p className="text-sm text-red-600">{usersError}</p>
+              )}
+
+              {usersLoading ? (
+                <p className="text-sm text-gray-400">Loading users…</p>
+              ) : (
+                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          Name
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          Role
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500 text-right">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {displayUsers.map((user, i) => (
+                        <tr
+                          key={user.email}
+                          className={user.isMe ? "bg-blue-50/40" : ""}
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-900">
+                            <span className="flex items-center gap-2">
+                              {user.displayName || user.email}
+                              {user.isMe && (
+                                <span className="px-1.5 py-0.5 bg-primary text-white rounded text-xs font-medium">
+                                  You
+                                </span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">
+                            {user.email}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">
+                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {editingTeamIndex === i ? (
+                              <select
+                                value={teamStatusEdits[i] ?? user.status}
+                                onChange={(e) =>
+                                  setTeamStatusEdits({
+                                    ...teamStatusEdits,
+                                    [i]: e.target.value as UserStatus,
+                                  })
+                                }
+                                className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              >
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Inactive">Inactive</option>
+                              </select>
+                            ) : (
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                              >
+                                {user.status}
                               </span>
                             )}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {user.email}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {editingTeamIndex === i ? (
-                            <select
-                              value={teamStatusEdits[i] ?? user.status}
-                              onChange={(e) =>
-                                setTeamStatusEdits({
-                                  ...teamStatusEdits,
-                                  [i]: e.target.value,
-                                })
-                              }
-                              className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            >
-                              <option value="Active">Active</option>
-                              <option value="Pending">Pending</option>
-                              <option value="Inactive">Inactive</option>
-                            </select>
-                          ) : (
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${(teamStatusEdits[i] ?? user.status) === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
-                            >
-                              {teamStatusEdits[i] ?? user.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {editingTeamIndex === i ? (
-                            <div className="flex items-center justify-end gap-3">
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {editingTeamIndex === i ? (
+                              <div className="flex items-center justify-end gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingTeamIndex(null)}
+                                  className="text-xs text-gray-500 hover:underline"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={savingIndex === i}
+                                  onClick={() => handleSaveTeamStatus(i, user)}
+                                  className="text-xs text-green-600 font-medium hover:underline disabled:opacity-50"
+                                >
+                                  {savingIndex === i ? "Saving…" : "Save"}
+                                </button>
+                              </div>
+                            ) : (
                               <button
                                 type="button"
-                                onClick={() => setEditingTeamIndex(null)}
-                                className="text-xs text-gray-500 hover:underline"
+                                onClick={() => setEditingTeamIndex(i)}
+                                className="text-primary hover:underline"
                               >
-                                Cancel
+                                Edit
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditingTeamIndex(null)}
-                                className="text-xs text-green-600 font-medium hover:underline"
-                              >
-                                Save
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setEditingTeamIndex(i)}
-                              className="text-primary hover:underline"
-                            >
-                              Edit
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -418,95 +447,105 @@ const Settings = () => {
                 As a Global Admin, you can assign system-wide roles to users.
               </p>
 
-              <div className="border border-gray-100 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        User
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        Current Role
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500">
-                        Assign New Role
-                      </th>
-                      <th className="px-4 py-3 font-medium text-gray-500 text-right">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {displayUsers.map((user, i) => (
-                      <tr key={i} className={user.isMe ? "bg-blue-50/40" : ""}>
-                        <td className="px-4 py-3 font-medium text-gray-900">
-                          <span className="flex items-center gap-2">
-                            {user.name}
-                            {user.isMe && (
-                              <span className="px-1.5 py-0.5 bg-primary text-white rounded text-xs font-medium">
-                                You
-                              </span>
-                            )}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={roleEdits[i] ?? user.role}
-                            onChange={(e) =>
-                              setRoleEdits({
-                                ...roleEdits,
-                                [i]: e.target.value,
-                              })
-                            }
-                            className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          >
-                            <option value="User">User</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Global Admin">Global Admin</option>
-                            <option value="Developer">Developer</option>
-                          </select>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex flex-col items-end gap-2">
-                            {roleEdits[i] && roleEdits[i] !== user.role && (
+              {usersError && (
+                <p className="text-sm text-red-600">{usersError}</p>
+              )}
+
+              {usersLoading ? (
+                <p className="text-sm text-gray-400">Loading users…</p>
+              ) : (
+                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          User
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          Current Role
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500">
+                          Assign New Role
+                        </th>
+                        <th className="px-4 py-3 font-medium text-gray-500 text-right">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {displayUsers.map((user, i) => (
+                        <tr
+                          key={user.email}
+                          className={user.isMe ? "bg-blue-50/40" : ""}
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-900">
+                            <span className="flex items-center gap-2">
+                              {user.displayName || user.email}
+                              {user.isMe && (
+                                <span className="px-1.5 py-0.5 bg-primary text-white rounded text-xs font-medium">
+                                  You
+                                </span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">
+                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={roleEdits[i] ?? user.role}
+                              onChange={(e) =>
+                                setRoleEdits({
+                                  ...roleEdits,
+                                  [i]: e.target.value as UserRole,
+                                })
+                              }
+                              className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option value="User">User</option>
+                              <option value="Admin">Admin</option>
+                              <option value="Global Admin">Global Admin</option>
+                              <option value="Developer">Developer</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col items-end gap-2">
+                              {roleEdits[i] && roleEdits[i] !== user.role && (
+                                <button
+                                  type="button"
+                                  disabled={savingIndex === i}
+                                  onClick={() => handleSaveRole(i, user)}
+                                  className="text-xs bg-primary text-white px-3 py-1 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                >
+                                  {roleSavedIndex === i
+                                    ? "Saved!"
+                                    : savingIndex === i
+                                      ? "Saving…"
+                                      : "Save Role"}
+                                </button>
+                              )}
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setRoleSavedIndex(i);
-                                  setTimeout(
-                                    () => setRoleSavedIndex(null),
-                                    2000,
-                                  );
-                                }}
-                                className="text-xs bg-primary text-white px-3 py-1 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                                onClick={() =>
+                                  alert(
+                                    `Password reset link sent to ${user.email}`,
+                                  )
+                                }
+                                className="text-sm text-primary hover:text-primary/80 font-medium flex items-center justify-end gap-1.5"
                               >
-                                {roleSavedIndex === i ? "Saved!" : "Save Role"}
+                                <Key className="w-3.5 h-3.5" />
+                                Reset Password
                               </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                alert(
-                                  `Password reset link sent to ${user.email}`,
-                                )
-                              }
-                              className="text-sm text-primary hover:text-primary/80 font-medium flex items-center justify-end gap-1.5"
-                            >
-                              <Key className="w-3.5 h-3.5" />
-                              Reset Password
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
