@@ -1,0 +1,15 @@
+name = "mc-dashboard"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-01-01"
+
+# Environment variables that are safe to commit (non-secret placeholders)
+# Secret values (GEMINI_API_KEY, VITE_API_* URLs) must be set via:
+#   - Cloudflare Dashboard: Pages → Settings → Environment Variables
+#   - Or CLI: npx wrangler pages secret put <VAR_NAME>
+#
+# To deploy:
+#   npx wrangler pages deploy dist --project-name=mc-dashboard
+
+[vars]
+# Add any non-secret build-time vars here if needed
+# Example: VITE_APP_NAME = "MC Dashboard"

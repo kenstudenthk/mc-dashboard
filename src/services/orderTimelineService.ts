@@ -1,0 +1,36 @@
+const URL = import.meta.env.VITE_API_ORDER_TIMELINE_URL as string
+
+export interface TimelineEvent {
+  id: number
+  Title: string
+  OrderID: string
+  EventDate: string
+  Description: string
+  Completed: boolean
+}
+
+export interface AddEventInput {
+  Title: string
+  OrderID: string
+  EventDate: string
+  Description: string
+  Completed: boolean
+}
+
+async function call<T>(body: object): Promise<T> {
+  const res = await fetch(URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`orderTimelineService error: ${res.status}`)
+  return res.json() as Promise<T>
+}
+
+export const orderTimelineService = {
+  getByOrder: (orderID: string) =>
+    call<TimelineEvent[]>({ action: 'GET_BY_ORDER', data: { orderID } }),
+
+  addEvent: (data: AddEventInput, userEmail: string) =>
+    call<TimelineEvent>({ action: 'ADD_EVENT', data, userEmail }),
+}

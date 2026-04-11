@@ -1,18 +1,29 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { TutorTooltip } from '../components/TutorTooltip';
+import { orderService } from '../services/orderService';
+import { usePermission } from '../contexts/PermissionContext';
+
+const CLOUD_PROVIDER_MAP: Record<string, string> = {
+  'AWS (Amazon Web Service)': 'AWS',
+  'Microsoft Azure': 'Azure',
+  'Huawei Cloud': 'Huawei',
+  'Google Cloud Platform (GCP)': 'GCP',
+  'AliCloud': 'Alibaba',
+  'Tencent': 'Tencent',
+};
 
 const InputGroup = ({ label, type = "text", placeholder = "", disabled = false, value, onChange }: { label: string, type?: string, placeholder?: string, disabled?: boolean, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
   <div className="space-y-2">
     <label className="label-text text-gray-500">{label}</label>
-    <input 
-      type={type} 
+    <input
+      type={type}
       disabled={disabled}
       value={value}
       onChange={onChange}
-      className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`} 
-      placeholder={placeholder} 
+      className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+      placeholder={placeholder}
     />
   </div>
 );
@@ -20,7 +31,7 @@ const InputGroup = ({ label, type = "text", placeholder = "", disabled = false, 
 const SelectGroup = ({ label, options, value, onChange }: { label: string, options: string[], value?: string, onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void }) => (
   <div className="space-y-2">
     <label className="label-text text-gray-500">{label}</label>
-    <select 
+    <select
       value={value}
       onChange={onChange}
       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
@@ -32,10 +43,52 @@ const SelectGroup = ({ label, options, value, onChange }: { label: string, optio
 );
 
 const NewOrder = () => {
+  const navigate = useNavigate();
+  const { userEmail } = usePermission();
+
   const [isPreProvision, setIsPreProvision] = useState(false);
   const [serviceNo, setServiceNo] = useState('');
+  const [status, setStatus] = useState('');
   const [productSubscribe, setProductSubscribe] = useState('');
   const [orderType, setOrderType] = useState('');
+  const [srd, setSrd] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [accountId, setAccountId] = useState('');
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleSave = async () => {
+    if (!companyName) { setSubmitError('Company Name is required.'); return; }
+    if (!orderType) { setSubmitError('Order Type is required.'); return; }
+    if (!status) { setSubmitError('Status is required.'); return; }
+    if (!productSubscribe) { setSubmitError('Product Subscribe is required.'); return; }
+    if (!isPreProvision && !serviceNo) { setSubmitError('Service No. is required.'); return; }
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const cloudProvider = CLOUD_PROVIDER_MAP[productSubscribe] || productSubscribe;
+      const order = await orderService.create({
+        Title: isPreProvision ? 'TBC' : serviceNo,
+        CustomerName: companyName,
+        OrderType: orderType,
+        Status: status,
+        SRD: srd,
+        CloudProvider: cloudProvider,
+        Amount: parseFloat(amount) || 0,
+        AccountID: accountId || undefined,
+      }, userEmail);
+      setSubmitSuccess(true);
+      setTimeout(() => navigate(`/orders/${order.Title}`), 800);
+    } catch {
+      setSubmitError('Failed to create order. Please try again.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -50,24 +103,38 @@ const NewOrder = () => {
           </div>
         </div>
         <TutorTooltip text="Click here to save the new order to the registry once all required fields are filled." position="bottom">
-          <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
-            <Save className="w-4 h-4" />
-            Save Order
+          <button
+            onClick={handleSave}
+            disabled={submitting || submitSuccess}
+            className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {submitSuccess ? (
+              <><CheckCircle className="w-4 h-4" />Saved!</>
+            ) : (
+              <><Save className="w-4 h-4" />{submitting ? 'Saving…' : 'Save Order'}</>
+            )}
           </button>
         </TutorTooltip>
       </div>
 
+      {submitError && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          {submitError}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-6">
-        
+
         {/* Order Information */}
         <div className="card p-8">
           <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
             <h2 className="text-xl font-serif font-bold text-gray-900">Order Information</h2>
             <TutorTooltip text="Check this box if you are creating an account before receiving an official Service No. The Service No. will be set to 'TBC'." position="left">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
-                  id="preProvision" 
+                <input
+                  type="checkbox"
+                  id="preProvision"
                   checked={isPreProvision}
                   onChange={(e) => setIsPreProvision(e.target.checked)}
                   className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
@@ -78,20 +145,25 @@ const NewOrder = () => {
               </div>
             </TutorTooltip>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <InputGroup 
-              label="Service No." 
-              placeholder="e.g. CL549486" 
-              disabled={isPreProvision} 
+            <InputGroup
+              label="Service No."
+              placeholder="e.g. CL549486"
+              disabled={isPreProvision}
               value={isPreProvision ? 'TBC' : serviceNo}
               onChange={(e) => setServiceNo(e.target.value)}
             />
-            <SelectGroup label="Status" options={['Completed', 'Account Created', 'Pending for order issued', 'Processing', 'Cancelled', 'Pending Closure', 'Pending for other parties']} />
+            <SelectGroup
+              label="Status"
+              options={['Completed', 'Account Created', 'Pending for order issued', 'Processing', 'Cancelled', 'Pending Closure', 'Pending for other parties']}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            />
             <TutorTooltip text="Select 'Termination' if you are closing an existing account. This will prompt the system to check for existing records." position="bottom" wrapperClass="block">
-              <SelectGroup 
-                label="Order Type" 
-                options={['New Install', 'Misc Change', 'Contract Renewal', 'Termination', 'Pre-Pro']} 
+              <SelectGroup
+                label="Order Type"
+                options={['New Install', 'Misc Change', 'Contract Renewal', 'Termination', 'Pre-Pro']}
                 value={orderType}
                 onChange={(e) => setOrderType(e.target.value)}
               />
@@ -99,8 +171,20 @@ const NewOrder = () => {
             <InputGroup label="Service Type" placeholder="e.g. Offset Amount" />
             <InputGroup label="OASIS Number" placeholder="e.g. CB23-00007546\1" />
             <InputGroup label="Order Receive Date" placeholder="DD-MMM-YY" />
-            <InputGroup label="SRD" placeholder="DD-MMM-YY" />
+            <InputGroup
+              label="SRD"
+              placeholder="DD-MMM-YY"
+              value={srd}
+              onChange={(e) => setSrd(e.target.value)}
+            />
             <InputGroup label="CxS Complete Date" placeholder="DD-MMM-YY" />
+            <InputGroup
+              label="Amount"
+              type="number"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
           </div>
 
           {orderType === 'Termination' && (
@@ -119,7 +203,12 @@ const NewOrder = () => {
           <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Customer Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
-              <InputGroup label="Company Name" placeholder="e.g. New World Corporate Services Limited" />
+              <InputGroup
+                label="Company Name"
+                placeholder="e.g. New World Corporate Services Limited"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
             </div>
             <InputGroup label="Contact Person" placeholder="e.g. Don Ng" />
             <InputGroup label="Contact No." placeholder="e.g. 67594210" />
@@ -138,18 +227,18 @@ const NewOrder = () => {
           <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Cloud Service Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <SelectGroup 
-                label="Product Subscribe" 
-                options={['AWS (Amazon Web Service)', 'Microsoft Azure', 'Huawei Cloud', 'Google Cloud Platform (GCP)', 'AliCloud', 'Tencent']} 
+              <SelectGroup
+                label="Product Subscribe"
+                options={['AWS (Amazon Web Service)', 'Microsoft Azure', 'Huawei Cloud', 'Google Cloud Platform (GCP)', 'AliCloud', 'Tencent']}
                 value={productSubscribe}
-                onChange={(e) => setProductSubscribe(e.target.value)}
+                onChange={(e) => { setProductSubscribe(e.target.value); setAccountId(''); }}
               />
             </div>
 
             {productSubscribe === 'AWS (Amazon Web Service)' && (
               <>
                 <InputGroup label="Billing Account / Master Account" placeholder="e.g. 7.59168E+11" />
-                <InputGroup label="Account ID / Root ID" placeholder="e.g. 74430167128" />
+                <InputGroup label="Account ID / Root ID" placeholder="e.g. 74430167128" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
                 <InputGroup label="Account Name / Cloud Checker Name" placeholder="e.g. CL545725" />
                 <InputGroup label="Account Login Email" type="email" placeholder="admin@example.com" />
               </>
@@ -157,14 +246,14 @@ const NewOrder = () => {
 
             {productSubscribe === 'AliCloud' && (
               <>
-                <InputGroup label="UID" placeholder="e.g. 5.04886E+15" />
+                <InputGroup label="UID" placeholder="e.g. 5.04886E+15" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
                 <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
             {productSubscribe === 'Microsoft Azure' && (
               <>
-                <InputGroup label="Tenant ID" placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194" />
+                <InputGroup label="Tenant ID" placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
                 <InputGroup label="Azure Subscription ID" placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128" />
                 <InputGroup label="Primary Domain" placeholder="e.g. example.onmicrosoft.com" />
                 <InputGroup label="Admin Email" type="email" placeholder="admin@example.onmicrosoft.com" />
@@ -173,21 +262,21 @@ const NewOrder = () => {
 
             {productSubscribe === 'Huawei Cloud' && (
               <>
-                <InputGroup label="Huawei ID" placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573" />
+                <InputGroup label="Huawei ID" placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
                 <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
             {productSubscribe === 'Google Cloud Platform (GCP)' && (
               <>
-                <InputGroup label="Billing Account ID" placeholder="e.g. 013933-F2938A-CC207B" />
+                <InputGroup label="Billing Account ID" placeholder="e.g. 013933-F2938A-CC207B" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
                 <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
             {productSubscribe === 'Tencent' && (
               <>
-                <InputGroup label="Tenant ID" placeholder="e.g. 200019722598" />
+                <InputGroup label="Tenant ID" placeholder="e.g. 200019722598" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
                 <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
               </>
             )}
