@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
+import CustomerCombobox from "../components/CustomerCombobox";
 import { orderService } from "../services/orderService";
 import { usePermission } from "../contexts/PermissionContext";
 
@@ -84,6 +85,7 @@ const NewOrder = () => {
   const [orderType, setOrderType] = useState("");
   const [srd, setSrd] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [customerId, setCustomerId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [accountId, setAccountId] = useState("");
 
@@ -124,6 +126,7 @@ const NewOrder = () => {
         {
           Title: title,
           CustomerName: companyName,
+          CustomerID: customerId ?? undefined,
           OrderType: orderType,
           Status: status,
           SRD: srd || undefined,
@@ -311,11 +314,12 @@ const NewOrder = () => {
           <h2 className={sectionHeaderClass}>Customer Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="md:col-span-2">
-              <InputGroup
-                label="Company Name"
-                placeholder="e.g. New World Corporate Services Limited"
+              <CustomerCombobox
                 value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                onChange={(name, id) => {
+                  setCompanyName(name);
+                  setCustomerId(id);
+                }}
               />
             </div>
             <InputGroup label="Contact Person" placeholder="e.g. Don Ng" />
