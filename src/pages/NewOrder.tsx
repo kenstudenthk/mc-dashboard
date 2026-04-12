@@ -14,6 +14,9 @@ const CLOUD_PROVIDER_MAP: Record<string, string> = {
   Tencent: "Tencent",
 };
 
+const inputClass =
+  "w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30";
+
 const InputGroup = ({
   label,
   type = "text",
@@ -29,14 +32,14 @@ const InputGroup = ({
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => (
-  <div className="space-y-2">
-    <label className="label-text text-gray-500">{label}</label>
+  <div className="space-y-1.5">
+    <label className="label-text text-[#1d1d1f]/45">{label}</label>
     <input
       type={type}
       disabled={disabled}
       value={value}
       onChange={onChange}
-      className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      className={`${inputClass} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       placeholder={placeholder}
     />
   </div>
@@ -53,12 +56,12 @@ const SelectGroup = ({
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }) => (
-  <div className="space-y-2">
-    <label className="label-text text-gray-500">{label}</label>
+  <div className="space-y-1.5">
+    <label className="label-text text-[#1d1d1f]/45">{label}</label>
     <select
       value={value}
       onChange={onChange}
-      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+      className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all appearance-none text-sm text-[#1d1d1f]"
     >
       <option value="">Select...</option>
       {options.map((opt) => (
@@ -137,21 +140,27 @@ const NewOrder = () => {
     }
   };
 
+  const sectionHeaderClass = "text-[17px] font-semibold text-[#1d1d1f] mb-5 border-b border-[#1d1d1f]/06 pb-4";
+  const cardClass = "card p-8";
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-5 max-w-6xl mx-auto pb-12">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
             to="/orders"
-            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-4.5 h-4.5 text-[#1d1d1f]/60" />
           </Link>
           <div>
-            <h1 className="text-3xl font-serif font-bold text-gray-900">
+            <h1
+              className="text-[28px] font-semibold text-[#1d1d1f]"
+              style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+            >
               Create New Order
             </h1>
-            <p className="text-gray-500 mt-1">
+            <p className="text-sm text-[#1d1d1f]/50 mt-1">
               Fill in the details for cloud service provisioning.
             </p>
           </div>
@@ -163,7 +172,7 @@ const NewOrder = () => {
           <button
             onClick={handleSave}
             disabled={submitting || submitSuccess}
-            className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {submitSuccess ? (
               <>
@@ -181,17 +190,17 @@ const NewOrder = () => {
       </div>
 
       {submitError && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           {submitError}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-5">
         {/* Order Information */}
-        <div className="card p-8">
-          <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-            <h2 className="text-xl font-serif font-bold text-gray-900">
+        <div className={cardClass}>
+          <div className="flex items-center justify-between mb-5 border-b border-[#1d1d1f]/06 pb-4">
+            <h2 className="text-[17px] font-semibold text-[#1d1d1f]">
               Order Information
             </h2>
             <TutorTooltip
@@ -204,11 +213,11 @@ const NewOrder = () => {
                   id="preProvision"
                   checked={isPreProvision}
                   onChange={(e) => setIsPreProvision(e.target.checked)}
-                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  className="w-4 h-4 text-[#0071e3] border-[#1d1d1f]/20 rounded focus:ring-[#0071e3]"
                 />
                 <label
                   htmlFor="preProvision"
-                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                  className="text-sm font-medium text-[#1d1d1f]/70 cursor-pointer"
                 >
                   Pre-Provision Order (No Service No. yet)
                 </label>
@@ -216,7 +225,7 @@ const NewOrder = () => {
             </TutorTooltip>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <InputGroup
               label="Service No."
               placeholder="e.g. CL549486"
@@ -257,10 +266,7 @@ const NewOrder = () => {
               />
             </TutorTooltip>
             <InputGroup label="Service Type" placeholder="e.g. Offset Amount" />
-            <InputGroup
-              label="OASIS Number"
-              placeholder="e.g. CB23-00007546\1"
-            />
+            <InputGroup label="OASIS Number" placeholder="e.g. CB23-00007546\1" />
             <InputGroup label="Order Receive Date" placeholder="DD-MMM-YY" />
             <InputGroup
               label="SRD"
@@ -279,10 +285,10 @@ const NewOrder = () => {
           </div>
 
           {orderType === "Termination" && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="mt-5 p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-sm font-medium text-red-800">
+                <h3 className="text-sm font-semibold text-red-800">
                   Termination Order
                 </h3>
                 <p className="text-sm text-red-600 mt-1">
@@ -296,11 +302,9 @@ const NewOrder = () => {
         </div>
 
         {/* Customer Information */}
-        <div className="card p-8">
-          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">
-            Customer Information
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={cardClass}>
+          <h2 className={sectionHeaderClass}>Customer Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="md:col-span-2">
               <InputGroup
                 label="Company Name"
@@ -318,12 +322,10 @@ const NewOrder = () => {
                 placeholder="email@example.com"
               />
             </div>
-            <div className="md:col-span-3 space-y-2">
-              <label className="label-text text-gray-500">
-                Billing Address
-              </label>
+            <div className="md:col-span-3 space-y-1.5">
+              <label className="label-text text-[#1d1d1f]/45">Billing Address</label>
               <textarea
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[80px]"
+                className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[80px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                 placeholder="Enter full billing address"
               ></textarea>
             </div>
@@ -331,11 +333,9 @@ const NewOrder = () => {
         </div>
 
         {/* Cloud Service Details */}
-        <div className="card p-8">
-          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">
-            Cloud Service Details
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={cardClass}>
+          <h2 className={sectionHeaderClass}>Cloud Service Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
               <SelectGroup
                 label="Product Subscribe"
@@ -357,25 +357,15 @@ const NewOrder = () => {
 
             {productSubscribe === "AWS (Amazon Web Service)" && (
               <>
-                <InputGroup
-                  label="Billing Account / Master Account"
-                  placeholder="e.g. 7.59168E+11"
-                />
+                <InputGroup label="Billing Account / Master Account" placeholder="e.g. 7.59168E+11" />
                 <InputGroup
                   label="Account ID / Root ID"
                   placeholder="e.g. 74430167128"
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup
-                  label="Account Name / Cloud Checker Name"
-                  placeholder="e.g. CL545725"
-                />
-                <InputGroup
-                  label="Account Login Email"
-                  type="email"
-                  placeholder="admin@example.com"
-                />
+                <InputGroup label="Account Name / Cloud Checker Name" placeholder="e.g. CL545725" />
+                <InputGroup label="Account Login Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
@@ -387,11 +377,7 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup
-                  label="Admin Email"
-                  type="email"
-                  placeholder="admin@example.com"
-                />
+                <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
@@ -403,19 +389,9 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup
-                  label="Azure Subscription ID"
-                  placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128"
-                />
-                <InputGroup
-                  label="Primary Domain"
-                  placeholder="e.g. example.onmicrosoft.com"
-                />
-                <InputGroup
-                  label="Admin Email"
-                  type="email"
-                  placeholder="admin@example.onmicrosoft.com"
-                />
+                <InputGroup label="Azure Subscription ID" placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128" />
+                <InputGroup label="Primary Domain" placeholder="e.g. example.onmicrosoft.com" />
+                <InputGroup label="Admin Email" type="email" placeholder="admin@example.onmicrosoft.com" />
               </>
             )}
 
@@ -427,11 +403,7 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup
-                  label="Login Email"
-                  type="email"
-                  placeholder="admin@example.com"
-                />
+                <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
@@ -443,11 +415,7 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup
-                  label="Admin Email"
-                  type="email"
-                  placeholder="admin@example.com"
-                />
+                <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
@@ -459,33 +427,23 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup
-                  label="Login Email"
-                  type="email"
-                  placeholder="admin@example.com"
-                />
+                <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
               </>
             )}
 
             {!productSubscribe && (
-              <div className="md:col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 text-center">
+              <div className="md:col-span-2 p-4 bg-[#f5f5f7] rounded-lg border border-[#1d1d1f]/06 text-sm text-[#1d1d1f]/40 text-center">
                 Please select a Product Subscribe to view specific fields.
               </div>
             )}
 
             {productSubscribe && (
               <>
-                <InputGroup
-                  label="Password"
-                  type="password"
-                  placeholder="••••••••"
-                />
-                <div className="md:col-span-2 space-y-2">
-                  <label className="label-text text-gray-500">
-                    Other Account Information
-                  </label>
+                <InputGroup label="Password" type="password" placeholder="••••••••" />
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="label-text text-[#1d1d1f]/45">Other Account Information</label>
                   <textarea
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[80px]"
+                    className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[80px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                     placeholder="Domain names, additional IDs, etc."
                   ></textarea>
                 </div>
@@ -495,37 +453,23 @@ const NewOrder = () => {
         </div>
 
         {/* Provisioning & Tracking */}
-        <div className="card p-8">
-          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">
-            Provisioning & Tracking
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <InputGroup
-              label="CxS Request No."
-              placeholder="e.g. RN822908/1-2"
-            />
+        <div className={cardClass}>
+          <h2 className={sectionHeaderClass}>Provisioning & Tracking</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <InputGroup label="CxS Request No." placeholder="e.g. RN822908/1-2" />
             <InputGroup label="TID" placeholder="e.g. 103690" />
             <InputGroup label="SD Number" placeholder="e.g. SD11652876" />
-            <SelectGroup
-              label="PS Job (Y/N)"
-              options={["Y", "N", "Yes", "No"]}
-            />
+            <SelectGroup label="PS Job (Y/N)" options={["Y", "N", "Yes", "No"]} />
             <SelectGroup label="T2/ T3" options={["T1", "T2", "T3", "N/A"]} />
-            <SelectGroup
-              label="Welcome Letter (Yes / No)"
-              options={["Yes", "No"]}
-            />
+            <SelectGroup label="Welcome Letter (Yes / No)" options={["Yes", "No"]} />
             <InputGroup label="By" placeholder="e.g. Kilson, Helen, Hin" />
             <div className="md:col-span-2">
-              <InputGroup
-                label="Order Form (URL)"
-                placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..."
-              />
+              <InputGroup label="Order Form (URL)" placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..." />
             </div>
-            <div className="md:col-span-3 space-y-2">
-              <label className="label-text text-gray-500">Remark</label>
+            <div className="md:col-span-3 space-y-1.5">
+              <label className="label-text text-[#1d1d1f]/45">Remark</label>
               <textarea
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[120px]"
+                className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[120px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                 placeholder="Enter timeline, log updates, or special instructions..."
               ></textarea>
             </div>

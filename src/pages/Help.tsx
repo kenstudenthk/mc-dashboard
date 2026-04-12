@@ -1,52 +1,126 @@
-import React from 'react';
-import { HelpCircle, Mail, MessageSquare, Phone } from 'lucide-react';
+import React from "react";
+import { HelpCircle, Mail, MessageSquare, Phone, ChevronRight } from "lucide-react";
 
 const Help = () => {
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto pb-12">
+      {/* Page header */}
       <div>
-        <h1 className="text-3xl font-serif font-bold text-gray-900">Help & Support</h1>
-        <p className="text-gray-500 mt-1">How can we help you today?</p>
+        <h1
+          className="text-[28px] font-semibold text-[#1d1d1f]"
+          style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+        >
+          Help & Support
+        </h1>
+        <p
+          className="text-sm text-[#1d1d1f]/50 mt-1"
+          style={{ letterSpacing: "-0.224px" }}
+        >
+          How can we help you today?
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow cursor-pointer">
-          <div className="w-12 h-12 rounded-full bg-primary-light text-primary flex items-center justify-center mb-4">
-            <Mail className="w-6 h-6" />
+      {/* Contact channels */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          {
+            icon: Mail,
+            label: "Email Support",
+            desc: "Get help via email within 24 hours.",
+            detail: "support@pccw.com",
+          },
+          {
+            icon: MessageSquare,
+            label: "Live Chat",
+            desc: "Chat with our support team in real-time.",
+            detail: "Available 9am – 6pm",
+          },
+          {
+            icon: Phone,
+            label: "Phone Support",
+            desc: "Call us directly for urgent issues.",
+            detail: "+852 1000 0000",
+          },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="card p-6 flex flex-col gap-3 cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#f5f5f7] flex items-center justify-center text-[#0071e3] group-hover:bg-[#0071e3] group-hover:text-white transition-colors">
+              <item.icon className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h3
+                className="text-[14px] font-semibold text-[#1d1d1f]"
+                style={{ letterSpacing: "-0.224px" }}
+              >
+                {item.label}
+              </h3>
+              <p
+                className="text-[12px] text-[#1d1d1f]/45 mt-0.5"
+                style={{ letterSpacing: "-0.12px" }}
+              >
+                {item.desc}
+              </p>
+            </div>
+            <span
+              className="text-[12px] font-medium text-[#0071e3]"
+              style={{ letterSpacing: "-0.12px" }}
+            >
+              {item.detail}
+            </span>
           </div>
-          <h3 className="font-bold text-gray-900 mb-2">Email Support</h3>
-          <p className="text-sm text-gray-500">Get help via email within 24 hours.</p>
-        </div>
-        <div className="card p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow cursor-pointer">
-          <div className="w-12 h-12 rounded-full bg-primary-light text-primary flex items-center justify-center mb-4">
-            <MessageSquare className="w-6 h-6" />
-          </div>
-          <h3 className="font-bold text-gray-900 mb-2">Live Chat</h3>
-          <p className="text-sm text-gray-500">Chat with our support team in real-time.</p>
-        </div>
-        <div className="card p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow cursor-pointer">
-          <div className="w-12 h-12 rounded-full bg-primary-light text-primary flex items-center justify-center mb-4">
-            <Phone className="w-6 h-6" />
-          </div>
-          <h3 className="font-bold text-gray-900 mb-2">Phone Support</h3>
-          <p className="text-sm text-gray-500">Call us directly for urgent issues.</p>
-        </div>
+        ))}
       </div>
 
-      <div className="card p-8 mt-8">
-        <h2 className="text-xl font-serif font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Frequently Asked Questions</h2>
-        <div className="space-y-4">
+      {/* FAQ */}
+      <div className="card p-7">
+        <h2
+          className="text-[17px] font-semibold text-[#1d1d1f] border-b border-[#1d1d1f]/06 pb-4 mb-2"
+          style={{ letterSpacing: "-0.374px" }}
+        >
+          Frequently Asked Questions
+        </h2>
+        <div className="divide-y divide-[#1d1d1f]/06">
           {[
-            { q: 'How do I create a new order?', a: 'Navigate to the Order Registry and click the "New Order" button in the top right corner.' },
-            { q: 'Can I export my customer list?', a: 'Yes, you can export your customer list by clicking the download icon on the Customers page.' },
-            { q: 'How do I change my password?', a: 'Go to Settings > Profile Settings and click on "Change Password".' }
+            {
+              q: "How do I create a new order?",
+              a: 'Navigate to the Order Registry and click the "New Order" button in the top right corner.',
+            },
+            {
+              q: "Can I export my customer list?",
+              a: "Yes, you can export your customer list by clicking the download icon on the Customers page.",
+            },
+            {
+              q: "How do I change my password?",
+              a: 'Go to Settings > Profile Settings and click on "Change Password".',
+            },
+            {
+              q: "How are roles assigned?",
+              a: "Roles are managed by a Global Admin in Settings > Role Management. Contact your admin to update your access level.",
+            },
+            {
+              q: "What does pre-provision order mean?",
+              a: 'A pre-provision order is a cloud account created in advance without an official Service No. It is displayed as "TBC" until a service number is assigned.',
+            },
           ].map((faq, i) => (
-            <div key={i} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-              <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-primary" />
-                {faq.q}
-              </h4>
-              <p className="text-sm text-gray-500 pl-6">{faq.a}</p>
+            <div key={i} className="py-4 flex items-start gap-3 group cursor-pointer">
+              <HelpCircle className="w-4 h-4 text-[#0071e3] mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h4
+                  className="text-[14px] font-medium text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors"
+                  style={{ letterSpacing: "-0.224px" }}
+                >
+                  {faq.q}
+                </h4>
+                <p
+                  className="text-[13px] text-[#1d1d1f]/45 mt-1 leading-relaxed"
+                  style={{ letterSpacing: "-0.12px" }}
+                >
+                  {faq.a}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#1d1d1f]/20 mt-0.5 shrink-0 group-hover:text-[#0071e3] transition-colors" />
             </div>
           ))}
         </div>

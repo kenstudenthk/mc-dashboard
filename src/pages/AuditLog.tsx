@@ -62,13 +62,13 @@ const AuditLog = () => {
   const getActionIcon = (action: string) => {
     switch (action) {
       case "Create":
-        return <PlusCircle className="w-4 h-4" />;
+        return <PlusCircle className="w-3.5 h-3.5" />;
       case "Update":
-        return <Edit className="w-4 h-4" />;
+        return <Edit className="w-3.5 h-3.5" />;
       case "Delete":
-        return <Trash2 className="w-4 h-4" />;
+        return <Trash2 className="w-3.5 h-3.5" />;
       default:
-        return <FileText className="w-4 h-4" />;
+        return <FileText className="w-3.5 h-3.5" />;
     }
   };
 
@@ -81,7 +81,7 @@ const AuditLog = () => {
       case "Delete":
         return "bg-red-100 text-red-700 border-red-200";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-gray-100 text-gray-600 border-gray-200";
     }
   };
 
@@ -89,31 +89,34 @@ const AuditLog = () => {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900">
+          <h1
+            className="text-[28px] font-semibold text-[#1d1d1f]"
+            style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+          >
             Audit Log
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-sm text-[#1d1d1f]/50 mt-1">
             Track all system activities, modifications, and user actions.
           </p>
         </div>
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="p-4 border-b border-[#1d1d1f]/06 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f5f5f7]/60">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <TutorTooltip
               text="Search logs by user name, service number, or specific details."
               position="bottom"
               wrapperClass="relative flex-1 sm:w-80"
             >
               <div className="relative flex-1 sm:w-full">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
                 <input
                   type="text"
                   placeholder="Search by User, Service No, or Details..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
                 />
               </div>
             </TutorTooltip>
@@ -122,11 +125,11 @@ const AuditLog = () => {
               position="bottom"
             >
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-400" />
+                <Filter className="w-3.5 h-3.5 text-[#1d1d1f]/30" />
                 <select
                   value={actionFilter}
                   onChange={(e) => setActionFilter(e.target.value)}
-                  className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="text-sm bg-white border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]/70"
                 >
                   <option value="All">All Actions</option>
                   <option value="Create">Create</option>
@@ -139,89 +142,65 @@ const AuditLog = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="px-6 py-4 label-text text-gray-400 w-48">
-                  Date & Time
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400 w-48">
-                  User
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400 w-32">
-                  Action
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400 w-40">
-                  Service No.
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Details (What changed)
-                </th>
+              <tr className="border-b border-[#1d1d1f]/06">
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">Date & Time</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">User</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-32">Action</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-40">Service No.</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Details (What changed)</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-12 text-center text-gray-400"
-                  >
+                  <td colSpan={5} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
                     Loading audit logs…
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-12 text-center text-red-500"
-                  >
+                  <td colSpan={5} className="px-6 py-12 text-center text-red-500 text-sm">
                     {error}
                   </td>
                 </tr>
               ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      {formatTimestamp(log.Created)}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-primary-light text-primary flex items-center justify-center text-xs font-bold">
-                        {log.UserEmail.charAt(0).toUpperCase()}
+                  <tr key={log.id} className="border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors">
+                    <td className="px-6 py-3.5 text-xs text-[#1d1d1f]/45 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-[#1d1d1f]/25" />
+                        {formatTimestamp(log.Created)}
                       </div>
-                      {log.UserEmail}
                     </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${getActionColor(log.Action)}`}
-                      >
+                    <td className="px-6 py-3.5 text-xs font-medium text-[#1d1d1f]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center text-[10px] font-bold">
+                          {log.UserEmail.charAt(0).toUpperCase()}
+                        </div>
+                        {log.UserEmail}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getActionColor(log.Action)}`}>
                         {getActionIcon(log.Action)}
                         {log.Action}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-medium text-primary hover:underline">
+                    <td className="px-6 py-3.5 text-xs font-semibold text-[#0071e3] hover:underline">
                       {log.TargetID ? (
-                        <Link to={`/orders/${log.TargetID}`}>
-                          {log.TargetID}
-                        </Link>
+                        <Link to={`/orders/${log.TargetID}`}>{log.TargetID}</Link>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-[#1d1d1f]/25">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {log.Details}
-                    </td>
+                    <td className="px-6 py-3.5 text-xs text-[#1d1d1f]/60">{log.Details}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
+                  <td colSpan={5} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
                     No audit logs found matching your filters.
                   </td>
                 </tr>
@@ -230,22 +209,14 @@ const AuditLog = () => {
           </table>
         </div>
 
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+        <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
           <div>Showing {filteredLogs.length} entries</div>
           <div className="flex gap-1">
-            <button
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-              disabled
-            >
+            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
               Prev
             </button>
-            <button className="px-3 py-1 bg-primary text-white rounded">
-              1
-            </button>
-            <button
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-              disabled
-            >
+            <button className="px-3 py-1 bg-[#0071e3] text-white rounded-lg text-xs font-medium">1</button>
+            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
               Next
             </button>
           </div>

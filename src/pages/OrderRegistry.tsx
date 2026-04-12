@@ -89,10 +89,13 @@ const OrderRegistry = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900">
+          <h1
+            className="text-[28px] font-semibold text-[#1d1d1f]"
+            style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+          >
             Order Registry
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-sm text-[#1d1d1f]/50 mt-1">
             Manage and track all cloud provisioning orders.
           </p>
         </div>
@@ -103,7 +106,7 @@ const OrderRegistry = () => {
         >
           <Link
             to="/orders/new"
-            className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2"
+            className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             New Order
@@ -112,21 +115,21 @@ const OrderRegistry = () => {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+        <div className="p-4 border-b border-[#1d1d1f]/06 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f5f5f7]/60">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
             position="bottom"
             wrapperClass="flex-1 sm:flex-none"
           >
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {["All", "Pending", "Completed"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                     activeTab === tab
-                      ? "bg-white border border-gray-200 text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      ? "bg-white border border-[#1d1d1f]/08 text-[#1d1d1f] shadow-sm"
+                      : "text-[#1d1d1f]/50 hover:text-[#1d1d1f] hover:bg-white/60"
                   }`}
                 >
                   {tab === "All" ? "All Orders" : tab}
@@ -135,20 +138,20 @@ const OrderRegistry = () => {
             </div>
           </TutorTooltip>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <TutorTooltip
               text="Search for a specific order by typing the Service No, Customer Name, or Account ID."
               position="bottom"
               wrapperClass="relative flex-1 sm:w-64"
             >
               <div className="relative flex-1 sm:w-full">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
                 <input
                   type="text"
                   placeholder="Search by Service No, Account ID, Customer..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
                 />
               </div>
             </TutorTooltip>
@@ -158,13 +161,13 @@ const OrderRegistry = () => {
             >
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border ${
                   showFilters
-                    ? "bg-primary-light text-primary border-primary/20"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    ? "bg-blue-50 text-[#0071e3] border-[#0071e3]/20"
+                    : "bg-white text-[#1d1d1f]/70 border-[#1d1d1f]/08 hover:bg-[#f5f5f7]"
                 }`}
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3.5 h-3.5" />
                 Filter
               </button>
             </TutorTooltip>
@@ -172,15 +175,15 @@ const OrderRegistry = () => {
         </div>
 
         {showFilters && (
-          <div className="p-4 border-b border-gray-100 bg-white flex gap-4 items-center">
+          <div className="p-4 border-b border-[#1d1d1f]/06 bg-white flex gap-4 items-center">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-xs font-medium text-[#1d1d1f]/60">
                 Provider:
               </label>
               <select
                 value={providerFilter}
                 onChange={(e) => setProviderFilter(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="text-sm border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 bg-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]"
               >
                 <option value="All">All Providers</option>
                 <option value="AWS">AWS</option>
@@ -200,40 +203,23 @@ const OrderRegistry = () => {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Service No.
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Company Name
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Product Subscribe
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Account ID
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Order Type
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">
-                  Receive Date
-                </th>
-                <th className="px-6 py-4 label-text text-gray-400">Status</th>
-                <th className="px-6 py-4 label-text text-gray-400 text-right">
-                  Actions
-                </th>
+              <tr className="border-b border-[#1d1d1f]/06">
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Service No.</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Company Name</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Product Subscribe</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Account ID</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Order Type</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Receive Date</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Status</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-6 py-12 text-center text-gray-400"
-                  >
+                  <td colSpan={8} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
                     Loading orders…
                   </td>
                 </tr>
@@ -246,24 +232,20 @@ const OrderRegistry = () => {
                   return (
                     <tr
                       key={order.id}
-                      className={`border-b border-gray-50 transition-colors group ${isTerminated ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-gray-50/50"}`}
+                      className={`border-b border-[#1d1d1f]/04 transition-colors group ${isTerminated ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-[#f5f5f7]"}`}
                     >
-                      <td
-                        className={`px-6 py-4 font-medium hover:underline ${isTerminated ? "text-red-600" : "text-primary"}`}
-                      >
+                      <td className={`px-6 py-3.5 text-xs font-semibold hover:underline ${isTerminated ? "text-red-600" : "text-[#0071e3]"}`}>
                         <Link to={`/orders/${order.Title}`}>{order.Title}</Link>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-3.5 text-sm">
                         <Link
                           to={`/customers/${order.CustomerID}`}
-                          className={`hover:underline transition-colors ${isTerminated ? "text-red-500 hover:text-red-700" : "text-gray-600 hover:text-primary"}`}
+                          className={`hover:underline transition-colors ${isTerminated ? "text-red-500 hover:text-red-700" : "text-[#1d1d1f]/70 hover:text-[#0071e3]"}`}
                         >
                           {order.CustomerName}
                         </Link>
                       </td>
-                      <td
-                        className={`px-6 py-4 font-medium ${isTerminated ? "text-red-600" : "text-gray-900"}`}
-                      >
+                      <td className={`px-6 py-3.5 text-sm font-medium ${isTerminated ? "text-red-600" : "text-[#1d1d1f]"}`}>
                         {order.CloudProvider}
                         {isTerminated && (
                           <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -272,38 +254,32 @@ const OrderRegistry = () => {
                         )}
                       </td>
                       <td
-                        className={`px-6 py-4 font-mono text-xs truncate max-w-[120px] ${isTerminated ? "text-red-500" : "text-gray-500"}`}
+                        className={`px-6 py-3.5 font-mono text-xs truncate max-w-[120px] ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"}`}
                         title={order.AccountID}
                       >
                         {order.AccountID ?? "—"}
                       </td>
-                      <td
-                        className={`px-6 py-4 ${isTerminated ? "text-red-500" : "text-gray-500"}`}
-                      >
+                      <td className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"}`}>
                         {order.OrderType}
                       </td>
-                      <td
-                        className={`px-6 py-4 ${isTerminated ? "text-red-500" : "text-gray-500"}`}
-                      >
+                      <td className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"}`}>
                         {formatDate(order.SRD)}
                       </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}
-                        >
+                      <td className="px-6 py-3.5">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}>
                           {order.Status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <td className="px-6 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
                             to={`/orders/${order.Title}`}
-                            className={`p-2 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-100" : "text-gray-400 hover:text-primary hover:bg-primary-light"}`}
+                            className={`p-1.5 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-50" : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"}`}
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
                           <button
-                            className={`p-2 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-100" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
+                            className={`p-1.5 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-50" : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"}`}
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
@@ -314,10 +290,7 @@ const OrderRegistry = () => {
                 })
               ) : (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
+                  <td colSpan={8} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
                     No orders found matching your filters.
                   </td>
                 </tr>
@@ -326,22 +299,16 @@ const OrderRegistry = () => {
           </table>
         </div>
 
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+        <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
           <div>Showing {filteredOrders.length} entries</div>
           <div className="flex gap-1">
-            <button
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-              disabled
-            >
+            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
               Prev
             </button>
-            <button className="px-3 py-1 bg-primary text-white rounded">
+            <button className="px-3 py-1 bg-[#0071e3] text-white rounded-lg text-xs font-medium">
               1
             </button>
-            <button
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-              disabled
-            >
+            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
               Next
             </button>
           </div>

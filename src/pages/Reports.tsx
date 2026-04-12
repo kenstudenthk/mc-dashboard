@@ -34,54 +34,53 @@ const Reports = () => {
 
   // Apply filters (simulating dynamic data changes)
   const scale = timeRange === 'Last 30 Days' ? 0.3 : timeRange === 'This Year' ? 0.8 : 1;
-  
+
   const cloudProviderData = baseCloudProviderData
     .filter(d => provider === 'All' || d.name.includes(provider))
     .map(d => ({ ...d, value: Math.max(1, Math.round(d.value * scale)) }));
-    
+
   const orderTypeData = baseOrderTypeData.map(d => ({ ...d, count: Math.max(1, Math.round(d.count * scale * (provider !== 'All' ? 0.4 : 1))) }));
-  
+
   const statusSummary = baseStatusSummary.map(d => ({ ...d, value: Math.max(0, Math.round(d.value * scale * (provider !== 'All' ? 0.4 : 1))) }));
 
   const totalOrders = orderTypeData.reduce((acc, curr) => acc + curr.count, 0);
   const totalCompleted = statusSummary.find(s => s.label === 'Completed')?.value || 0;
   const completionRate = totalOrders > 0 ? ((totalCompleted / totalOrders) * 100).toFixed(1) : '0.0';
 
+  const selectClass = "bg-[#f5f5f7] border border-[#1d1d1f]/08 text-[#1d1d1f]/70 text-sm rounded-lg px-3 py-2 focus:ring-[#0071e3] focus:border-[#0071e3] outline-none";
+
   return (
-    <div className="space-y-8 pb-12 max-w-7xl mx-auto">
+    <div className="space-y-6 pb-12 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-gray-500 mt-1">Overview of cloud provisioning orders and service distribution.</p>
+          <h1
+            className="text-[28px] font-semibold text-[#1d1d1f]"
+            style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+          >
+            Reports & Analytics
+          </h1>
+          <p className="text-sm text-[#1d1d1f]/50 mt-1">
+            Overview of cloud provisioning orders and service distribution.
+          </p>
         </div>
-        <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
+        <button className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2">
           <Download className="w-4 h-4" />
           Export CSV
         </button>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 text-gray-500 font-medium mr-2">
-          <Filter className="w-4 h-4" />
-          <span className="text-sm">Filters:</span>
+      <div className="card p-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-[#1d1d1f]/45 mr-1">
+          <Filter className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">Filters:</span>
         </div>
-        
-        <select 
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-primary focus:border-primary block px-3 py-2 outline-none"
-        >
+        <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className={selectClass}>
           <option value="All Time">All Time</option>
           <option value="This Year">This Year</option>
           <option value="Last 30 Days">Last 30 Days</option>
         </select>
-
-        <select 
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-          className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-primary focus:border-primary block px-3 py-2 outline-none"
-        >
+        <select value={provider} onChange={(e) => setProvider(e.target.value)} className={selectClass}>
           <option value="All">All Providers</option>
           <option value="AWS">AWS</option>
           <option value="Azure">Azure</option>
@@ -92,61 +91,78 @@ const Reports = () => {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary">
-            <FileText className="w-6 h-6" />
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-[#0071e3]">
+            <FileText className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500">Total Orders</div>
-            <div className="text-2xl font-bold text-gray-900">{totalOrders}</div>
+            <div className="text-xs font-medium text-[#1d1d1f]/45">Total Orders</div>
+            <div
+              className="text-[22px] font-semibold text-[#1d1d1f]"
+              style={{ fontFamily: "SF Pro Display, Helvetica Neue, Helvetica, Arial, sans-serif", letterSpacing: "-0.28px" }}
+            >
+              {totalOrders}
+            </div>
           </div>
         </div>
-        <div className="card p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-            <CheckCircle className="w-6 h-6" />
+        <div className="card p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+            <CheckCircle className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500">Completed</div>
-            <div className="text-2xl font-bold text-gray-900">{totalCompleted}</div>
+            <div className="text-xs font-medium text-[#1d1d1f]/45">Completed</div>
+            <div
+              className="text-[22px] font-semibold text-[#1d1d1f]"
+              style={{ fontFamily: "SF Pro Display, Helvetica Neue, Helvetica, Arial, sans-serif", letterSpacing: "-0.28px" }}
+            >
+              {totalCompleted}
+            </div>
           </div>
         </div>
-        <div className="card p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-            <Cloud className="w-6 h-6" />
+        <div className="card p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+            <Cloud className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500">Active Cloud Services</div>
-            <div className="text-2xl font-bold text-gray-900">{cloudProviderData.reduce((acc, curr) => acc + curr.value, 0)}</div>
+            <div className="text-xs font-medium text-[#1d1d1f]/45">Active Cloud Services</div>
+            <div
+              className="text-[22px] font-semibold text-[#1d1d1f]"
+              style={{ fontFamily: "SF Pro Display, Helvetica Neue, Helvetica, Arial, sans-serif", letterSpacing: "-0.28px" }}
+            >
+              {cloudProviderData.reduce((acc, curr) => acc + curr.value, 0)}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Cloud Provider Distribution */}
         <div className="card p-6">
-          <h2 className="text-lg font-serif font-bold text-gray-900 mb-6">Orders by Cloud Provider</h2>
-          <div className="h-80">
+          <h2 className="text-[17px] font-semibold text-[#1d1d1f] mb-5" style={{ letterSpacing: "-0.374px" }}>
+            Orders by Cloud Provider
+          </h2>
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={cloudProviderData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={80}
-                  outerRadius={120}
-                  paddingAngle={5}
+                  innerRadius={75}
+                  outerRadius={110}
+                  paddingAngle={4}
                   dataKey="value"
                 >
                   {cloudProviderData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.08)', fontSize: 12 }}
                 />
-                <Legend verticalAlign="bottom" height={36} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -154,21 +170,20 @@ const Reports = () => {
 
         {/* Order Types */}
         <div className="card p-6">
-          <h2 className="text-lg font-serif font-bold text-gray-900 mb-6">Orders by Type</h2>
-          <div className="h-80">
+          <h2 className="text-[17px] font-semibold text-[#1d1d1f] mb-5" style={{ letterSpacing: "-0.374px" }}>
+            Orders by Type
+          </h2>
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={orderTypeData}
-                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                <Tooltip 
-                  cursor={{ fill: '#f9fafb' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              <BarChart data={orderTypeData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'rgba(29,29,31,0.45)', fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(29,29,31,0.45)', fontSize: 11 }} />
+                <Tooltip
+                  cursor={{ fill: 'rgba(29,29,31,0.03)' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.08)', fontSize: 12 }}
                 />
-                <Bar dataKey="count" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="count" fill="#0071e3" radius={[4, 4, 0, 0]} barSize={36} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -176,25 +191,26 @@ const Reports = () => {
 
         {/* Status Summary */}
         <div className="card p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-serif font-bold text-gray-900">Status Breakdown</h2>
-            <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
-              <TrendingUp className="w-4 h-4" />
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-[17px] font-semibold text-[#1d1d1f]" style={{ letterSpacing: "-0.374px" }}>
+              Status Breakdown
+            </h2>
+            <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+              <TrendingUp className="w-3.5 h-3.5" />
               <span>{completionRate}% Completion Rate</span>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {statusSummary.map((status, idx) => (
-              <div key={idx} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 flex flex-col items-center justify-center text-center">
-                <div className={`w-12 h-12 rounded-full ${status.bg} ${status.color} flex items-center justify-center font-bold text-lg mb-3`}>
+              <div key={idx} className="p-4 rounded-lg bg-[#f5f5f7] flex flex-col items-center justify-center text-center">
+                <div className={`w-11 h-11 rounded-full ${status.bg} ${status.color} flex items-center justify-center font-bold text-base mb-2.5`}>
                   {status.value}
                 </div>
-                <div className="text-sm font-medium text-gray-700">{status.label}</div>
+                <div className="text-xs font-medium text-[#1d1d1f]/60">{status.label}</div>
               </div>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

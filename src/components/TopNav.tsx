@@ -40,19 +40,19 @@ const TopNav = () => {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="h-20 px-8 flex items-center justify-between glass-panel sticky top-0 z-10">
-      <div className="flex items-center text-sm font-medium text-gray-500">
+    <header className="h-16 px-8 flex items-center justify-between glass-panel sticky top-0 z-10">
+      <div className="flex items-center text-sm text-[#1d1d1f]/50" style={{ letterSpacing: '-0.224px' }}>
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={crumb.path}>
             {index > 0 && (
-              <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />
+              <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-[#1d1d1f]/25" />
             )}
             {index === breadcrumbs.length - 1 ? (
-              <span className="text-gray-900">{crumb.label}</span>
+              <span className="text-[#1d1d1f] font-medium">{crumb.label}</span>
             ) : (
               <Link
                 to={crumb.path}
-                className="hover:text-primary transition-colors"
+                className="hover:text-[#0071e3] transition-colors"
               >
                 {crumb.label}
               </Link>
@@ -61,25 +61,25 @@ const TopNav = () => {
         ))}
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <button
           onClick={toggleTutorMode}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors border ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
             isTutorMode
-              ? "bg-purple-100 text-purple-700 border-purple-200 shadow-inner"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              ? "bg-purple-100 text-purple-700 border-purple-200"
+              : "bg-[#f5f5f7] text-[#1d1d1f]/60 border-[#1d1d1f]/10 hover:bg-[#ededf2]"
           }`}
         >
-          <GraduationCap className="w-4 h-4" />
-          {isTutorMode ? "Tutor Mode: ON" : "Tutor Mode: OFF"}
+          <GraduationCap className="w-3.5 h-3.5" />
+          {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
         </button>
 
-        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
-          <Shield className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-[11px] px-3 py-1.5">
+          <Shield className="w-3.5 h-3.5 text-[#0071e3]" />
           <select
             value={currentRole}
             onChange={(e) => setCurrentRole(e.target.value as Role)}
-            className="text-sm font-medium bg-transparent border-none focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#1d1d1f]/80 cursor-pointer"
           >
             <option value="User">User View</option>
             <option value="Admin">Admin View</option>
@@ -89,27 +89,27 @@ const TopNav = () => {
         </div>
 
         <div className="relative hidden md:block">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
           <input
             type="text"
-            placeholder="Search anything..."
-            className="pl-10 pr-4 py-2 bg-gray-100/50 border-none rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-48 transition-all"
+            placeholder="Search..."
+            className="pl-9 pr-4 py-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-full text-xs text-[#1d1d1f] placeholder:text-[#1d1d1f]/30 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/25 w-44 transition-all"
           />
         </div>
 
-        <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+        <button className="relative p-2 text-[#1d1d1f]/35 hover:text-[#1d1d1f]/70 transition-colors">
+          <Bell className="w-4 h-4" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
         </button>
 
-        <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
+        <div className="flex items-center gap-2.5 pl-4 border-l border-[#1d1d1f]/08">
           <div className="text-right hidden md:block">
-            <div className="text-sm font-semibold text-gray-900">
+            <div className="text-xs font-semibold text-[#1d1d1f]" style={{ letterSpacing: '-0.224px' }}>
               {userEmail || "Not signed in"}
             </div>
-            <div className="text-xs text-gray-500">{currentRole}</div>
+            <div className="text-[10px] text-[#1d1d1f]/45">{currentRole}</div>
           </div>
-          <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-primary text-white flex items-center justify-center text-sm font-bold uppercase">
+          <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white flex items-center justify-center text-xs font-semibold uppercase">
             {userEmail ? userEmail[0] : "?"}
           </div>
         </div>

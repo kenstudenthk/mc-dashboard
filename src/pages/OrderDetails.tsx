@@ -52,11 +52,9 @@ const InfoField = ({
   label: string;
   value: React.ReactNode;
 }) => (
-  <div className="py-3 border-b border-gray-50 last:border-0">
-    <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-      {label}
-    </dt>
-    <dd className="text-sm font-medium text-gray-900">{value || "—"}</dd>
+  <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
+    <dt className="label-text text-[#1d1d1f]/35 mb-1">{label}</dt>
+    <dd className="text-sm font-medium text-[#1d1d1f]">{value || "—"}</dd>
   </div>
 );
 
@@ -83,7 +81,7 @@ const OrderDetails = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-gray-400">
+      <div className="flex items-center justify-center py-24 text-[#1d1d1f]/30 text-sm">
         Loading…
       </div>
     );
@@ -91,74 +89,69 @@ const OrderDetails = () => {
 
   if (error || !order) {
     return (
-      <div className="flex items-center justify-center py-24 text-red-500">
+      <div className="flex items-center justify-center py-24 text-red-500 text-sm">
         {error ?? "Order not found."}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-5 max-w-6xl mx-auto pb-12">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
             to="/orders"
-            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-4 h-4 text-[#1d1d1f]/60" />
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-serif font-bold text-gray-900">
+              <h1
+                className="text-[28px] font-semibold text-[#1d1d1f]"
+                style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+              >
                 {order.Title}
               </h1>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.Status)}`}
-              >
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}>
                 {order.Status}
               </span>
             </div>
-            <p className="text-gray-500 mt-1">SRD: {formatDate(order.SRD)}</p>
+            <p className="text-sm text-[#1d1d1f]/45 mt-1">SRD: {formatDate(order.SRD)}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600">
-            <Printer className="w-5 h-5" />
+        <div className="flex items-center gap-2">
+          <button className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50">
+            <Printer className="w-4 h-4" />
           </button>
-          <button className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600">
-            <Download className="w-5 h-5" />
+          <button className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50">
+            <Download className="w-4 h-4" />
           </button>
-          <TutorTooltip
-            text="Click here to modify the details of this order."
-            position="bottom"
-          >
-            <button className="gradient-cta px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-primary/20">
+          <TutorTooltip text="Click here to modify the details of this order." position="bottom">
+            <button className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm">
               Edit Order
             </button>
           </TutorTooltip>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-5">
           <TutorTooltip
             text="This section contains the core technical details about the cloud service provisioned for this order."
             position="top"
           >
             <div className="card p-6">
-              <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-4">
-                <Server className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-serif font-bold text-gray-900">
+              <div className="flex items-center gap-2 mb-4 border-b border-[#1d1d1f]/06 pb-4">
+                <Server className="w-4 h-4 text-[#0071e3]" />
+                <h2 className="text-[17px] font-semibold text-[#1d1d1f]">
                   Cloud Service Details
                 </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <dl>
-                  <InfoField
-                    label="Product Subscribe"
-                    value={order.CloudProvider}
-                  />
+                  <InfoField label="Product Subscribe" value={order.CloudProvider} />
                   <InfoField label="Order Type" value={order.OrderType} />
                   <InfoField label="Service Type" value="—" />
                   <InfoField
@@ -167,14 +160,8 @@ const OrderDetails = () => {
                   />
                 </dl>
                 <dl>
-                  <InfoField
-                    label="Account ID / Root ID / UID"
-                    value={order.AccountID}
-                  />
-                  <InfoField
-                    label="Account Name / Cloud Checker Name"
-                    value="—"
-                  />
+                  <InfoField label="Account ID / Root ID / UID" value={order.AccountID} />
+                  <InfoField label="Account Name / Cloud Checker Name" value="—" />
                   <InfoField label="Account Login Email" value="—" />
                   <InfoField label="Other Account Information" value="—" />
                 </dl>
@@ -183,9 +170,9 @@ const OrderDetails = () => {
           </TutorTooltip>
 
           <div className="card p-6">
-            <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-4">
-              <FileText className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-serif font-bold text-gray-900">
+            <div className="flex items-center gap-2 mb-4 border-b border-[#1d1d1f]/06 pb-4">
+              <FileText className="w-4 h-4 text-[#0071e3]" />
+              <h2 className="text-[17px] font-semibold text-[#1d1d1f]">
                 Provisioning & Tracking
               </h2>
             </div>
@@ -207,65 +194,46 @@ const OrderDetails = () => {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
-          <TutorTooltip
-            text="Quick details about the customer associated with this order."
-            position="left"
-          >
+        <div className="space-y-5">
+          <TutorTooltip text="Quick details about the customer associated with this order." position="left">
             <div className="card p-6">
-              <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-4">
-                <Building className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-serif font-bold text-gray-900">
-                  Customer
-                </h2>
+              <div className="flex items-center gap-2 mb-4 border-b border-[#1d1d1f]/06 pb-4">
+                <Building className="w-4 h-4 text-[#0071e3]" />
+                <h2 className="text-[17px] font-semibold text-[#1d1d1f]">Customer</h2>
               </div>
               <Link
                 to={`/customers/${order.CustomerID}`}
-                className="text-base font-medium text-primary hover:underline transition-colors block mb-3"
+                className="text-sm font-semibold text-[#0071e3] hover:underline transition-colors block mb-2"
               >
                 {order.CustomerName}
               </Link>
-              <p className="text-xs text-gray-400">ID #{order.CustomerID}</p>
+              <p className="text-xs text-[#1d1d1f]/35">ID #{order.CustomerID}</p>
             </div>
           </TutorTooltip>
 
-          <TutorTooltip
-            text="A chronological view of the order's lifecycle."
-            position="left"
-          >
+          <TutorTooltip text="A chronological view of the order's lifecycle." position="left">
             <div className="card p-6">
-              <h2 className="text-lg font-serif font-bold text-gray-900 mb-4">
-                Timeline
-              </h2>
+              <h2 className="text-[17px] font-semibold text-[#1d1d1f] mb-4">Timeline</h2>
               {timeline.length === 0 ? (
-                <p className="text-sm text-gray-400">No timeline events yet.</p>
+                <p className="text-sm text-[#1d1d1f]/30">No timeline events yet.</p>
               ) : (
-                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
+                <div className="space-y-5 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#1d1d1f]/10 before:to-transparent">
                   {timeline.map((event) => (
-                    <div
-                      key={event.id}
-                      className="relative flex items-start gap-4"
-                    >
+                    <div key={event.id} className="relative flex items-start gap-4">
                       <div
-                        className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-white shadow shrink-0 z-10 ${event.Completed ? "bg-green-500" : "bg-blue-400"}`}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-white shadow shrink-0 z-10 ${event.Completed ? "bg-green-500" : "bg-[#0071e3]"}`}
                       >
                         {event.Completed ? (
-                          <CheckCircle className="w-5 h-5" />
+                          <CheckCircle className="w-4 h-4" />
                         ) : (
-                          <Clock className="w-5 h-5" />
+                          <Clock className="w-4 h-4" />
                         )}
                       </div>
                       <div className="pt-2">
-                        <div className="font-bold text-gray-900 text-sm">
-                          {event.Title}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {formatDate(event.EventDate)}
-                        </div>
+                        <div className="font-semibold text-[#1d1d1f] text-sm">{event.Title}</div>
+                        <div className="text-xs text-[#1d1d1f]/45">{formatDate(event.EventDate)}</div>
                         {event.Description && (
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {event.Description}
-                          </div>
+                          <div className="text-xs text-[#1d1d1f]/45 mt-0.5">{event.Description}</div>
                         )}
                       </div>
                     </div>
