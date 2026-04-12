@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Filter, MoreHorizontal, Eye, Search } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { orderService, Order } from "../services/orderService";
+import { customerService, Customer } from "../services/customerService";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -23,13 +24,22 @@ const OrderRegistry = () => {
   const [providerFilter, setProviderFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [customerMap, setCustomerMap] = useState<Map<string, number>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    orderService
-      .findAll()
-      .then((result) => setAllOrders(Array.isArray(result) ? result : []))
+    Promise.all([orderService.findAll(), customerService.findAll()])
+      .then(([orders, customers]) => {
+        setAllOrders(Array.isArray(orders) ? orders : []);
+        const map = new Map<string, number>();
+        (Array.isArray(customers) ? customers : []).forEach((c: Customer) => {
+          if (c.Title) map.set(c.Title.toLowerCase(), c.id);
+        });
+        setCustomerMap(map);
+      })
       .catch(() => setError("Failed to load orders. Please try again."))
       .finally(() => setLoading(false));
   }, []);
@@ -222,7 +232,7 @@ const OrderRegistry = () => {
                   Order Type
                 </th>
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
-                  Receive Date
+                  SRD
                 </th>
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
                   Status
@@ -259,9 +269,11 @@ const OrderRegistry = () => {
                         <Link to={`/orders/${order.Title}`}>{order.Title}</Link>
                       </td>
                       <td className="px-6 py-3.5 text-sm">
-                        {order.CustomerID ? (
+                        {customerMap.get(
+                          (order.CustomerName ?? "").toLowerCase(),
+                        ) ? (
                           <Link
-                            to={`/customers/${order.CustomerID}`}
+                            to={`/customers/${customerMap.get((order.CustomerName ?? "").toLowerCase())}`}
                             className={`hover:underline transition-colors ${isTerminated ? "text-red-500 hover:text-red-700" : "text-[#1d1d1f]/70 hover:text-[#0071e3]"}`}
                           >
                             {order.CustomerName}
