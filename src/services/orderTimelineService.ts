@@ -3,7 +3,7 @@ const URL = import.meta.env.VITE_API_ORDER_TIMELINE_URL as string;
 export interface TimelineEvent {
   id: number;
   Title: string;
-  OrderID: string;
+  OrderId: string;
   EventDate: string;
   Description: string;
   Completed: boolean;
@@ -11,7 +11,7 @@ export interface TimelineEvent {
 
 export interface AddEventInput {
   Title: string;
-  OrderID: string;
+  OrderId: string;
   EventDate: string;
   Description: string;
   Completed: boolean;
