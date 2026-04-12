@@ -119,9 +119,10 @@ const NewOrder = () => {
     try {
       const cloudProvider =
         CLOUD_PROVIDER_MAP[productSubscribe] || productSubscribe;
-      const order = await orderService.create(
+      const title = isPreProvision ? "TBC" : serviceNo;
+      await orderService.create(
         {
-          Title: isPreProvision ? "TBC" : serviceNo,
+          Title: title,
           CustomerName: companyName,
           OrderType: orderType,
           Status: status,
@@ -133,14 +134,15 @@ const NewOrder = () => {
         userEmail,
       );
       setSubmitSuccess(true);
-      setTimeout(() => navigate(`/orders/${order.Title}`), 800);
+      setTimeout(() => navigate(`/orders/${title}`), 800);
     } catch {
       setSubmitError("Failed to create order. Please try again.");
       setSubmitting(false);
     }
   };
 
-  const sectionHeaderClass = "text-[17px] font-semibold text-[#1d1d1f] mb-5 border-b border-[#1d1d1f]/06 pb-4";
+  const sectionHeaderClass =
+    "text-[17px] font-semibold text-[#1d1d1f] mb-5 border-b border-[#1d1d1f]/06 pb-4";
   const cardClass = "card p-8";
 
   return (
@@ -266,7 +268,10 @@ const NewOrder = () => {
               />
             </TutorTooltip>
             <InputGroup label="Service Type" placeholder="e.g. Offset Amount" />
-            <InputGroup label="OASIS Number" placeholder="e.g. CB23-00007546\1" />
+            <InputGroup
+              label="OASIS Number"
+              placeholder="e.g. CB23-00007546\1"
+            />
             <InputGroup label="Order Receive Date" placeholder="DD-MMM-YY" />
             <InputGroup
               label="SRD"
@@ -323,7 +328,9 @@ const NewOrder = () => {
               />
             </div>
             <div className="md:col-span-3 space-y-1.5">
-              <label className="label-text text-[#1d1d1f]/45">Billing Address</label>
+              <label className="label-text text-[#1d1d1f]/45">
+                Billing Address
+              </label>
               <textarea
                 className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[80px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                 placeholder="Enter full billing address"
@@ -357,15 +364,25 @@ const NewOrder = () => {
 
             {productSubscribe === "AWS (Amazon Web Service)" && (
               <>
-                <InputGroup label="Billing Account / Master Account" placeholder="e.g. 7.59168E+11" />
+                <InputGroup
+                  label="Billing Account / Master Account"
+                  placeholder="e.g. 7.59168E+11"
+                />
                 <InputGroup
                   label="Account ID / Root ID"
                   placeholder="e.g. 74430167128"
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup label="Account Name / Cloud Checker Name" placeholder="e.g. CL545725" />
-                <InputGroup label="Account Login Email" type="email" placeholder="admin@example.com" />
+                <InputGroup
+                  label="Account Name / Cloud Checker Name"
+                  placeholder="e.g. CL545725"
+                />
+                <InputGroup
+                  label="Account Login Email"
+                  type="email"
+                  placeholder="admin@example.com"
+                />
               </>
             )}
 
@@ -377,7 +394,11 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
+                <InputGroup
+                  label="Admin Email"
+                  type="email"
+                  placeholder="admin@example.com"
+                />
               </>
             )}
 
@@ -389,9 +410,19 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup label="Azure Subscription ID" placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128" />
-                <InputGroup label="Primary Domain" placeholder="e.g. example.onmicrosoft.com" />
-                <InputGroup label="Admin Email" type="email" placeholder="admin@example.onmicrosoft.com" />
+                <InputGroup
+                  label="Azure Subscription ID"
+                  placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128"
+                />
+                <InputGroup
+                  label="Primary Domain"
+                  placeholder="e.g. example.onmicrosoft.com"
+                />
+                <InputGroup
+                  label="Admin Email"
+                  type="email"
+                  placeholder="admin@example.onmicrosoft.com"
+                />
               </>
             )}
 
@@ -403,7 +434,11 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
+                <InputGroup
+                  label="Login Email"
+                  type="email"
+                  placeholder="admin@example.com"
+                />
               </>
             )}
 
@@ -415,7 +450,11 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" />
+                <InputGroup
+                  label="Admin Email"
+                  type="email"
+                  placeholder="admin@example.com"
+                />
               </>
             )}
 
@@ -427,7 +466,11 @@ const NewOrder = () => {
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                 />
-                <InputGroup label="Login Email" type="email" placeholder="admin@example.com" />
+                <InputGroup
+                  label="Login Email"
+                  type="email"
+                  placeholder="admin@example.com"
+                />
               </>
             )}
 
@@ -439,9 +482,15 @@ const NewOrder = () => {
 
             {productSubscribe && (
               <>
-                <InputGroup label="Password" type="password" placeholder="••••••••" />
+                <InputGroup
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                />
                 <div className="md:col-span-2 space-y-1.5">
-                  <label className="label-text text-[#1d1d1f]/45">Other Account Information</label>
+                  <label className="label-text text-[#1d1d1f]/45">
+                    Other Account Information
+                  </label>
                   <textarea
                     className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[80px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                     placeholder="Domain names, additional IDs, etc."
@@ -456,15 +505,27 @@ const NewOrder = () => {
         <div className={cardClass}>
           <h2 className={sectionHeaderClass}>Provisioning & Tracking</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <InputGroup label="CxS Request No." placeholder="e.g. RN822908/1-2" />
+            <InputGroup
+              label="CxS Request No."
+              placeholder="e.g. RN822908/1-2"
+            />
             <InputGroup label="TID" placeholder="e.g. 103690" />
             <InputGroup label="SD Number" placeholder="e.g. SD11652876" />
-            <SelectGroup label="PS Job (Y/N)" options={["Y", "N", "Yes", "No"]} />
+            <SelectGroup
+              label="PS Job (Y/N)"
+              options={["Y", "N", "Yes", "No"]}
+            />
             <SelectGroup label="T2/ T3" options={["T1", "T2", "T3", "N/A"]} />
-            <SelectGroup label="Welcome Letter (Yes / No)" options={["Yes", "No"]} />
+            <SelectGroup
+              label="Welcome Letter (Yes / No)"
+              options={["Yes", "No"]}
+            />
             <InputGroup label="By" placeholder="e.g. Kilson, Helen, Hin" />
             <div className="md:col-span-2">
-              <InputGroup label="Order Form (URL)" placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..." />
+              <InputGroup
+                label="Order Form (URL)"
+                placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..."
+              />
             </div>
             <div className="md:col-span-3 space-y-1.5">
               <label className="label-text text-[#1d1d1f]/45">Remark</label>

@@ -33,9 +33,32 @@ async function call<T>(body: object): Promise<T> {
   return json as T;
 }
 
+function unwrap(val: unknown): unknown {
+  if (val != null && typeof val === "object" && "Value" in (val as object)) {
+    return (val as { Value: unknown }).Value;
+  }
+  return val;
+}
+
+function normalizeEvent(item: Record<string, unknown>): TimelineEvent {
+  return {
+    id: (item.ID ?? item.id) as number,
+    Title: unwrap(item.Title) as string,
+    OrderId: unwrap(item.OrderId) as string,
+    EventDate: unwrap(item.EventDate) as string,
+    Description: unwrap(item.Description) as string,
+    Completed: unwrap(item.Completed) as boolean,
+  };
+}
+
 export const orderTimelineService = {
-  getByOrder: (orderID: string) =>
-    call<TimelineEvent[]>({ action: "GET_BY_ORDER", data: { orderID } }),
+  getByOrder: async (orderID: string) => {
+    const items = await call<Record<string, unknown>[]>({
+      action: "GET_BY_ORDER",
+      data: { orderID },
+    });
+    return items.map(normalizeEvent);
+  },
 
   addEvent: (data: AddEventInput, userEmail: string) =>
     call<TimelineEvent>({ action: "ADD_EVENT", data, userEmail }),
