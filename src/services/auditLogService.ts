@@ -18,6 +18,19 @@ export interface CreateAuditLogInput {
   Details: string;
 }
 
+function normalizeChoiceFields<T>(data: T): T {
+  if (Array.isArray(data)) return data.map(normalizeChoiceFields) as T;
+  if (data !== null && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    if ("Value" in obj && typeof obj["Value"] === "string")
+      return obj["Value"] as T;
+    return Object.fromEntries(
+      Object.entries(obj).map(([k, v]) => [k, normalizeChoiceFields(v)]),
+    ) as T;
+  }
+  return data;
+}
+
 async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
@@ -28,10 +41,11 @@ async function call<T>(body: object): Promise<T> {
   const json = await res.json();
   if (json != null && typeof json === "object" && "success" in json) {
     if (!json.success) throw new Error(json.error?.message ?? "API error");
-    if (Array.isArray(json.data?.value)) return json.data.value as T;
-    if (json.data != null) return json.data as T;
+    if (Array.isArray(json.data?.value))
+      return normalizeChoiceFields(json.data.value as T);
+    if (json.data != null) return normalizeChoiceFields(json.data as T);
   }
-  return json as T;
+  return normalizeChoiceFields(json as T);
 }
 
 export const auditLogService = {

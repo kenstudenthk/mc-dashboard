@@ -145,29 +145,48 @@ const AuditLog = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-[#1d1d1f]/06">
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">Date & Time</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">User</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-32">Action</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-40">Service No.</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Details (What changed)</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">
+                  Date & Time
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">
+                  User
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-32">
+                  Action
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-40">
+                  Service No.
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Details (What changed)
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
+                  >
                     Loading audit logs…
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-red-500 text-sm">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-red-500 text-sm"
+                  >
                     {error}
                   </td>
                 </tr>
               ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors">
+                  <tr
+                    key={log.id}
+                    className="border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors"
+                  >
                     <td className="px-6 py-3.5 text-xs text-[#1d1d1f]/45 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-[#1d1d1f]/25" />
@@ -177,30 +196,39 @@ const AuditLog = () => {
                     <td className="px-6 py-3.5 text-xs font-medium text-[#1d1d1f]">
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center text-[10px] font-bold">
-                          {log.UserEmail.charAt(0).toUpperCase()}
+                          {log.UserEmail?.charAt(0).toUpperCase() ?? "?"}
                         </div>
-                        {log.UserEmail}
+                        {log.UserEmail ?? "—"}
                       </div>
                     </td>
                     <td className="px-6 py-3.5">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getActionColor(log.Action)}`}>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getActionColor(log.Action)}`}
+                      >
                         {getActionIcon(log.Action)}
                         {log.Action}
                       </span>
                     </td>
                     <td className="px-6 py-3.5 text-xs font-semibold text-[#0071e3] hover:underline">
                       {log.TargetID ? (
-                        <Link to={`/orders/${log.TargetID}`}>{log.TargetID}</Link>
+                        <Link to={`/orders/${log.TargetID}`}>
+                          {log.TargetID}
+                        </Link>
                       ) : (
                         <span className="text-[#1d1d1f]/25">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-xs text-[#1d1d1f]/60">{log.Details}</td>
+                    <td className="px-6 py-3.5 text-xs text-[#1d1d1f]/60">
+                      {log.Details}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
+                  >
                     No audit logs found matching your filters.
                   </td>
                 </tr>
@@ -212,11 +240,19 @@ const AuditLog = () => {
         <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
           <div>Showing {filteredLogs.length} entries</div>
           <div className="flex gap-1">
-            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
+            <button
+              className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
+              disabled
+            >
               Prev
             </button>
-            <button className="px-3 py-1 bg-[#0071e3] text-white rounded-lg text-xs font-medium">1</button>
-            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
+            <button className="px-3 py-1 bg-[#0071e3] text-white rounded-lg text-xs font-medium">
+              1
+            </button>
+            <button
+              className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
+              disabled
+            >
               Next
             </button>
           </div>
