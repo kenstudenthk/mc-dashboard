@@ -37,12 +37,18 @@ function normalizeChoiceFields<T>(data: T): T {
   return data;
 }
 
-// Maps SharePoint "ID" → "id" so the interface's `id` field is always populated.
+// Maps SharePoint "ID" → "id" and lookup ID fields to their base names.
+// SharePoint lookup columns return the numeric ID as "<FieldName>Id" (e.g. CustomerIDId → CustomerID).
 function withId(data: unknown): unknown {
   if (Array.isArray(data)) return data.map(withId);
   if (data !== null && typeof data === "object") {
     const obj = data as Record<string, unknown>;
-    if ("ID" in obj) return { ...obj, id: obj.ID };
+    const result: Record<string, unknown> = { ...obj };
+    if ("ID" in obj) result.id = obj.ID;
+    // Prefer the raw lookup ID over the normalised choice value
+    if ("CustomerIDId" in obj && obj.CustomerIDId != null)
+      result.CustomerID = obj.CustomerIDId;
+    return result;
   }
   return data;
 }

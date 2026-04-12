@@ -85,6 +85,8 @@ const NewOrder = () => {
   const [productSubscribe, setProductSubscribe] = useState("");
   const [orderType, setOrderType] = useState("");
   const [srd, setSrd] = useState("");
+  const [orderReceiveDate, setOrderReceiveDate] = useState("");
+  const [cxsCompleteDate, setCxsCompleteDate] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
@@ -113,6 +115,10 @@ const NewOrder = () => {
     }
     if (!isPreProvision && !serviceNo) {
       setSubmitError("Service No. is required.");
+      return;
+    }
+    if (!srd) {
+      setSubmitError("SRD is required.");
       return;
     }
 
@@ -148,7 +154,7 @@ const NewOrder = () => {
           CustomerID: resolvedCustomerId ?? undefined,
           OrderType: orderType,
           Status: status,
-          SRD: srd || undefined,
+          SRD: srd,
           CloudProvider: cloudProvider,
           Amount: parseFloat(amount) || 0,
           AccountID: accountId || undefined,
@@ -294,14 +300,24 @@ const NewOrder = () => {
               label="OASIS Number"
               placeholder="e.g. CB23-00007546\1"
             />
-            <InputGroup label="Order Receive Date" placeholder="DD-MMM-YY" />
             <InputGroup
-              label="SRD"
-              placeholder="DD-MMM-YY"
+              label="Order Receive Date"
+              type="date"
+              value={orderReceiveDate}
+              onChange={(e) => setOrderReceiveDate(e.target.value)}
+            />
+            <InputGroup
+              label="SRD *"
+              type="date"
               value={srd}
               onChange={(e) => setSrd(e.target.value)}
             />
-            <InputGroup label="CxS Complete Date" placeholder="DD-MMM-YY" />
+            <InputGroup
+              label="CxS Complete Date"
+              type="date"
+              value={cxsCompleteDate}
+              onChange={(e) => setCxsCompleteDate(e.target.value)}
+            />
             <InputGroup
               label="Amount"
               type="number"
