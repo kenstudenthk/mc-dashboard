@@ -142,7 +142,40 @@ Display all new fields in the order detail view once they are available from the
 
 ---
 
+## Phase 2: ServiceAccounts List (To Discuss Later)
+
+### Decision Made
+
+Use **1 single `ServiceAccounts` list** (not 6 separate lists per provider).
+
+**Reason:** Only 3–4 columns are truly provider-specific. Shared fields (LoginEmail, Password, OtherInfo) cover 99% of all providers. One list means simpler PA Flow and a single Lookup from Orders.
+
+### Columns for `ServiceAccounts` List
+
+| Column Name       | SP Type                | Notes                                                        | Status     |
+|-------------------|------------------------|--------------------------------------------------------------|------------|
+| `Title`           | Single line of text    | Auto or descriptive name for the account record              | ✅ Default |
+| `OrderID`         | Lookup (→ Orders)      | Links account back to the order                              | ❌ Create  |
+| `Provider`        | Choice                 | AWS, Microsoft Azure, AliCloud, Huawei Cloud, GCP, Tencent   | ❌ Create  |
+| `PrimaryAccountID`| Single line of text    | AWS: Root ID / Azure: Tenant ID / AliCloud: UID / etc.       | ❌ Create  |
+| `SecondaryID`     | Single line of text    | AWS: Billing/Master Account / Azure: Subscription ID         | ❌ Create  |
+| `AccountName`     | Single line of text    | AWS: Cloud Checker Name / others: leave blank                | ❌ Create  |
+| `Domain`          | Single line of text    | Azure: Primary Domain / others: leave blank                  | ❌ Create  |
+| `LoginEmail`      | Single line of text    | Admin login email                                            | ❌ Create  |
+| `Password`        | Single line of text    | ⚠️ Restrict list permissions to authorised staff only        | ❌ Create  |
+| `OtherInfo`       | Multiple lines of text | Domain names, additional IDs, misc notes                     | ❌ Create  |
+
+### Next Steps (when ready)
+
+1. Create the `ServiceAccounts` list in SharePoint with the columns above
+2. Create a new PA Flow for ServiceAccounts (Create / Get)
+3. Add `src/services/serviceAccountService.ts`
+4. Wire up Cloud Service Details section in `NewOrder.tsx` to save to this list
+5. Display linked account on `OrderDetails.tsx`
+
+---
+
 ## Open Questions / Decisions Needed
 
-- [ ] **Password security**: Should `Password` be stored in the main Orders list, or in a separate secured SharePoint list with restricted permissions?
+- [ ] **Password security**: Restrict `ServiceAccounts` list permissions so only authorised staff can view the Password column.
 - [ ] **OrderDetails layout**: How should the new fields be grouped/displayed on the detail page?
