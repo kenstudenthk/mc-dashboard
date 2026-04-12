@@ -47,7 +47,7 @@ const OrderRegistry = () => {
 
     if (
       providerFilter !== "All" &&
-      !order.CloudProvider.includes(providerFilter)
+      !(order.CloudProvider ?? "").includes(providerFilter)
     ) {
       return false;
     }
@@ -55,8 +55,8 @@ const OrderRegistry = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       if (
-        !order.Title.toLowerCase().includes(query) &&
-        !order.CustomerName.toLowerCase().includes(query) &&
+        !(order.Title ?? "").toLowerCase().includes(query) &&
+        !(order.CustomerName ?? "").toLowerCase().includes(query) &&
         !(order.AccountID && order.AccountID.toLowerCase().includes(query))
       ) {
         return false;
@@ -206,20 +206,39 @@ const OrderRegistry = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-[#1d1d1f]/06">
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Service No.</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Company Name</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Product Subscribe</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Account ID</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Order Type</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Receive Date</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">Status</th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 text-right">Actions</th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Service No.
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Company Name
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Product Subscribe
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Account ID
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Order Type
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Receive Date
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Status
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
+                  <td
+                    colSpan={8}
+                    className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
+                  >
                     Loading orders…
                   </td>
                 </tr>
@@ -234,18 +253,34 @@ const OrderRegistry = () => {
                       key={order.id}
                       className={`border-b border-[#1d1d1f]/04 transition-colors group ${isTerminated ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-[#f5f5f7]"}`}
                     >
-                      <td className={`px-6 py-3.5 text-xs font-semibold hover:underline ${isTerminated ? "text-red-600" : "text-[#0071e3]"}`}>
+                      <td
+                        className={`px-6 py-3.5 text-xs font-semibold hover:underline ${isTerminated ? "text-red-600" : "text-[#0071e3]"}`}
+                      >
                         <Link to={`/orders/${order.Title}`}>{order.Title}</Link>
                       </td>
                       <td className="px-6 py-3.5 text-sm">
-                        <Link
-                          to={`/customers/${order.CustomerID}`}
-                          className={`hover:underline transition-colors ${isTerminated ? "text-red-500 hover:text-red-700" : "text-[#1d1d1f]/70 hover:text-[#0071e3]"}`}
-                        >
-                          {order.CustomerName}
-                        </Link>
+                        {order.CustomerID ? (
+                          <Link
+                            to={`/customers/${order.CustomerID}`}
+                            className={`hover:underline transition-colors ${isTerminated ? "text-red-500 hover:text-red-700" : "text-[#1d1d1f]/70 hover:text-[#0071e3]"}`}
+                          >
+                            {order.CustomerName}
+                          </Link>
+                        ) : (
+                          <span
+                            className={
+                              isTerminated
+                                ? "text-red-500"
+                                : "text-[#1d1d1f]/70"
+                            }
+                          >
+                            {order.CustomerName}
+                          </span>
+                        )}
                       </td>
-                      <td className={`px-6 py-3.5 text-sm font-medium ${isTerminated ? "text-red-600" : "text-[#1d1d1f]"}`}>
+                      <td
+                        className={`px-6 py-3.5 text-sm font-medium ${isTerminated ? "text-red-600" : "text-[#1d1d1f]"}`}
+                      >
                         {order.CloudProvider}
                         {isTerminated && (
                           <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -259,14 +294,20 @@ const OrderRegistry = () => {
                       >
                         {order.AccountID ?? "—"}
                       </td>
-                      <td className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"}`}>
+                      <td
+                        className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"}`}
+                      >
                         {order.OrderType}
                       </td>
-                      <td className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"}`}>
+                      <td
+                        className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"}`}
+                      >
                         {formatDate(order.SRD)}
                       </td>
                       <td className="px-6 py-3.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}
+                        >
                           {order.Status}
                         </span>
                       </td>
@@ -290,7 +331,10 @@ const OrderRegistry = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm">
+                  <td
+                    colSpan={8}
+                    className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
+                  >
                     No orders found matching your filters.
                   </td>
                 </tr>
@@ -302,13 +346,19 @@ const OrderRegistry = () => {
         <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
           <div>Showing {filteredOrders.length} entries</div>
           <div className="flex gap-1">
-            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
+            <button
+              className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
+              disabled
+            >
               Prev
             </button>
             <button className="px-3 py-1 bg-[#0071e3] text-white rounded-lg text-xs font-medium">
               1
             </button>
-            <button className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60" disabled>
+            <button
+              className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
+              disabled
+            >
               Next
             </button>
           </div>

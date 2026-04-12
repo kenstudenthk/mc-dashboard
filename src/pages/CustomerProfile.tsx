@@ -55,7 +55,11 @@ const CustomerProfile = () => {
   const [notesData, setNotesData] = useState("");
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || isNaN(Number(id))) {
+      setError("Invalid customer ID.");
+      setLoading(false);
+      return;
+    }
     Promise.all([customerService.findById(Number(id)), orderService.findAll()])
       .then(([cust, allOrders]) => {
         setCustomer(cust);
@@ -119,9 +123,11 @@ const CustomerProfile = () => {
               className="text-[28px] font-semibold text-[#1d1d1f]"
               style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
             >
-              {customer.Title}
+              {customer.Title || customer.Company || `Customer #${customer.id}`}
             </h1>
-            <p className="text-sm text-[#1d1d1f]/45 mt-1">Customer ID: #{customer.id}</p>
+            <p className="text-sm text-[#1d1d1f]/45 mt-1">
+              Customer ID: #{customer.id}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -143,7 +149,10 @@ const CustomerProfile = () => {
               </button>
             </>
           ) : (
-            <TutorTooltip text="Click here to edit the customer's contact information." position="bottom">
+            <TutorTooltip
+              text="Click here to edit the customer's contact information."
+              position="bottom"
+            >
               <button
                 onClick={() => setIsEditing(true)}
                 className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50"
@@ -153,7 +162,10 @@ const CustomerProfile = () => {
               </button>
             </TutorTooltip>
           )}
-          <TutorTooltip text="Quickly start a new order specifically for this customer." position="bottom">
+          <TutorTooltip
+            text="Quickly start a new order specifically for this customer."
+            position="bottom"
+          >
             <Link
               to="/orders/new"
               className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm inline-flex items-center"
@@ -170,7 +182,9 @@ const CustomerProfile = () => {
           <div className="card p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-14 h-14 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-xl">
-                {customer.Title.substring(0, 2).toUpperCase()}
+                {(customer.Title || customer.Company || "??")
+                  .substring(0, 2)
+                  .toUpperCase()}
               </div>
               <div>
                 <span
@@ -189,13 +203,19 @@ const CustomerProfile = () => {
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
                     />
                   ) : (
-                    <div className="text-sm font-medium text-[#1d1d1f]">{formData.email || "—"}</div>
+                    <div className="text-sm font-medium text-[#1d1d1f]">
+                      {formData.email || "—"}
+                    </div>
                   )}
-                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">Email Address</div>
+                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
+                    Email Address
+                  </div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -205,13 +225,19 @@ const CustomerProfile = () => {
                     <input
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
                       className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
                     />
                   ) : (
-                    <div className="text-sm font-medium text-[#1d1d1f]">{formData.phone || "—"}</div>
+                    <div className="text-sm font-medium text-[#1d1d1f]">
+                      {formData.phone || "—"}
+                    </div>
                   )}
-                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">Phone Number</div>
+                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
+                    Phone Number
+                  </div>
                 </div>
               </div>
             </div>
@@ -220,7 +246,9 @@ const CustomerProfile = () => {
           {serviceBreakdown.length > 0 && (
             <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-[#1d1d1f]">Service Distribution</h3>
+                <h3 className="text-sm font-semibold text-[#1d1d1f]">
+                  Service Distribution
+                </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-[#0071e3]">
                   Total: {totalOrders}
                 </span>
@@ -229,10 +257,16 @@ const CustomerProfile = () => {
                 {serviceBreakdown.map((service, idx) => (
                   <div key={idx} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${service.color}`}></div>
-                      <span className="text-sm text-[#1d1d1f]/70">{service.name}</span>
+                      <div
+                        className={`w-2 h-2 rounded-full ${service.color}`}
+                      ></div>
+                      <span className="text-sm text-[#1d1d1f]/70">
+                        {service.name}
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-[#1d1d1f]">{service.count}</span>
+                    <span className="text-sm font-semibold text-[#1d1d1f]">
+                      {service.count}
+                    </span>
                   </div>
                 ))}
                 {totalOrders > 0 && (
@@ -241,7 +275,9 @@ const CustomerProfile = () => {
                       <div
                         key={idx}
                         className={`h-full ${service.color}`}
-                        style={{ width: `${(service.count / totalOrders) * 100}%` }}
+                        style={{
+                          width: `${(service.count / totalOrders) * 100}%`,
+                        }}
                         title={`${service.name}: ${service.count}`}
                       ></div>
                     ))}
@@ -252,23 +288,38 @@ const CustomerProfile = () => {
           )}
 
           <div className="card p-5 grid grid-cols-2 gap-3">
-            <TutorTooltip text="Total number of orders placed by this customer." position="bottom">
+            <TutorTooltip
+              text="Total number of orders placed by this customer."
+              position="bottom"
+            >
               <div className="p-4 bg-[#f5f5f7] rounded-lg">
                 <div className="flex items-center gap-1.5 text-[#1d1d1f]/45 mb-2">
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">Orders</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">
+                    Orders
+                  </span>
                 </div>
-                <div className="text-2xl font-semibold text-[#1d1d1f]">{totalOrders}</div>
+                <div className="text-2xl font-semibold text-[#1d1d1f]">
+                  {totalOrders}
+                </div>
               </div>
             </TutorTooltip>
-            <TutorTooltip text="Total amount spent by this customer across all orders." position="bottom">
+            <TutorTooltip
+              text="Total amount spent by this customer across all orders."
+              position="bottom"
+            >
               <div className="p-4 bg-[#f5f5f7] rounded-lg">
                 <div className="flex items-center gap-1.5 text-[#1d1d1f]/45 mb-2">
                   <DollarSign className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">Spent</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">
+                    Spent
+                  </span>
                 </div>
                 <div className="text-xl font-semibold text-[#1d1d1f]">
-                  ${totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  $
+                  {totalSpent.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
                 </div>
               </div>
             </TutorTooltip>
@@ -285,7 +336,9 @@ const CustomerProfile = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-amber-700">
                   <StickyNote className="w-4 h-4" />
-                  <h2 className="text-[17px] font-semibold">Special Notes & Instructions</h2>
+                  <h2 className="text-[17px] font-semibold">
+                    Special Notes & Instructions
+                  </h2>
                 </div>
                 <div className="flex items-center gap-2">
                   {isEditingNotes ? (
@@ -331,7 +384,8 @@ const CustomerProfile = () => {
                       notesData
                     ) : (
                       <span className="text-[#1d1d1f]/30 italic">
-                        No special notes added for this customer yet. Click the edit icon to add instructions or paste email content.
+                        No special notes added for this customer yet. Click the
+                        edit icon to add instructions or paste email content.
                       </span>
                     )}
                   </div>
@@ -346,14 +400,21 @@ const CustomerProfile = () => {
           >
             <div className="card p-6">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[17px] font-semibold text-[#1d1d1f]">Order History</h2>
-                <Link to="/orders" className="text-xs font-medium text-[#0071e3] hover:underline">
+                <h2 className="text-[17px] font-semibold text-[#1d1d1f]">
+                  Order History
+                </h2>
+                <Link
+                  to="/orders"
+                  className="text-xs font-medium text-[#0071e3] hover:underline"
+                >
                   View All
                 </Link>
               </div>
 
               {recentOrders.length === 0 ? (
-                <p className="text-sm text-[#1d1d1f]/30">No orders found for this customer.</p>
+                <p className="text-sm text-[#1d1d1f]/30">
+                  No orders found for this customer.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {recentOrders.map((order) => (
@@ -379,9 +440,13 @@ const CustomerProfile = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs font-medium text-[#1d1d1f]/70">{order.CloudProvider}</div>
+                        <div className="text-xs font-medium text-[#1d1d1f]/70">
+                          {order.CloudProvider}
+                        </div>
                         <div className="mt-1">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}
+                          >
                             {order.Status}
                           </span>
                         </div>

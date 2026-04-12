@@ -2,13 +2,13 @@ const URL = import.meta.env.VITE_API_CUSTOMERS_URL as string;
 
 export interface Customer {
   id: number;
-  Title: string;
+  Title?: string;
   Email: string;
-  Phone: string;
-  Company: string;
+  Phone?: string;
+  Company?: string;
   Status: "Active" | "Inactive";
-  Tier: "Standard" | "Premium" | "Enterprise";
-  SpecialNotes: string;
+  Tier?: "Standard" | "Premium" | "Enterprise";
+  SpecialNotes?: string;
 }
 
 export interface CreateCustomerInput {
@@ -33,6 +33,16 @@ function normalizeChoiceFields<T>(data: T): T {
   return data;
 }
 
+// Maps SharePoint "ID" → "id" so the interface's `id` field is always populated.
+function withId(data: unknown): unknown {
+  if (Array.isArray(data)) return data.map(withId);
+  if (data !== null && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    if ("ID" in obj) return { ...obj, id: obj.ID };
+  }
+  return data;
+}
+
 async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
@@ -44,10 +54,11 @@ async function call<T>(body: object): Promise<T> {
   if (json != null && typeof json === "object" && "success" in json) {
     if (!json.success) throw new Error(json.error?.message ?? "API error");
     if (Array.isArray(json.data?.value))
-      return normalizeChoiceFields(json.data.value as T);
-    if (json.data != null) return normalizeChoiceFields(json.data as T);
+      return withId(normalizeChoiceFields(json.data.value as T)) as T;
+    if (json.data != null)
+      return withId(normalizeChoiceFields(json.data as T)) as T;
   }
-  return normalizeChoiceFields(json as T);
+  return withId(normalizeChoiceFields(json as T)) as T;
 }
 
 export const customerService = {

@@ -81,9 +81,10 @@ const Customers = () => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
-      c.Title.toLowerCase().includes(q) ||
-      c.Email.toLowerCase().includes(q) ||
-      c.Phone.includes(q)
+      (c.Title ?? "").toLowerCase().includes(q) ||
+      (c.Email ?? "").toLowerCase().includes(q) ||
+      (c.Phone ?? "").includes(q) ||
+      (c.Company ?? "").toLowerCase().includes(q)
     );
   });
 
@@ -199,7 +200,9 @@ const Customers = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-semibold text-xs">
-                          {customer.Title.substring(0, 2).toUpperCase()}
+                          {(customer.Title || customer.Company || "??")
+                            .substring(0, 2)
+                            .toUpperCase()}
                         </div>
                         <TutorTooltip
                           text="Click the customer name to view their detailed profile, including order history and special notes."
@@ -210,7 +213,9 @@ const Customers = () => {
                               to={`/customers/${customer.id}`}
                               className="text-sm font-medium text-[#0071e3] hover:underline"
                             >
-                              {customer.Title}
+                              {customer.Title ||
+                                customer.Company ||
+                                `Customer #${customer.id}`}
                             </Link>
                             <div className="text-xs text-[#1d1d1f]/35">
                               #{customer.id}

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
 import CustomerCombobox from "../components/CustomerCombobox";
 import { orderService } from "../services/orderService";
+import { customerService } from "../services/customerService";
 import { usePermission } from "../contexts/PermissionContext";
 
 const CLOUD_PROVIDER_MAP: Record<string, string> = {
@@ -122,11 +123,29 @@ const NewOrder = () => {
       const cloudProvider =
         CLOUD_PROVIDER_MAP[productSubscribe] || productSubscribe;
       const title = isPreProvision ? "TBC" : serviceNo;
+
+      // If no existing customer was selected, auto-create a customer record first
+      let resolvedCustomerId = customerId;
+      if (!resolvedCustomerId) {
+        const newCustomer = await customerService.create(
+          {
+            Title: companyName,
+            Company: companyName,
+            Email: "",
+            Phone: "",
+            Status: "Active",
+            Tier: "Standard",
+          },
+          userEmail,
+        );
+        resolvedCustomerId = newCustomer.id;
+      }
+
       await orderService.create(
         {
           Title: title,
           CustomerName: companyName,
-          CustomerID: customerId ?? undefined,
+          CustomerID: resolvedCustomerId ?? undefined,
           OrderType: orderType,
           Status: status,
           SRD: srd || undefined,
