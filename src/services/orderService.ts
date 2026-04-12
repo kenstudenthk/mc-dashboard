@@ -29,8 +29,7 @@ function normalizeChoiceFields<T>(data: T): T {
   if (Array.isArray(data)) return data.map(normalizeChoiceFields) as T;
   if (data !== null && typeof data === "object") {
     const obj = data as Record<string, unknown>;
-    if ("Value" in obj && typeof obj["Value"] === "string")
-      return obj["Value"] as T;
+    if ("Value" in obj) return normalizeChoiceFields(obj["Value"]) as T;
     return Object.fromEntries(
       Object.entries(obj).map(([k, v]) => [k, normalizeChoiceFields(v)]),
     ) as T;
