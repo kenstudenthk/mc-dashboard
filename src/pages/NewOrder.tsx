@@ -5,6 +5,7 @@ import { TutorTooltip } from "../components/TutorTooltip";
 import CustomerCombobox from "../components/CustomerCombobox";
 import { orderService } from "../services/orderService";
 import { customerService } from "../services/customerService";
+import { serviceAccountService } from "../services/serviceAccountService";
 import { usePermission } from "../contexts/PermissionContext";
 
 const CLOUD_PROVIDER_MAP: Record<string, string> = {
@@ -168,16 +169,7 @@ const NewOrder = () => {
         resolvedCustomerId = newCustomer.id;
       }
 
-      const otherInfo = [
-        productSubscribe === "Microsoft Azure" && azurePrimaryDomain
-          ? `Domain: ${azurePrimaryDomain}`
-          : null,
-        otherAccountInfo || null,
-      ]
-        .filter(Boolean)
-        .join("\n");
-
-      await orderService.create(
+      const order = await orderService.create(
         {
           Title: title,
           CustomerName: companyName,
@@ -196,11 +188,6 @@ const NewOrder = () => {
           ContactNo: contactNo || undefined,
           ContactEmail: contactEmail || undefined,
           BillingAddress: billingAddress || undefined,
-          BillingAccount: billingAccount || undefined,
-          AccountName: accountName || undefined,
-          AccountLoginEmail: accountLoginEmail || undefined,
-          Password: password || undefined,
-          OtherAccountInfo: otherInfo || undefined,
           CxSRequestNo: cxsRequestNo || undefined,
           TID: tid || undefined,
           SDNumber: sdNumber || undefined,
@@ -213,6 +200,35 @@ const NewOrder = () => {
         },
         userEmail,
       );
+
+      // Save cloud account details to App_ServiceAccounts if a provider was selected
+      if (productSubscribe && order.id) {
+        const otherInfo = [
+          productSubscribe === "Microsoft Azure" && azurePrimaryDomain
+            ? `Domain: ${azurePrimaryDomain}`
+            : null,
+          otherAccountInfo || null,
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        await serviceAccountService.create(
+          {
+            Title: `${title} - ${cloudProvider}`,
+            OrderID: order.id,
+            Provider: cloudProvider,
+            PrimaryAccountID: accountId || undefined,
+            SecondaryID: billingAccount || undefined,
+            AccountName: accountName || undefined,
+            Domain: azurePrimaryDomain || undefined,
+            LoginEmail: accountLoginEmail || undefined,
+            Password: password || undefined,
+            OtherInfo: otherInfo || undefined,
+          },
+          userEmail,
+        );
+      }
+
       setSubmitSuccess(true);
       setTimeout(() => navigate(`/orders/${title}`), 800);
     } catch {
