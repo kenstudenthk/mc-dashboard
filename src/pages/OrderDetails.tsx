@@ -72,16 +72,17 @@ const OrderDetails = () => {
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([
-      orderService.findByTitle(id),
-      orderTimelineService.getByOrder(id),
-    ])
-      .then(([ord, events]) => {
+    orderService
+      .findByTitle(id)
+      .then((ord) => {
         setOrder(ord);
-        setTimeline(events);
-        return serviceAccountService.findByOrderId(ord.id);
+        return Promise.all([
+          orderTimelineService.getByOrder(ord.id),
+          serviceAccountService.findByOrderId(ord.id),
+        ]);
       })
-      .then((accounts) => {
+      .then(([events, accounts]) => {
+        setTimeline(events);
         if (accounts.length > 0) setServiceAccount(accounts[0]);
       })
       .catch(() => setError("Failed to load order details."))

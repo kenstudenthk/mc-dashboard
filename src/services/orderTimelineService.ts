@@ -3,7 +3,7 @@ const URL = import.meta.env.VITE_API_ORDER_TIMELINE_URL as string;
 export interface TimelineEvent {
   id: number;
   Title: string;
-  OrderId: string;
+  OrderID: number;
   EventDate: string;
   Description: string;
   Completed: boolean;
@@ -11,7 +11,7 @@ export interface TimelineEvent {
 
 export interface AddEventInput {
   Title: string;
-  OrderId: string;
+  OrderID: number;
   EventDate: string;
   Description: string;
   Completed: boolean;
@@ -44,7 +44,7 @@ function normalizeEvent(item: Record<string, unknown>): TimelineEvent {
   return {
     id: (item.ID ?? item.id) as number,
     Title: unwrap(item.Title) as string,
-    OrderId: unwrap(item.OrderId) as string,
+    OrderID: (item.OrderIDId ?? item.OrderID) as number,
     EventDate: unwrap(item.EventDate) as string,
     Description: unwrap(item.Description) as string,
     Completed: unwrap(item.Completed) as boolean,
@@ -52,7 +52,7 @@ function normalizeEvent(item: Record<string, unknown>): TimelineEvent {
 }
 
 export const orderTimelineService = {
-  getByOrder: async (orderID: string) => {
+  getByOrder: async (orderID: number) => {
     const items = await call<Record<string, unknown>[]>({
       action: "GET_BY_ORDER",
       data: { orderID },
