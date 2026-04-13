@@ -16,6 +16,10 @@ import {
   orderTimelineService,
   TimelineEvent,
 } from "../services/orderTimelineService";
+import {
+  serviceAccountService,
+  ServiceAccount,
+} from "../services/serviceAccountService";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -62,6 +66,7 @@ const OrderDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,6 +79,10 @@ const OrderDetails = () => {
       .then(([ord, events]) => {
         setOrder(ord);
         setTimeline(events);
+        return serviceAccountService.findByOrderId(ord.id);
+      })
+      .then((accounts) => {
+        if (accounts.length > 0) setServiceAccount(accounts[0]);
       })
       .catch(() => setError("Failed to load order details."))
       .finally(() => setLoading(false));
@@ -158,13 +167,14 @@ const OrderDetails = () => {
                     label="Amount"
                     value={`$${order.Amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
                   />
-                  <InfoField label="Billing Account" value={order.BillingAccount} />
+                  <InfoField label="Billing Account / Secondary ID" value={serviceAccount?.SecondaryID} />
                 </dl>
                 <dl>
-                  <InfoField label="Account ID / Root ID / UID" value={order.AccountID} />
-                  <InfoField label="Account Name / Cloud Checker Name" value={order.AccountName} />
-                  <InfoField label="Account Login Email" value={order.AccountLoginEmail} />
-                  <InfoField label="Other Account Information" value={order.OtherAccountInfo} />
+                  <InfoField label="Account ID / Root ID / UID" value={serviceAccount?.PrimaryAccountID ?? order.AccountID} />
+                  <InfoField label="Account Name / Cloud Checker Name" value={serviceAccount?.AccountName} />
+                  <InfoField label="Domain" value={serviceAccount?.Domain} />
+                  <InfoField label="Login Email" value={serviceAccount?.LoginEmail} />
+                  <InfoField label="Other Account Information" value={serviceAccount?.OtherInfo} />
                 </dl>
               </div>
             </div>
