@@ -153,17 +153,18 @@ const OrderDetails = () => {
                 <dl>
                   <InfoField label="Product Subscribe" value={order.CloudProvider} />
                   <InfoField label="Order Type" value={order.OrderType} />
-                  <InfoField label="Service Type" value="—" />
+                  <InfoField label="Service Type" value={order.ServiceType} />
                   <InfoField
                     label="Amount"
                     value={`$${order.Amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
                   />
+                  <InfoField label="Billing Account" value={order.BillingAccount} />
                 </dl>
                 <dl>
                   <InfoField label="Account ID / Root ID / UID" value={order.AccountID} />
-                  <InfoField label="Account Name / Cloud Checker Name" value="—" />
-                  <InfoField label="Account Login Email" value="—" />
-                  <InfoField label="Other Account Information" value="—" />
+                  <InfoField label="Account Name / Cloud Checker Name" value={order.AccountName} />
+                  <InfoField label="Account Login Email" value={order.AccountLoginEmail} />
+                  <InfoField label="Other Account Information" value={order.OtherAccountInfo} />
                 </dl>
               </div>
             </div>
@@ -178,18 +179,36 @@ const OrderDetails = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
               <dl>
-                <InfoField label="OASIS Number" value="—" />
-                <InfoField label="CxS Request No." value="—" />
-                <InfoField label="TID" value="—" />
-                <InfoField label="SD Number" value="—" />
+                <InfoField label="OASIS Number" value={order.OasisNumber} />
+                <InfoField label="Order Receive Date" value={formatDate(order.OrderReceiveDate ?? "")} />
+                <InfoField label="CxS Complete Date" value={formatDate(order.CxSCompleteDate ?? "")} />
+                <InfoField label="CxS Request No." value={order.CxSRequestNo} />
+                <InfoField label="TID" value={order.TID} />
+                <InfoField label="SD Number" value={order.SDNumber} />
               </dl>
               <dl>
-                <InfoField label="PS Job (Y/N)" value="—" />
-                <InfoField label="T2 / T3" value="—" />
-                <InfoField label="Welcome Letter" value="—" />
-                <InfoField label="Handled By" value="—" />
+                <InfoField label="PS Job (Y/N)" value={order.PSJob} />
+                <InfoField label="T2 / T3" value={order.T2T3} />
+                <InfoField label="Welcome Letter" value={order.WelcomeLetter} />
+                <InfoField label="Handled By" value={order.By} />
+                {order.OrderFormURL && (
+                  <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
+                    <dt className="label-text text-[#1d1d1f]/35 mb-1">Order Form</dt>
+                    <dd className="text-sm font-medium">
+                      <a href={order.OrderFormURL} target="_blank" rel="noopener noreferrer" className="text-[#0071e3] hover:underline break-all">
+                        View File
+                      </a>
+                    </dd>
+                  </div>
+                )}
               </dl>
             </div>
+            {order.Remark && (
+              <div className="mt-4 pt-4 border-t border-[#1d1d1f]/06">
+                <dt className="label-text text-[#1d1d1f]/35 mb-1">Remark</dt>
+                <dd className="text-sm text-[#1d1d1f] whitespace-pre-wrap">{order.Remark}</dd>
+              </div>
+            )}
           </div>
         </div>
 
@@ -207,7 +226,18 @@ const OrderDetails = () => {
               >
                 {order.CustomerName}
               </Link>
-              <p className="text-xs text-[#1d1d1f]/35">ID #{order.CustomerID}</p>
+              <p className="text-xs text-[#1d1d1f]/35 mb-4">ID #{order.CustomerID}</p>
+              <dl>
+                <InfoField label="Contact Person" value={order.ContactPerson} />
+                <InfoField label="Contact No." value={order.ContactNo} />
+                <InfoField label="Contact Email" value={order.ContactEmail} />
+                {order.BillingAddress && (
+                  <div className="py-2.5">
+                    <dt className="label-text text-[#1d1d1f]/35 mb-1">Billing Address</dt>
+                    <dd className="text-sm font-medium text-[#1d1d1f] whitespace-pre-wrap">{order.BillingAddress}</dd>
+                  </div>
+                )}
+              </dl>
             </div>
           </TutorTooltip>
 

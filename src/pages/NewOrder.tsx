@@ -91,6 +91,27 @@ const NewOrder = () => {
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [accountId, setAccountId] = useState("");
+  const [serviceType, setServiceType] = useState("");
+  const [oasisNumber, setOasisNumber] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [contactNo, setContactNo] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [billingAccount, setBillingAccount] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountLoginEmail, setAccountLoginEmail] = useState("");
+  const [azurePrimaryDomain, setAzurePrimaryDomain] = useState("");
+  const [password, setPassword] = useState("");
+  const [otherAccountInfo, setOtherAccountInfo] = useState("");
+  const [cxsRequestNo, setCxsRequestNo] = useState("");
+  const [tid, setTid] = useState("");
+  const [sdNumber, setSdNumber] = useState("");
+  const [psJob, setPsJob] = useState("");
+  const [t2t3, setT2t3] = useState("");
+  const [welcomeLetter, setWelcomeLetter] = useState("");
+  const [by, setBy] = useState("");
+  const [orderFormUrl, setOrderFormUrl] = useState("");
+  const [remark, setRemark] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -147,6 +168,15 @@ const NewOrder = () => {
         resolvedCustomerId = newCustomer.id;
       }
 
+      const otherInfo = [
+        productSubscribe === "Microsoft Azure" && azurePrimaryDomain
+          ? `Domain: ${azurePrimaryDomain}`
+          : null,
+        otherAccountInfo || null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
       await orderService.create(
         {
           Title: title,
@@ -158,6 +188,28 @@ const NewOrder = () => {
           CloudProvider: cloudProvider,
           Amount: parseFloat(amount) || 0,
           AccountID: accountId || undefined,
+          ServiceType: serviceType || undefined,
+          OasisNumber: oasisNumber || undefined,
+          OrderReceiveDate: orderReceiveDate || undefined,
+          CxSCompleteDate: cxsCompleteDate || undefined,
+          ContactPerson: contactPerson || undefined,
+          ContactNo: contactNo || undefined,
+          ContactEmail: contactEmail || undefined,
+          BillingAddress: billingAddress || undefined,
+          BillingAccount: billingAccount || undefined,
+          AccountName: accountName || undefined,
+          AccountLoginEmail: accountLoginEmail || undefined,
+          Password: password || undefined,
+          OtherAccountInfo: otherInfo || undefined,
+          CxSRequestNo: cxsRequestNo || undefined,
+          TID: tid || undefined,
+          SDNumber: sdNumber || undefined,
+          PSJob: psJob || undefined,
+          T2T3: t2t3 || undefined,
+          WelcomeLetter: welcomeLetter || undefined,
+          By: by || undefined,
+          OrderFormURL: orderFormUrl || undefined,
+          Remark: remark || undefined,
         },
         userEmail,
       );
@@ -295,10 +347,17 @@ const NewOrder = () => {
                 onChange={(e) => setOrderType(e.target.value)}
               />
             </TutorTooltip>
-            <InputGroup label="Service Type" placeholder="e.g. Offset Amount" />
+            <InputGroup
+              label="Service Type"
+              placeholder="e.g. Offset Amount"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+            />
             <InputGroup
               label="OASIS Number"
               placeholder="e.g. CB23-00007546\1"
+              value={oasisNumber}
+              onChange={(e) => setOasisNumber(e.target.value)}
             />
             <InputGroup
               label="Order Receive Date"
@@ -357,13 +416,25 @@ const NewOrder = () => {
                 }}
               />
             </div>
-            <InputGroup label="Contact Person" placeholder="e.g. Don Ng" />
-            <InputGroup label="Contact No." placeholder="e.g. 67594210" />
+            <InputGroup
+              label="Contact Person"
+              placeholder="e.g. Don Ng"
+              value={contactPerson}
+              onChange={(e) => setContactPerson(e.target.value)}
+            />
+            <InputGroup
+              label="Contact No."
+              placeholder="e.g. 67594210"
+              value={contactNo}
+              onChange={(e) => setContactNo(e.target.value)}
+            />
             <div className="md:col-span-2">
               <InputGroup
                 label="Contact Email (If have)"
                 type="email"
                 placeholder="email@example.com"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
               />
             </div>
             <div className="md:col-span-3 space-y-1.5">
@@ -373,6 +444,8 @@ const NewOrder = () => {
               <textarea
                 className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[80px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                 placeholder="Enter full billing address"
+                value={billingAddress}
+                onChange={(e) => setBillingAddress(e.target.value)}
               ></textarea>
             </div>
           </div>
@@ -397,6 +470,12 @@ const NewOrder = () => {
                 onChange={(e) => {
                   setProductSubscribe(e.target.value);
                   setAccountId("");
+                  setBillingAccount("");
+                  setAccountName("");
+                  setAccountLoginEmail("");
+                  setAzurePrimaryDomain("");
+                  setPassword("");
+                  setOtherAccountInfo("");
                 }}
               />
             </div>
@@ -406,6 +485,8 @@ const NewOrder = () => {
                 <InputGroup
                   label="Billing Account / Master Account"
                   placeholder="e.g. 7.59168E+11"
+                  value={billingAccount}
+                  onChange={(e) => setBillingAccount(e.target.value)}
                 />
                 <InputGroup
                   label="Account ID / Root ID"
@@ -416,11 +497,15 @@ const NewOrder = () => {
                 <InputGroup
                   label="Account Name / Cloud Checker Name"
                   placeholder="e.g. CL545725"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
                 />
                 <InputGroup
                   label="Account Login Email"
                   type="email"
                   placeholder="admin@example.com"
+                  value={accountLoginEmail}
+                  onChange={(e) => setAccountLoginEmail(e.target.value)}
                 />
               </>
             )}
@@ -437,6 +522,8 @@ const NewOrder = () => {
                   label="Admin Email"
                   type="email"
                   placeholder="admin@example.com"
+                  value={accountLoginEmail}
+                  onChange={(e) => setAccountLoginEmail(e.target.value)}
                 />
               </>
             )}
@@ -452,15 +539,21 @@ const NewOrder = () => {
                 <InputGroup
                   label="Azure Subscription ID"
                   placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128"
+                  value={billingAccount}
+                  onChange={(e) => setBillingAccount(e.target.value)}
                 />
                 <InputGroup
                   label="Primary Domain"
                   placeholder="e.g. example.onmicrosoft.com"
+                  value={azurePrimaryDomain}
+                  onChange={(e) => setAzurePrimaryDomain(e.target.value)}
                 />
                 <InputGroup
                   label="Admin Email"
                   type="email"
                   placeholder="admin@example.onmicrosoft.com"
+                  value={accountLoginEmail}
+                  onChange={(e) => setAccountLoginEmail(e.target.value)}
                 />
               </>
             )}
@@ -477,6 +570,8 @@ const NewOrder = () => {
                   label="Login Email"
                   type="email"
                   placeholder="admin@example.com"
+                  value={accountLoginEmail}
+                  onChange={(e) => setAccountLoginEmail(e.target.value)}
                 />
               </>
             )}
@@ -493,6 +588,8 @@ const NewOrder = () => {
                   label="Admin Email"
                   type="email"
                   placeholder="admin@example.com"
+                  value={accountLoginEmail}
+                  onChange={(e) => setAccountLoginEmail(e.target.value)}
                 />
               </>
             )}
@@ -509,6 +606,8 @@ const NewOrder = () => {
                   label="Login Email"
                   type="email"
                   placeholder="admin@example.com"
+                  value={accountLoginEmail}
+                  onChange={(e) => setAccountLoginEmail(e.target.value)}
                 />
               </>
             )}
@@ -525,6 +624,8 @@ const NewOrder = () => {
                   label="Password"
                   type="password"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <div className="md:col-span-2 space-y-1.5">
                   <label className="label-text text-[#1d1d1f]/45">
@@ -533,6 +634,8 @@ const NewOrder = () => {
                   <textarea
                     className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[80px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                     placeholder="Domain names, additional IDs, etc."
+                    value={otherAccountInfo}
+                    onChange={(e) => setOtherAccountInfo(e.target.value)}
                   ></textarea>
                 </div>
               </>
@@ -547,23 +650,51 @@ const NewOrder = () => {
             <InputGroup
               label="CxS Request No."
               placeholder="e.g. RN822908/1-2"
+              value={cxsRequestNo}
+              onChange={(e) => setCxsRequestNo(e.target.value)}
             />
-            <InputGroup label="TID" placeholder="e.g. 103690" />
-            <InputGroup label="SD Number" placeholder="e.g. SD11652876" />
+            <InputGroup
+              label="TID"
+              placeholder="e.g. 103690"
+              value={tid}
+              onChange={(e) => setTid(e.target.value)}
+            />
+            <InputGroup
+              label="SD Number"
+              placeholder="e.g. SD11652876"
+              value={sdNumber}
+              onChange={(e) => setSdNumber(e.target.value)}
+            />
             <SelectGroup
               label="PS Job (Y/N)"
               options={["Y", "N", "Yes", "No"]}
+              value={psJob}
+              onChange={(e) => setPsJob(e.target.value)}
             />
-            <SelectGroup label="T2/ T3" options={["T1", "T2", "T3", "N/A"]} />
+            <SelectGroup
+              label="T2/ T3"
+              options={["T1", "T2", "T3", "N/A"]}
+              value={t2t3}
+              onChange={(e) => setT2t3(e.target.value)}
+            />
             <SelectGroup
               label="Welcome Letter (Yes / No)"
               options={["Yes", "No"]}
+              value={welcomeLetter}
+              onChange={(e) => setWelcomeLetter(e.target.value)}
             />
-            <InputGroup label="By" placeholder="e.g. Kilson, Helen, Hin" />
+            <InputGroup
+              label="By"
+              placeholder="e.g. Kilson, Helen, Hin"
+              value={by}
+              onChange={(e) => setBy(e.target.value)}
+            />
             <div className="md:col-span-2">
               <InputGroup
                 label="Order Form (URL)"
                 placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..."
+                value={orderFormUrl}
+                onChange={(e) => setOrderFormUrl(e.target.value)}
               />
             </div>
             <div className="md:col-span-3 space-y-1.5">
@@ -571,6 +702,8 @@ const NewOrder = () => {
               <textarea
                 className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all min-h-[120px] text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30"
                 placeholder="Enter timeline, log updates, or special instructions..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
               ></textarea>
             </div>
           </div>

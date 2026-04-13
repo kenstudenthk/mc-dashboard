@@ -11,6 +11,28 @@ export interface Order {
   CloudProvider: string;
   Amount: number;
   AccountID?: string;
+  ServiceType?: string;
+  OasisNumber?: string;
+  OrderReceiveDate?: string;
+  CxSCompleteDate?: string;
+  ContactPerson?: string;
+  ContactNo?: string;
+  ContactEmail?: string;
+  BillingAddress?: string;
+  BillingAccount?: string;
+  AccountName?: string;
+  AccountLoginEmail?: string;
+  Password?: string;
+  OtherAccountInfo?: string;
+  CxSRequestNo?: string;
+  TID?: string;
+  SDNumber?: string;
+  PSJob?: string;
+  T2T3?: string;
+  WelcomeLetter?: string;
+  By?: string;
+  OrderFormURL?: string;
+  Remark?: string;
 }
 
 export interface CreateOrderInput {
@@ -23,6 +45,28 @@ export interface CreateOrderInput {
   CloudProvider: string;
   Amount: number;
   AccountID?: string;
+  ServiceType?: string;
+  OasisNumber?: string;
+  OrderReceiveDate?: string;
+  CxSCompleteDate?: string;
+  ContactPerson?: string;
+  ContactNo?: string;
+  ContactEmail?: string;
+  BillingAddress?: string;
+  BillingAccount?: string;
+  AccountName?: string;
+  AccountLoginEmail?: string;
+  Password?: string;
+  OtherAccountInfo?: string;
+  CxSRequestNo?: string;
+  TID?: string;
+  SDNumber?: string;
+  PSJob?: string;
+  T2T3?: string;
+  WelcomeLetter?: string;
+  By?: string;
+  OrderFormURL?: string;
+  Remark?: string;
 }
 
 function normalizeChoiceFields<T>(data: T): T {
