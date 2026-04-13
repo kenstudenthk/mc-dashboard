@@ -11,5 +11,4 @@ compatibility_date = "2025-01-01"
 #   npx wrangler pages deploy dist --project-name=mc-dashboard
 
 [vars]
-# Add any non-secret build-time vars here if needed
-# Example: VITE_APP_NAME = "MC Dashboard"
+# VITE_API_* URLs are set via Cloudflare Pages Dashboard → Settings → Variables and Secrets
