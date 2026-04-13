@@ -53,10 +53,11 @@ function normalizeEvent(item: Record<string, unknown>): TimelineEvent {
 
 export const orderTimelineService = {
   getByOrder: async (orderID: number) => {
-    const items = await call<Record<string, unknown>[]>({
+    const raw = await call<unknown>({
       action: "GET_BY_ORDER",
       data: { orderID },
     });
+    const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
     return items.map(normalizeEvent);
   },
 

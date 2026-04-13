@@ -72,8 +72,11 @@ const OrderDetails = () => {
 
   useEffect(() => {
     if (!id) return;
-    orderService
-      .findByTitle(id)
+    const numericId = /^\d+$/.test(id) ? parseInt(id, 10) : null;
+    const orderPromise = numericId !== null
+      ? orderService.findById(numericId)
+      : orderService.findByTitle(id);
+    orderPromise
       .then((ord) => {
         setOrder(ord);
         return Promise.all([

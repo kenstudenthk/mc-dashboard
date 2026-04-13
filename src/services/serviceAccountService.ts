@@ -61,6 +61,8 @@ export const serviceAccountService = {
   create: (data: CreateServiceAccountInput, userEmail: string) =>
     call<ServiceAccount>({ action: "CREATE", data, userEmail }),
 
-  findByOrderId: (orderId: number) =>
-    call<ServiceAccount[]>({ action: "GET_BY_ORDER", data: { orderId } }),
+  findByOrderId: async (orderId: number) => {
+    const result = await call<unknown>({ action: "GET_BY_ORDER", data: { orderId } });
+    return Array.isArray(result) ? (result as ServiceAccount[]) : [];
+  },
 };

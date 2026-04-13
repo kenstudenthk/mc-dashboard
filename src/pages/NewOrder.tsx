@@ -230,7 +230,7 @@ const NewOrder = () => {
       }
 
       setSubmitSuccess(true);
-      setTimeout(() => navigate(`/orders/${title}`), 800);
+      setTimeout(() => navigate(`/orders/${order.id ?? title}`), 800);
     } catch {
       setSubmitError("Failed to create order. Please try again.");
       setSubmitting(false);
