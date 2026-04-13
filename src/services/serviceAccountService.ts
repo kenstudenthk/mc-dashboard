@@ -1,4 +1,4 @@
-const URL = import.meta.env.VITE_API_SERVICE_ACCOUNTS_URL as string;
+const BASE_URL = import.meta.env.VITE_API_SERVICE_ACCOUNTS_URL as string;
 
 export interface ServiceAccount {
   id: number;
@@ -41,7 +41,7 @@ function withId(data: unknown): unknown {
 }
 
 async function call<T>(body: object): Promise<T> {
-  const res = await fetch(URL, {
+  const res = await fetch(BASE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
