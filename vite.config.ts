@@ -6,10 +6,17 @@ import { defineConfig, loadEnv } from "vite";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
 
-  // Explicitly inject all VITE_* vars from process.env so CI builds
-  // (GitHub Actions, Cloudflare) work without a .env.local file.
+  // Merge VITE_* vars from both sources so all deployment paths work:
+  // - process.env: Cloudflare Pages Git integration sets env vars here
+  // - env (loadEnv): GitHub Actions writes a .env file that loadEnv reads
+  const processEnvVite = Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([k, v]) => k.startsWith("VITE_") && v !== undefined,
+    ) as [string, string][],
+  );
+  const merged = { ...processEnvVite, ...env };
   const viteEnvDefines = Object.fromEntries(
-    Object.entries(env)
+    Object.entries(merged)
       .filter(([key]) => key.startsWith("VITE_"))
       .map(([key, val]) => [`import.meta.env.${key}`, JSON.stringify(val)]),
   );
@@ -17,7 +24,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      "process.env.GEMINI_API_KEY": JSON.stringify(env.GEMINI_API_KEY),
+      "process.env.GEMINI_API_KEY": JSON.stringify(
+        env.GEMINI_API_KEY ?? process.env.GEMINI_API_KEY,
+      ),
       ...viteEnvDefines,
     },
     resolve: {
