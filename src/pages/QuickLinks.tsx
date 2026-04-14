@@ -13,6 +13,8 @@ const QuickLinks = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<QuickLink | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     Title: "",
     URL: "",
@@ -41,10 +43,13 @@ const QuickLinks = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingLink(null);
+    setModalError(null);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setModalError(null);
     try {
       if (editingLink) {
         const updated = await quickLinkService.update(editingLink.id, formData, userEmail);
@@ -55,7 +60,9 @@ const QuickLinks = () => {
       }
       handleCloseModal();
     } catch {
-      setError("Failed to save quick link.");
+      setModalError("Failed to save. Please check the PA flow and try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -172,6 +179,11 @@ const QuickLinks = () => {
             </div>
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
+              {modalError && (
+                <div className="px-4 py-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                  {modalError}
+                </div>
+              )}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-[#1d1d1f]/60">Portal Name</label>
                 <input
@@ -215,9 +227,10 @@ const QuickLinks = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-[#0071e3] text-white font-medium rounded-lg hover:bg-[#0071e3]/90 transition-colors text-sm"
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-[#0071e3] text-white font-medium rounded-lg hover:bg-[#0071e3]/90 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {editingLink ? "Save Changes" : "Add Link"}
+                  {saving ? "Saving…" : editingLink ? "Save Changes" : "Add Link"}
                 </button>
               </div>
             </form>
