@@ -9,9 +9,11 @@ import {
   FileText,
   Server,
   Building,
+  X,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
-import { orderService, Order } from "../services/orderService";
+import { usePermission } from "../contexts/PermissionContext";
+import { orderService, Order, CreateOrderInput } from "../services/orderService";
 import {
   orderTimelineService,
   TimelineEvent,
@@ -62,13 +64,81 @@ const InfoField = ({
   </div>
 );
 
+const STATUS_OPTIONS = ["Processing", "Account Created", "Completed", "Cancelled"];
+const inputClass = "w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30";
+
 const OrderDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const { hasPermission, userEmail } = usePermission();
+  const canEdit = hasPermission("Admin");
+
   const [order, setOrder] = useState<Order | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<CreateOrderInput>>({});
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const handleEditOpen = () => {
+    if (!order) return;
+    setEditForm({
+      Title: order.Title,
+      Status: order.Status,
+      SRD: order.SRD?.slice(0, 10) ?? "",
+      CloudProvider: order.CloudProvider,
+      OrderType: order.OrderType,
+      ServiceType: order.ServiceType ?? "",
+      Amount: order.Amount,
+      OasisNumber: order.OasisNumber ?? "",
+      OrderReceiveDate: order.OrderReceiveDate?.slice(0, 10) ?? "",
+      CxSCompleteDate: order.CxSCompleteDate?.slice(0, 10) ?? "",
+      CxSRequestNo: order.CxSRequestNo ?? "",
+      TID: order.TID ?? "",
+      SDNumber: order.SDNumber ?? "",
+      PSJob: order.PSJob ?? "",
+      T2T3: order.T2T3 ?? "",
+      WelcomeLetter: order.WelcomeLetter ?? "",
+      By: order.By ?? "",
+      OrderFormURL: order.OrderFormURL ?? "",
+      CustomerID: order.CustomerID,
+      CustomerName: order.CustomerName,
+      ContactPerson: order.ContactPerson ?? "",
+      ContactNo: order.ContactNo ?? "",
+      ContactEmail: order.ContactEmail ?? "",
+      BillingAddress: order.BillingAddress ?? "",
+      Remark: order.Remark ?? "",
+    });
+    setEditError(null);
+    setIsEditOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setIsEditOpen(false);
+    setEditError(null);
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order) return;
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      const updated = await orderService.update(order.id, editForm, userEmail);
+      setOrder(updated);
+      handleEditClose();
+    } catch {
+      setEditError("Failed to save. Please check the PA flow and try again.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const set = (field: keyof CreateOrderInput, value: string | number) =>
+    setEditForm((prev) => ({ ...prev, [field]: value }));
 
   useEffect(() => {
     if (!id) return;
@@ -141,11 +211,16 @@ const OrderDetails = () => {
           <button className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50">
             <Download className="w-4 h-4" />
           </button>
-          <TutorTooltip text="Click here to modify the details of this order." position="bottom">
-            <button className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm">
-              Edit Order
-            </button>
-          </TutorTooltip>
+          {canEdit && (
+            <TutorTooltip text="Click here to modify the details of this order." position="bottom">
+              <button
+                onClick={handleEditOpen}
+                className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm"
+              >
+                Edit Order
+              </button>
+            </TutorTooltip>
+          )}
         </div>
       </div>
 
@@ -289,6 +364,160 @@ const OrderDetails = () => {
           </TutorTooltip>
         </div>
       </div>
+
+      {isEditOpen && (
+        <div className="fixed inset-0 bg-[#1d1d1f]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-[#1d1d1f]/06 shrink-0">
+              <h2 className="text-[17px] font-semibold text-[#1d1d1f]">Edit Order — {order?.Title}</h2>
+              <button onClick={handleEditClose} className="text-[#1d1d1f]/35 hover:text-[#1d1d1f]/60 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSave} className="overflow-y-auto flex-1 p-6 space-y-6">
+              {editError && (
+                <div className="px-4 py-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                  {editError}
+                </div>
+              )}
+
+              {/* Order Info */}
+              <section>
+                <h3 className="text-xs font-semibold text-[#1d1d1f]/40 uppercase tracking-wider mb-3">Order Info</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Order Title</label>
+                    <input type="text" required value={editForm.Title ?? ""} onChange={(e) => set("Title", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Status</label>
+                    <select value={editForm.Status ?? ""} onChange={(e) => set("Status", e.target.value)} className={inputClass}>
+                      {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">SRD</label>
+                    <input type="date" value={editForm.SRD ?? ""} onChange={(e) => set("SRD", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Cloud Provider</label>
+                    <input type="text" value={editForm.CloudProvider ?? ""} onChange={(e) => set("CloudProvider", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Order Type</label>
+                    <input type="text" value={editForm.OrderType ?? ""} onChange={(e) => set("OrderType", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Service Type</label>
+                    <input type="text" value={editForm.ServiceType ?? ""} onChange={(e) => set("ServiceType", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Amount ($)</label>
+                    <input type="number" min={0} step="0.01" value={editForm.Amount ?? ""} onChange={(e) => set("Amount", parseFloat(e.target.value) || 0)} className={inputClass} />
+                  </div>
+                </div>
+              </section>
+
+              {/* Tracking */}
+              <section>
+                <h3 className="text-xs font-semibold text-[#1d1d1f]/40 uppercase tracking-wider mb-3">Tracking</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">OASIS Number</label>
+                    <input type="text" value={editForm.OasisNumber ?? ""} onChange={(e) => set("OasisNumber", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">CxS Request No.</label>
+                    <input type="text" value={editForm.CxSRequestNo ?? ""} onChange={(e) => set("CxSRequestNo", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Order Receive Date</label>
+                    <input type="date" value={editForm.OrderReceiveDate ?? ""} onChange={(e) => set("OrderReceiveDate", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">CxS Complete Date</label>
+                    <input type="date" value={editForm.CxSCompleteDate ?? ""} onChange={(e) => set("CxSCompleteDate", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">TID</label>
+                    <input type="text" value={editForm.TID ?? ""} onChange={(e) => set("TID", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">SD Number</label>
+                    <input type="text" value={editForm.SDNumber ?? ""} onChange={(e) => set("SDNumber", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">PS Job (Y/N)</label>
+                    <input type="text" value={editForm.PSJob ?? ""} onChange={(e) => set("PSJob", e.target.value)} className={inputClass} placeholder="Y or N" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">T2 / T3</label>
+                    <input type="text" value={editForm.T2T3 ?? ""} onChange={(e) => set("T2T3", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Welcome Letter</label>
+                    <input type="text" value={editForm.WelcomeLetter ?? ""} onChange={(e) => set("WelcomeLetter", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Handled By</label>
+                    <input type="text" value={editForm.By ?? ""} onChange={(e) => set("By", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Order Form URL</label>
+                    <input type="url" value={editForm.OrderFormURL ?? ""} onChange={(e) => set("OrderFormURL", e.target.value)} className={inputClass} placeholder="https://..." />
+                  </div>
+                </div>
+              </section>
+
+              {/* Customer */}
+              <section>
+                <h3 className="text-xs font-semibold text-[#1d1d1f]/40 uppercase tracking-wider mb-3">Customer</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Customer Name</label>
+                    <input type="text" value={editForm.CustomerName ?? ""} onChange={(e) => set("CustomerName", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Contact Person</label>
+                    <input type="text" value={editForm.ContactPerson ?? ""} onChange={(e) => set("ContactPerson", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Contact No.</label>
+                    <input type="text" value={editForm.ContactNo ?? ""} onChange={(e) => set("ContactNo", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Contact Email</label>
+                    <input type="email" value={editForm.ContactEmail ?? ""} onChange={(e) => set("ContactEmail", e.target.value)} className={inputClass} />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-xs font-medium text-[#1d1d1f]/60">Billing Address</label>
+                    <textarea value={editForm.BillingAddress ?? ""} onChange={(e) => set("BillingAddress", e.target.value)} className={`${inputClass} min-h-[70px] resize-none`} />
+                  </div>
+                </div>
+              </section>
+
+              {/* Notes */}
+              <section>
+                <h3 className="text-xs font-semibold text-[#1d1d1f]/40 uppercase tracking-wider mb-3">Notes</h3>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-[#1d1d1f]/60">Remark</label>
+                  <textarea value={editForm.Remark ?? ""} onChange={(e) => set("Remark", e.target.value)} className={`${inputClass} min-h-[90px] resize-none`} />
+                </div>
+              </section>
+            </form>
+
+            <div className="p-6 border-t border-[#1d1d1f]/06 flex gap-3 shrink-0">
+              <button type="button" onClick={handleEditClose} className="flex-1 px-4 py-2 border border-[#1d1d1f]/08 text-[#1d1d1f]/70 font-medium rounded-lg hover:bg-[#f5f5f7] transition-colors text-sm">
+                Cancel
+              </button>
+              <button type="submit" form="edit-order-form" disabled={editSaving} onClick={handleEditSave} className="flex-1 px-4 py-2 bg-[#0071e3] text-white font-medium rounded-lg hover:bg-[#0071e3]/90 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                {editSaving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
