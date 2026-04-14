@@ -33,7 +33,7 @@ const Sidebar = () => {
           <div className="w-8 h-8 rounded-lg bg-[#0071e3] flex items-center justify-center text-white font-bold text-xl shrink-0">
             A
           </div>
-          {!isCollapsed && <span className="font-bold text-xl tracking-tight text-white whitespace-nowrap" style={{ fontFamily: 'SF Pro Display, Helvetica Neue, Helvetica, Arial, sans-serif' }}>Alexandria</span>}
+          {!isCollapsed && <span className="font-bold text-xl tracking-tight text-white whitespace-nowrap" style={{ fontFamily: 'SF Pro Display, Helvetica Neue, Helvetica, Arial, sans-serif' }}>Multi Cloud</span>}
         </div>
 
         <button
