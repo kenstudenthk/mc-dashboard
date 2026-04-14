@@ -25,12 +25,18 @@ function withId(data: unknown): unknown {
 }
 
 async function call<T>(body: object): Promise<T> {
+  if (!BASE_URL) {
+    throw new Error(
+      "Quick Links API URL is not configured. Set VITE_API_QUICK_LINKS_URL in .env.local.",
+    );
+  }
   const res = await fetch(BASE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`quickLinkService error: ${res.status}`);
+  if (!res.ok)
+    throw new Error(`Quick Links API error: ${res.status} ${res.statusText}`);
   const json = await res.json();
   if (json != null && typeof json === "object" && "success" in json) {
     if (!json.success) throw new Error(json.error?.message ?? "API error");

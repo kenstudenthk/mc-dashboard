@@ -25,14 +25,22 @@ const QuickLinks = () => {
     quickLinkService
       .findAll()
       .then((result) => setLinks(Array.isArray(result) ? result : []))
-      .catch(() => setError("Failed to load quick links."))
+      .catch((err: unknown) =>
+        setError(
+          err instanceof Error ? err.message : "Failed to load quick links.",
+        ),
+      )
       .finally(() => setLoading(false));
   }, []);
 
   const handleOpenModal = (link?: QuickLink) => {
     if (link) {
       setEditingLink(link);
-      setFormData({ Title: link.Title, URL: link.URL, Description: link.Description });
+      setFormData({
+        Title: link.Title,
+        URL: link.URL,
+        Description: link.Description,
+      });
     } else {
       setEditingLink(null);
       setFormData({ Title: "", URL: "", Description: "" });
@@ -52,7 +60,11 @@ const QuickLinks = () => {
     setModalError(null);
     try {
       if (editingLink) {
-        const updated = await quickLinkService.update(editingLink.id, formData, userEmail);
+        const updated = await quickLinkService.update(
+          editingLink.id,
+          formData,
+          userEmail,
+        );
         setLinks(links.map((l) => (l.id === editingLink.id ? updated : l)));
       } else {
         const created = await quickLinkService.create(formData, userEmail);
@@ -67,7 +79,8 @@ const QuickLinks = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this quick link?")) return;
+    if (!window.confirm("Are you sure you want to delete this quick link?"))
+      return;
     try {
       await quickLinkService.delete(id, userEmail);
       setLinks(links.filter((l) => l.id !== id));
@@ -76,7 +89,8 @@ const QuickLinks = () => {
     }
   };
 
-  const inputClass = "w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30";
+  const inputClass =
+    "w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30";
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -93,7 +107,10 @@ const QuickLinks = () => {
           </p>
         </div>
         {canEdit && (
-          <TutorTooltip text="Global Admins and Developers can add new quick links here." position="bottom">
+          <TutorTooltip
+            text="Global Admins and Developers can add new quick links here."
+            position="bottom"
+          >
             <button
               onClick={() => handleOpenModal()}
               className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
@@ -112,7 +129,9 @@ const QuickLinks = () => {
       )}
 
       {loading ? (
-        <div className="py-24 text-center text-[#1d1d1f]/30 text-sm">Loading…</div>
+        <div className="py-24 text-center text-[#1d1d1f]/30 text-sm">
+          Loading…
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {links.map((link) => (
@@ -144,10 +163,17 @@ const QuickLinks = () => {
                 )}
               </div>
 
-              <h3 className="text-sm font-semibold text-[#1d1d1f] mb-1.5">{link.Title}</h3>
-              <p className="text-xs text-[#1d1d1f]/50 flex-1 mb-5">{link.Description}</p>
+              <h3 className="text-sm font-semibold text-[#1d1d1f] mb-1.5">
+                {link.Title}
+              </h3>
+              <p className="text-xs text-[#1d1d1f]/50 flex-1 mb-5">
+                {link.Description}
+              </p>
 
-              <TutorTooltip text={`Click here to open the ${link.Title} in a new tab.`} position="top">
+              <TutorTooltip
+                text={`Click here to open the ${link.Title} in a new tab.`}
+                position="top"
+              >
                 <a
                   href={link.URL}
                   target="_blank"
@@ -185,33 +211,45 @@ const QuickLinks = () => {
                 </div>
               )}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#1d1d1f]/60">Portal Name</label>
+                <label className="text-xs font-medium text-[#1d1d1f]/60">
+                  Portal Name
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.Title}
-                  onChange={(e) => setFormData({ ...formData, Title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Title: e.target.value })
+                  }
                   placeholder="e.g. AWS Management Console"
                   className={inputClass}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#1d1d1f]/60">URL</label>
+                <label className="text-xs font-medium text-[#1d1d1f]/60">
+                  URL
+                </label>
                 <input
                   type="url"
                   required
                   value={formData.URL}
-                  onChange={(e) => setFormData({ ...formData, URL: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, URL: e.target.value })
+                  }
                   placeholder="https://..."
                   className={inputClass}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#1d1d1f]/60">Description</label>
+                <label className="text-xs font-medium text-[#1d1d1f]/60">
+                  Description
+                </label>
                 <textarea
                   required
                   value={formData.Description}
-                  onChange={(e) => setFormData({ ...formData, Description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Description: e.target.value })
+                  }
                   placeholder="Brief description of what this portal is used for..."
                   className={`${inputClass} min-h-[90px] resize-none`}
                 />
@@ -230,7 +268,11 @@ const QuickLinks = () => {
                   disabled={saving}
                   className="flex-1 px-4 py-2 bg-[#0071e3] text-white font-medium rounded-lg hover:bg-[#0071e3]/90 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {saving ? "Saving…" : editingLink ? "Save Changes" : "Add Link"}
+                  {saving
+                    ? "Saving…"
+                    : editingLink
+                      ? "Save Changes"
+                      : "Add Link"}
                 </button>
               </div>
             </form>
