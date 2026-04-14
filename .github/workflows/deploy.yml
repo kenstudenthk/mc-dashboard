@@ -19,10 +19,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Write env vars
         run: |
-          env | grep '^VITE_' >> .env
-          npm run build
+          echo "VITE_API_ORDERS_URL=$VITE_API_ORDERS_URL" >> .env
+          echo "VITE_API_CUSTOMERS_URL=$VITE_API_CUSTOMERS_URL" >> .env
+          echo "VITE_API_PERMISSIONS_URL=$VITE_API_PERMISSIONS_URL" >> .env
+          echo "VITE_API_ORDER_TIMELINE_URL=$VITE_API_ORDER_TIMELINE_URL" >> .env
+          echo "VITE_API_AUDIT_LOGS_URL=$VITE_API_AUDIT_LOGS_URL" >> .env
+          echo "VITE_API_QUICK_LINKS_URL=$VITE_API_QUICK_LINKS_URL" >> .env
+          echo "VITE_API_SERVICE_ACCOUNTS_URL=$VITE_API_SERVICE_ACCOUNTS_URL" >> .env
         env:
           VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
           VITE_API_CUSTOMERS_URL: ${{ secrets.VITE_API_CUSTOMERS_URL }}
@@ -31,6 +36,9 @@ jobs:
           VITE_API_AUDIT_LOGS_URL: ${{ secrets.VITE_API_AUDIT_LOGS_URL }}
           VITE_API_QUICK_LINKS_URL: ${{ secrets.VITE_API_QUICK_LINKS_URL }}
           VITE_API_SERVICE_ACCOUNTS_URL: ${{ secrets.VITE_API_SERVICE_ACCOUNTS_URL }}
+
+      - name: Build
+        run: npm run build
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy dist --project-name=mc-dashboard --commit-dirty=true
