@@ -12,6 +12,7 @@ const applyRole = (raw: string, set: (r: Role) => void) => {
 interface PermissionContextType {
   currentRole: Role;
   userEmail: string;
+  isAuthorized: boolean | null; // null = still checking, true = authorized, false = not in permissions list
   setCurrentRole: (role: Role) => void;
   setUserEmail: (email: string) => void;
   hasPermission: (requiredRole: Role) => boolean;
@@ -39,19 +40,39 @@ export const PermissionProvider = ({
   const [userEmail, setUserEmail] = useState<string>(
     () => localStorage.getItem("userEmail") ?? "",
   );
+  // null = checking, true = found in SharePoint, false = not registered
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   // On mount: try Cloudflare Access identity first (production),
   // fall back to localStorage email (local development).
   useEffect(() => {
     authService.getIdentity().then((identity) => {
-      const email = identity?.email ?? localStorage.getItem("userEmail") ?? "";
-      if (!email) return;
-      setUserEmail(email);
-      getRole(email)
-        .then((role) => applyRole(role, setCurrentRole))
-        .catch(() => {
-          /* keep default role on failure */
-        });
+      if (identity?.email) {
+        // Production: Cloudflare-verified identity — enforce SharePoint check
+        const email = identity.email;
+        setUserEmail(email);
+        getRole(email)
+          .then((role) => {
+            if (VALID_ROLES.includes(role as Role)) {
+              applyRole(role, setCurrentRole);
+              setIsAuthorized(true);
+            } else {
+              // Email passed OTP but is not in the SharePoint permissions list
+              setIsAuthorized(false);
+            }
+          })
+          .catch(() => setIsAuthorized(false));
+      } else {
+        // Local development: no Cloudflare identity, skip authorization check
+        const email = localStorage.getItem("userEmail") ?? "";
+        if (email) {
+          setUserEmail(email);
+          getRole(email)
+            .then((role) => applyRole(role, setCurrentRole))
+            .catch(() => {/* keep default role */});
+        }
+        setIsAuthorized(true);
+      }
     });
   }, []);
 
@@ -80,6 +101,7 @@ export const PermissionProvider = ({
       value={{
         currentRole,
         userEmail,
+        isAuthorized,
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
