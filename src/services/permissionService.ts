@@ -25,7 +25,9 @@ export async function getRole(email: string): Promise<UserRole> {
     json.data.value.length > 0
   ) {
     const item = json.data.value[0];
-    return (item.Role ?? item.role) as UserRole;
+    const raw = item.Role ?? item.role;
+    // SharePoint choice fields return { Value: "..." } — unwrap if needed
+    return ((raw as { Value?: string })?.Value ?? raw) as UserRole;
   }
   // Fallback: direct {"role":"..."} format
   return (json.data?.role ?? json.role) as UserRole;
