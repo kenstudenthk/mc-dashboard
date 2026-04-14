@@ -15,6 +15,7 @@ import { TutorTooltip } from "../components/TutorTooltip";
 import {
   getAllUsers,
   updateUser,
+  createUser,
   type SPUser,
   type UserRole,
   type UserStatus,
@@ -27,7 +28,12 @@ const Settings = () => {
   const [profileEmail, setProfileEmail] = useState(userEmail || "");
   const [profileName, setProfileName] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
-  const [inviteSent, setInviteSent] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState<UserRole>("User");
+  const [newStatus, setNewStatus] = useState<UserStatus>("Active");
+  const [addingUser, setAddingUser] = useState(false);
   const [editingTeamIndex, setEditingTeamIndex] = useState<number | null>(null);
   const [teamStatusEdits, setTeamStatusEdits] = useState<
     Record<number, UserStatus>
@@ -57,9 +63,24 @@ const Settings = () => {
     setTimeout(() => setProfileSaved(false), 3000);
   };
 
-  const handleInviteMember = () => {
-    setInviteSent(true);
-    setTimeout(() => setInviteSent(false), 3000);
+  const handleAddUser = async () => {
+    if (!newEmail || !newName) return;
+    setAddingUser(true);
+    setUsersError(null);
+    try {
+      await createUser(newEmail, newName, newRole, newStatus);
+      const updated = await getAllUsers();
+      setUsers(updated);
+      setNewName("");
+      setNewEmail("");
+      setNewRole("User");
+      setNewStatus("Active");
+      setShowAddUser(false);
+    } catch {
+      setUsersError("Failed to add user. Please try again.");
+    } finally {
+      setAddingUser(false);
+    }
   };
 
   const handleSaveTeamStatus = async (index: number, user: SPUser) => {
@@ -349,24 +370,14 @@ const Settings = () => {
                 >
                   Team Management
                 </h2>
-                <div className="flex items-center gap-3">
-                  {inviteSent && (
-                    <span
-                      className="text-[12px] text-green-600 font-medium"
-                      style={{ letterSpacing: "-0.12px" }}
-                    >
-                      Invite sent!
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleInviteMember}
-                    className="px-4 py-1.5 bg-[#f5f5f7] text-[#1d1d1f] rounded-lg text-[13px] font-medium hover:bg-[#ededf2] transition-colors border border-[rgba(0,0,0,0.04)]"
-                    style={{ letterSpacing: "-0.12px" }}
-                  >
-                    Invite Member
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddUser((v) => !v)}
+                  className="px-4 py-1.5 bg-[#0071e3] text-white rounded-lg text-[13px] font-medium hover:bg-[#0077ed] transition-colors"
+                  style={{ letterSpacing: "-0.12px" }}
+                >
+                  {showAddUser ? "Cancel" : "+ Add User"}
+                </button>
               </div>
               <p
                 className="text-[13px] text-[#1d1d1f]/45"
@@ -375,6 +386,89 @@ const Settings = () => {
                 As an Admin, you can manage your team members and their basic
                 access.
               </p>
+
+              {showAddUser && (
+                <div className="p-5 bg-[#f5f5f7] rounded-xl space-y-4">
+                  <p className="text-[13px] font-semibold text-[#1d1d1f]" style={{ letterSpacing: "-0.12px" }}>
+                    New User
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="e.g. John Smith"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] placeholder-[#1d1d1f]/30 focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
+                        style={{ letterSpacing: "-0.224px" }}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="user@example.com"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] placeholder-[#1d1d1f]/30 focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
+                        style={{ letterSpacing: "-0.224px" }}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                        Role
+                      </label>
+                      <select
+                        value={newRole}
+                        onChange={(e) => setNewRole(e.target.value as UserRole)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
+                      >
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Global Admin">Global Admin</option>
+                        <option value="Developer">Developer</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                        Status
+                      </label>
+                      <select
+                        value={newStatus}
+                        onChange={(e) => setNewStatus(e.target.value as UserStatus)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleAddUser}
+                      disabled={addingUser || !newEmail || !newName}
+                      className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
+                      style={{ letterSpacing: "-0.224px" }}
+                    >
+                      {addingUser ? "Adding…" : "Add User"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddUser(false); setNewName(""); setNewEmail(""); setNewRole("User"); setNewStatus("Active"); }}
+                      className="text-[13px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {usersError && (
                 <p className="text-[13px] text-red-600">{usersError}</p>

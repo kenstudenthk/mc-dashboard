@@ -85,3 +85,21 @@ export async function updateUser(
   });
   if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
 }
+
+export async function createUser(
+  email: string,
+  displayName: string,
+  role: UserRole,
+  status: UserStatus,
+): Promise<void> {
+  if (!URL) throw new Error("Permissions API URL is not configured.");
+  const res = await fetch(URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "CREATE_USER",
+      data: { Title: email, DisplayName: displayName, Role: role, Status: status },
+    }),
+  });
+  if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
+}
