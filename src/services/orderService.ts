@@ -118,7 +118,12 @@ async function call<T>(body: object): Promise<T> {
 export const orderService = {
   findAll: () => call<Order[]>({ action: "GET_ALL" }),
 
-  findById: (id: number) => call<Order>({ action: "GET_ONE", data: { id } }),
+  findById: async (id: number): Promise<Order> => {
+    const orders = await call<Order[]>({ action: "GET_ALL" });
+    const order = orders.find((o) => o.id === id);
+    if (!order) throw new Error(`Order not found: ${id}`);
+    return order;
+  },
 
   findByTitle: async (title: string): Promise<Order> => {
     const orders = await call<Order[]>({ action: "GET_ALL" });
