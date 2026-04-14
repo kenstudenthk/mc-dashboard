@@ -79,14 +79,15 @@ const OrderDetails = () => {
     orderPromise
       .then((ord) => {
         setOrder(ord);
-        return Promise.all([
+        return Promise.allSettled([
           orderTimelineService.getByOrder(ord.id),
           serviceAccountService.findByOrderId(ord.id),
         ]);
       })
-      .then(([events, accounts]) => {
-        setTimeline(events);
-        if (accounts.length > 0) setServiceAccount(accounts[0]);
+      .then(([eventsResult, accountsResult]) => {
+        if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
+        if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
+          setServiceAccount(accountsResult.value[0]);
       })
       .catch(() => setError("Failed to load order details."))
       .finally(() => setLoading(false));
