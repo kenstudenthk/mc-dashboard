@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getRole } from "../services/permissionService";
+import { authService } from "../services/authService";
 
 export type Role = "User" | "Admin" | "Global Admin" | "Developer";
 
@@ -14,6 +15,7 @@ interface PermissionContextType {
   setCurrentRole: (role: Role) => void;
   setUserEmail: (email: string) => void;
   hasPermission: (requiredRole: Role) => boolean;
+  logout: () => void;
 }
 
 const roleHierarchy: Record<Role, number> = {
@@ -38,16 +40,19 @@ export const PermissionProvider = ({
     () => localStorage.getItem("userEmail") ?? "",
   );
 
-  // On mount, if an email is saved, fetch the real role from SharePoint
+  // On mount: try Cloudflare Access identity first (production),
+  // fall back to localStorage email (local development).
   useEffect(() => {
-    const saved = localStorage.getItem("userEmail");
-    if (!saved) return;
-    setUserEmail(saved);
-    getRole(saved)
-      .then((role) => applyRole(role, setCurrentRole))
-      .catch(() => {
-        /* keep default role on failure */
-      });
+    authService.getIdentity().then((identity) => {
+      const email = identity?.email ?? localStorage.getItem("userEmail") ?? "";
+      if (!email) return;
+      setUserEmail(email);
+      getRole(email)
+        .then((role) => applyRole(role, setCurrentRole))
+        .catch(() => {
+          /* keep default role on failure */
+        });
+    });
   }, []);
 
   // Persist email to localStorage whenever it changes
@@ -78,6 +83,7 @@ export const PermissionProvider = ({
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
+        logout: authService.logout,
       }}
     >
       {children}

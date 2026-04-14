@@ -6,7 +6,7 @@ import { TutorTooltip } from './TutorTooltip';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { hasPermission } = usePermission();
+  const { hasPermission, logout } = usePermission();
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -93,6 +93,7 @@ const Sidebar = () => {
 
         <button
           title={isCollapsed ? "Log Out" : undefined}
+          onClick={logout}
           className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2.5 rounded-lg text-white/40 hover:bg-red-900/25 hover:text-red-400 transition-all duration-200 w-full`}
         >
           <LogOut className="w-5 h-5 shrink-0" />
