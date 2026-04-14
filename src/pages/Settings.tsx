@@ -67,7 +67,7 @@ const Settings = () => {
     if (!newStatus) return;
     setSavingIndex(index);
     try {
-      await updateUser(user.email, { status: newStatus });
+      await updateUser(user.id, user.email, { status: newStatus });
       setUsers((prev) =>
         prev.map((u, i) => (i === index ? { ...u, status: newStatus } : u)),
       );
@@ -84,7 +84,7 @@ const Settings = () => {
     if (!newRole) return;
     setSavingIndex(index);
     try {
-      await updateUser(user.email, { role: newRole });
+      await updateUser(user.id, user.email, { role: newRole });
       setUsers((prev) =>
         prev.map((u, i) => (i === index ? { ...u, role: newRole } : u)),
       );

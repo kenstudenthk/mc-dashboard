@@ -4,6 +4,7 @@ export type UserRole = "Developer" | "Global Admin" | "Admin" | "User";
 export type UserStatus = "Active" | "Pending" | "Inactive";
 
 export interface SPUser {
+  id: number;
   email: string;
   displayName: string;
   role: UserRole;
@@ -50,6 +51,7 @@ export async function getAllUsers(): Promise<SPUser[]> {
     const roleRaw = i.Role ?? i.role;
     const statusRaw = i.Status ?? i.status;
     return {
+      id: Number(i.ID ?? i.Id ?? 0),
       email: i.Title ?? i.title ?? "",
       displayName: i.DisplayName ?? i.displayName ?? i.Title ?? "",
       role: ((roleRaw as { Value?: string })?.Value ??
@@ -63,6 +65,7 @@ export async function getAllUsers(): Promise<SPUser[]> {
 }
 
 export async function updateUser(
+  id: number,
   email: string,
   fields: Partial<Pick<SPUser, "role" | "status" | "displayName">>,
 ): Promise<void> {
@@ -72,6 +75,7 @@ export async function updateUser(
     body: JSON.stringify({
       action: "UPDATE_USER",
       data: {
+        Id: id,
         Title: email,
         Role: fields.role,
         DisplayName: fields.displayName,

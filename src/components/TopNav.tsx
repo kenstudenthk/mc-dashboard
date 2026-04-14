@@ -74,19 +74,21 @@ const TopNav = () => {
           {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
         </button>
 
-        <div className="flex items-center gap-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-[11px] px-3 py-1.5">
-          <Shield className="w-3.5 h-3.5 text-[#0071e3]" />
-          <select
-            value={currentRole}
-            onChange={(e) => setCurrentRole(e.target.value as Role)}
-            className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#1d1d1f]/80 cursor-pointer"
-          >
-            <option value="User">User View</option>
-            <option value="Admin">Admin View</option>
-            <option value="Global Admin">Global Admin View</option>
-            <option value="Developer">Developer View</option>
-          </select>
-        </div>
+        {currentRole === "Developer" && (
+          <div className="flex items-center gap-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-[11px] px-3 py-1.5">
+            <Shield className="w-3.5 h-3.5 text-[#0071e3]" />
+            <select
+              value={currentRole}
+              onChange={(e) => setCurrentRole(e.target.value as Role)}
+              className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#1d1d1f]/80 cursor-pointer"
+            >
+              <option value="User">User View</option>
+              <option value="Admin">Admin View</option>
+              <option value="Global Admin">Global Admin View</option>
+              <option value="Developer">Developer View</option>
+            </select>
+          </div>
+        )}
 
         <div className="relative hidden md:block">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
