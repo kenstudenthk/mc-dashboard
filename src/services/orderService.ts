@@ -115,26 +115,45 @@ async function call<T>(body: object): Promise<T> {
   return withId(normalizeChoiceFields(json as T)) as T;
 }
 
+let ordersCache: Order[] | null = null;
+
+async function findAllCached(): Promise<Order[]> {
+  if (ordersCache) return ordersCache;
+  const orders = await call<Order[]>({ action: "GET_ALL" });
+  ordersCache = orders;
+  return orders;
+}
+
+function invalidateCache() {
+  ordersCache = null;
+}
+
 export const orderService = {
-  findAll: () => call<Order[]>({ action: "GET_ALL" }),
+  findAll: findAllCached,
 
   findById: async (id: number): Promise<Order> => {
-    const orders = await call<Order[]>({ action: "GET_ALL" });
+    const orders = await findAllCached();
     const order = orders.find((o) => o.id === id);
     if (!order) throw new Error(`Order not found: ${id}`);
     return order;
   },
 
   findByTitle: async (title: string): Promise<Order> => {
-    const orders = await call<Order[]>({ action: "GET_ALL" });
+    const orders = await findAllCached();
     const order = orders.find((o) => o.Title === title);
     if (!order) throw new Error(`Order not found: ${title}`);
     return order;
   },
 
-  create: (data: CreateOrderInput, userEmail: string) =>
-    call<Order>({ action: "CREATE", data, userEmail }),
+  create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
+    const result = await call<Order>({ action: "CREATE", data, userEmail });
+    invalidateCache();
+    return result;
+  },
 
-  update: (id: number, data: Partial<CreateOrderInput>, userEmail: string) =>
-    call<Order>({ action: "UPDATE", data: { id, ...data }, userEmail }),
+  update: async (id: number, data: Partial<CreateOrderInput>, userEmail: string): Promise<Order> => {
+    const result = await call<Order>({ action: "UPDATE", data: { id, ...data }, userEmail });
+    invalidateCache();
+    return result;
+  },
 };
