@@ -274,7 +274,23 @@ const OrderDetails = () => {
                 <InfoField label="CxS Complete Date" value={formatDate(order.CxSCompleteDate ?? "")} />
                 <InfoField label="CxS Request No." value={order.CxSRequestNo} />
                 <InfoField label="TID" value={order.TID} />
-                <InfoField label="SD Number" value={order.SDNumber} />
+                {order.SDNumber ? (
+                  <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
+                    <dt className="label-text text-[#1d1d1f]/35 mb-1">SD Number</dt>
+                    <dd className="text-sm font-medium">
+                      <a
+                        href={`http://10.8.100.3:8080/pabx/servlet/IncidentDetailServlet?incidentId=${order.SDNumber}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#0071e3] hover:underline"
+                      >
+                        {order.SDNumber}
+                      </a>
+                    </dd>
+                  </div>
+                ) : (
+                  <InfoField label="SD Number" value={order.SDNumber} />
+                )}
               </dl>
               <dl>
                 <InfoField label="PS Job (Y/N)" value={order.PSJob} />

@@ -18,12 +18,15 @@ const formatDate = (iso: string): string => {
   }
 };
 
+const PAGE_SIZE = 20;
+
 const OrderRegistry = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [providerFilter, setProviderFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [customerMap, setCustomerMap] = useState<Map<string, number>>(
     new Map(),
@@ -44,6 +47,11 @@ const OrderRegistry = () => {
       .catch(() => setError("Failed to load orders. Please try again."))
       .finally(() => setLoading(false));
   }, []);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, providerFilter, statusFilter, searchQuery]);
 
   const uniqueStatuses = Array.from(
     new Set(allOrders.map((o) => o.Status).filter(Boolean))
@@ -84,6 +92,14 @@ const OrderRegistry = () => {
 
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+  const rangeStart = filteredOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredOrders.length);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -276,8 +292,8 @@ const OrderRegistry = () => {
                     Loading orders…
                   </td>
                 </tr>
-              ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => {
+              ) : pagedOrders.length > 0 ? (
+                pagedOrders.map((order) => {
                   const isTerminated =
                     terminatedAccountIds.includes(order.AccountID) &&
                     order.OrderType !== "Termination";
@@ -380,20 +396,47 @@ const OrderRegistry = () => {
         </div>
 
         <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
-          <div>Showing {filteredOrders.length} entries</div>
+          <div>
+            {filteredOrders.length === 0
+              ? "No entries"
+              : `Showing ${rangeStart}–${rangeEnd} of ${filteredOrders.length} entries`}
+          </div>
           <div className="flex gap-1">
             <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
               className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
-              disabled
             >
               Prev
             </button>
-            <button className="px-3 py-1 bg-[#0071e3] text-white rounded-lg text-xs font-medium">
-              1
-            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+              .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("…");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((item, idx) =>
+                item === "…" ? (
+                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-[#1d1d1f]/30">…</span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => setCurrentPage(item as number)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                      currentPage === item
+                        ? "bg-[#0071e3] text-white"
+                        : "border border-[#1d1d1f]/08 hover:bg-[#f5f5f7] text-[#1d1d1f]/60"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                )
+              )}
             <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
               className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
-              disabled
             >
               Next
             </button>
