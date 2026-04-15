@@ -61,7 +61,7 @@ const OrderRegistry = () => {
     .filter((order) => order.OrderType === "Termination" && order.AccountID)
     .map((order) => order.AccountID);
 
-  const filteredOrders = allOrders.filter((order) => {
+  const filteredOrders = [...allOrders].sort((a, b) => b.id - a.id).filter((order) => {
     if (activeTab === "Pending") {
       if (["Completed", "Cancelled"].includes(order.Status)) return false;
     } else if (activeTab === "Completed") {
