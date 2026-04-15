@@ -65,7 +65,7 @@ const CustomerProfile = () => {
         setCustomer(cust);
         setFormData({ email: cust.Email, phone: cust.Phone });
         setNotesData(cust.SpecialNotes || "");
-        setOrders(allOrders.filter((o) => o.CustomerID === cust.id));
+        setOrders(allOrders.filter((o) => Number(o.CustomerID) === cust.id));
       })
       .catch(() => setError("Failed to load customer details."))
       .finally(() => setLoading(false));
@@ -379,9 +379,15 @@ const CustomerProfile = () => {
                     className="w-full h-full min-h-[150px] px-3 py-2 text-sm bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400/20 resize-y"
                   />
                 ) : (
-                  <div className="text-sm text-[#1d1d1f]/70 whitespace-pre-wrap">
+                  <div className="text-sm text-[#1d1d1f]/70">
                     {notesData ? (
-                      notesData
+                      /^</.test(notesData.trim()) ? (
+                        <div
+                          dangerouslySetInnerHTML={{ __html: notesData }}
+                        />
+                      ) : (
+                        <span className="whitespace-pre-wrap">{notesData}</span>
+                      )
                     ) : (
                       <span className="text-[#1d1d1f]/30 italic">
                         No special notes added for this customer yet. Click the
@@ -428,7 +434,7 @@ const CustomerProfile = () => {
                         </div>
                         <div>
                           <Link
-                            to={`/orders/${order.Title}`}
+                            to={`/orders/${order.id}`}
                             className="text-sm font-medium text-[#1d1d1f] hover:text-[#0071e3] transition-colors"
                           >
                             {order.Title}

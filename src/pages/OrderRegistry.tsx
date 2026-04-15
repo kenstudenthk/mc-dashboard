@@ -22,6 +22,7 @@ const OrderRegistry = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [providerFilter, setProviderFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [customerMap, setCustomerMap] = useState<Map<string, number>>(
@@ -44,6 +45,10 @@ const OrderRegistry = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const uniqueStatuses = Array.from(
+    new Set(allOrders.map((o) => o.Status).filter(Boolean))
+  ).sort();
+
   const terminatedAccountIds = allOrders
     .filter((order) => order.OrderType === "Termination" && order.AccountID)
     .map((order) => order.AccountID);
@@ -59,6 +64,10 @@ const OrderRegistry = () => {
       providerFilter !== "All" &&
       !(order.CloudProvider ?? "").includes(providerFilter)
     ) {
+      return false;
+    }
+
+    if (statusFilter !== "All" && order.Status !== statusFilter) {
       return false;
     }
 
@@ -203,6 +212,21 @@ const OrderRegistry = () => {
                 <option value="AliCloud">AliCloud</option>
               </select>
             </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-[#1d1d1f]/60">
+                Status:
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="text-sm border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 bg-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]"
+              >
+                <option value="All">All Statuses</option>
+                {uniqueStatuses.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 
@@ -266,7 +290,7 @@ const OrderRegistry = () => {
                       <td
                         className={`px-6 py-3.5 text-xs font-semibold hover:underline ${isTerminated ? "text-red-600" : "text-[#0071e3]"}`}
                       >
-                        <Link to={`/orders/${order.Title}`}>{order.Title}</Link>
+                        <Link to={`/orders/${order.id}`}>{order.Title}</Link>
                       </td>
                       <td className="px-6 py-3.5 text-sm">
                         {customerMap.get(
@@ -326,7 +350,7 @@ const OrderRegistry = () => {
                       <td className="px-6 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
-                            to={`/orders/${order.Title}`}
+                            to={`/orders/${order.id}`}
                             className={`p-1.5 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-50" : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"}`}
                           >
                             <Eye className="w-4 h-4" />
