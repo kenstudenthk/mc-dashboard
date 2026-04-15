@@ -271,7 +271,7 @@ const OrderDetails = () => {
               <dl>
                 <InfoField label="OASIS Number" value={order.OasisNumber} />
                 <InfoField label="Order Receive Date" value={formatDate(order.OrderReceiveDate ?? "")} />
-                <InfoField label="CxS Complete Date" value={formatDate(order.CxSCompleteDate ?? "")} />
+                <InfoField label="CxS Complete Date" value={order.CxSCompleteDate ? formatDate(order.CxSCompleteDate) : "TBC"} />
                 <InfoField label="CxS Request No." value={order.CxSRequestNo} />
                 <InfoField label="TID" value={order.TID} />
                 {order.SDNumber ? (
@@ -301,8 +301,9 @@ const OrderDetails = () => {
                   <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
                     <dt className="label-text text-[#1d1d1f]/35 mb-1">Order Form</dt>
                     <dd className="text-sm font-medium">
-                      <a href={order.OrderFormURL} target="_blank" rel="noopener noreferrer" className="text-[#0071e3] hover:underline break-all">
-                        View File
+                      <a href={order.OrderFormURL} download rel="noopener noreferrer" className="text-[#0071e3] hover:underline inline-flex items-center gap-1">
+                        <Download className="w-3.5 h-3.5" />
+                        Download File
                       </a>
                     </dd>
                   </div>

@@ -131,6 +131,11 @@ function invalidateCache() {
 export const orderService = {
   findAll: findAllCached,
 
+  refresh: async (): Promise<Order[]> => {
+    invalidateCache();
+    return findAllCached();
+  },
+
   findById: async (id: number): Promise<Order> => {
     const orders = await findAllCached();
     const order = orders.find((o) => o.id === id);

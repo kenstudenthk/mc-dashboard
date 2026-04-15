@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   PieChart, Pie, Cell,
   BarChart, Bar,
@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import {
   Download, TrendingUp, Cloud, FileText,
-  CheckCircle, Filter, AlertCircle, Mail,
+  CheckCircle, Filter, AlertCircle, Mail, RefreshCw,
 } from 'lucide-react';
 import { orderService, type Order } from '../services/orderService';
 
@@ -107,21 +107,73 @@ function ChartCard({ title, children, right }: ChartCardProps) {
   );
 }
 
+function ReportsSkeleton() {
+  return (
+    <div className="space-y-6 pb-12 max-w-7xl mx-auto animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-56 bg-gray-200 rounded-lg" />
+          <div className="h-4 w-80 bg-gray-100 rounded" />
+        </div>
+        <div className="h-9 w-28 bg-gray-200 rounded-lg" />
+      </div>
+      <div className="card p-4 flex gap-3">
+        <div className="h-9 w-32 bg-gray-100 rounded-lg" />
+        <div className="h-9 w-36 bg-gray-100 rounded-lg" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="card p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0" />
+            <div className="space-y-2 flex-1">
+              <div className="h-3 bg-gray-100 rounded w-3/4" />
+              <div className="h-6 bg-gray-200 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+      {[0, 1].map(row => (
+        <div key={row} className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {[0, 1].map(col => (
+            <div key={col} className="card p-6">
+              <div className="h-5 w-40 bg-gray-200 rounded mb-5" />
+              <div className="h-72 bg-gray-100 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const Reports = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState('All Time');
   const [provider, setProvider] = useState('All');
 
-  useEffect(() => {
+  const loadOrders = useCallback(() => {
+    setError(null);
+    setLoading(true);
     orderService.findAll()
       .then(setOrders)
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    orderService.refresh()
+      .then(data => { setOrders(data); setError(null); })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setRefreshing(false));
+  };
 
   // ── Filtering ─────────────────────────────────────────────────────────────
 
@@ -293,18 +345,21 @@ const Reports = () => {
 
   // ── Loading / Error ───────────────────────────────────────────────────────
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-sm text-[#1d1d1f]/45">Loading report data…</div>
-      </div>
-    );
-  }
+  if (loading) return <ReportsSkeleton />;
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-sm text-red-500">Failed to load data: {error}</div>
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <AlertCircle className="w-10 h-10 text-red-400" />
+        <p className="text-sm text-[#1d1d1f]/60">Failed to load report data</p>
+        <p className="text-xs text-red-500">{error}</p>
+        <button
+          onClick={loadOrders}
+          className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm text-white flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </button>
       </div>
     );
   }
@@ -327,13 +382,23 @@ const Reports = () => {
             Overview of cloud provisioning orders and service distribution.
           </p>
         </div>
-        <button
-          onClick={exportCSV}
-          className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+          <button
+            onClick={exportCSV}
+            className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}

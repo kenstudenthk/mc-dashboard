@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Filter, MoreHorizontal, Eye, Search } from "lucide-react";
+import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { orderService, Order } from "../services/orderService";
 import { customerService, Customer } from "../services/customerService";
@@ -18,6 +18,25 @@ const formatDate = (iso: string): string => {
   }
 };
 
+function TableSkeleton() {
+  return (
+    <>
+      {[...Array(8)].map((_, i) => (
+        <tr key={i} className="border-b border-[#1d1d1f]/04 animate-pulse">
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-200 rounded w-24" /></td>
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-36" /></td>
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-20" /></td>
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-28" /></td>
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-20" /></td>
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-16" /></td>
+          <td className="px-6 py-3.5"><div className="h-5 bg-gray-200 rounded-full w-20" /></td>
+          <td className="px-6 py-3.5" />
+        </tr>
+      ))}
+    </>
+  );
+}
+
 const PAGE_SIZE = 20;
 
 const OrderRegistry = () => {
@@ -33,20 +52,44 @@ const OrderRegistry = () => {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const buildCustomerMap = (customers: Customer[]) => {
+    const map = new Map<string, number>();
+    (Array.isArray(customers) ? customers : []).forEach((c: Customer) => {
+      if (c.Title) map.set(c.Title.toLowerCase(), c.id);
+    });
+    return map;
+  };
+
+  const loadOrders = useCallback(() => {
+    setError(null);
+    setLoading(true);
     Promise.all([orderService.findAll(), customerService.findAll()])
       .then(([orders, customers]) => {
         setAllOrders(Array.isArray(orders) ? orders : []);
-        const map = new Map<string, number>();
-        (Array.isArray(customers) ? customers : []).forEach((c: Customer) => {
-          if (c.Title) map.set(c.Title.toLowerCase(), c.id);
-        });
-        setCustomerMap(map);
+        setCustomerMap(buildCustomerMap(customers));
+        setLoading(false);
       })
-      .catch(() => setError("Failed to load orders. Please try again."))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        setError("Failed to load orders. Please try again.");
+        setLoading(false);
+      });
   }, []);
+
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    Promise.all([orderService.refresh(), customerService.findAll()])
+      .then(([orders, customers]) => {
+        setAllOrders(Array.isArray(orders) ? orders : []);
+        setCustomerMap(buildCustomerMap(customers));
+        setError(null);
+      })
+      .catch(() => setError("Failed to refresh orders. Please try again."))
+      .finally(() => setRefreshing(false));
+  };
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
@@ -134,19 +177,29 @@ const OrderRegistry = () => {
             Manage and track all cloud provisioning orders.
           </p>
         </div>
-        <TutorTooltip
-          text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
-          position="bottom"
-          wrapperClass="inline-block"
-        >
-          <Link
-            to="/orders/new"
-            className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 disabled:opacity-50 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            New Order
-          </Link>
-        </TutorTooltip>
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+          <TutorTooltip
+            text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
+            position="bottom"
+            wrapperClass="inline-block"
+          >
+            <Link
+              to="/orders/new"
+              className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Order
+            </Link>
+          </TutorTooltip>
+        </div>
       </div>
 
       <div className="card overflow-hidden">
@@ -247,8 +300,15 @@ const OrderRegistry = () => {
         )}
 
         {error && (
-          <div className="px-6 py-4 text-sm text-red-600 bg-red-50 border-b border-red-100">
-            {error}
+          <div className="px-6 py-3 text-sm text-red-600 bg-red-50 border-b border-red-100 flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={loadOrders}
+              className="flex items-center gap-1.5 font-medium text-red-600 hover:text-red-800 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </button>
           </div>
         )}
 
@@ -284,14 +344,7 @@ const OrderRegistry = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
-                  >
-                    Loading orders…
-                  </td>
-                </tr>
+                <TableSkeleton />
               ) : pagedOrders.length > 0 ? (
                 pagedOrders.map((order) => {
                   const isTerminated =
@@ -396,11 +449,11 @@ const OrderRegistry = () => {
         </div>
 
         <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
-          <div>
+          <span>
             {filteredOrders.length === 0
               ? "No entries"
               : `Showing ${rangeStart}–${rangeEnd} of ${filteredOrders.length} entries`}
-          </div>
+          </span>
           <div className="flex gap-1">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
