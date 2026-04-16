@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Search,
   Filter,
@@ -17,6 +17,7 @@ import {
   CreateCustomerInput,
 } from "../services/customerService";
 import { usePermission } from "../contexts/PermissionContext";
+import { useCustomers, useInvalidateCustomers } from "../services/useOrdersQuery";
 
 const EMPTY_FORM: CreateCustomerInput = {
   Title: "",
@@ -33,9 +34,10 @@ const inputClass =
 
 const Customers = () => {
   const { userEmail } = usePermission();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading: loading, isError } = useCustomers();
+  const invalidateCustomers = useInvalidateCustomers();
+  const customers: Customer[] = Array.isArray(data) ? data : [];
+  const error = isError ? "Failed to load customers. Please try again." : null;
   const [searchQuery, setSearchQuery] = useState("");
 
   const [showModal, setShowModal] = useState(false);
@@ -58,8 +60,8 @@ const Customers = () => {
     setSubmitting(true);
     setFormError(null);
     try {
-      const created = await customerService.create(form, userEmail);
-      setCustomers((prev) => [created, ...prev]);
+      await customerService.create(form, userEmail);
+      invalidateCustomers();
       setShowModal(false);
       setForm(EMPTY_FORM);
     } catch {
@@ -68,14 +70,6 @@ const Customers = () => {
       setSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    customerService
-      .findAll()
-      .then((result) => setCustomers(Array.isArray(result) ? result : []))
-      .catch(() => setError("Failed to load customers. Please try again."))
-      .finally(() => setLoading(false));
-  }, []);
 
   const filtered = customers.filter((c) => {
     if (!searchQuery) return true;

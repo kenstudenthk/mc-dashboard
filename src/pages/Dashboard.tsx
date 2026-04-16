@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Clock, Calendar, Cloud, List, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
-import { orderService, Order } from "../services/orderService";
+import { Order } from "../services/orderService";
+import { useOrders } from "../services/useOrdersQuery";
 
 const INCOMPLETE_STATUSES = new Set([
   "Processing",
@@ -60,18 +61,8 @@ const getStatusColor = (status: string) => {
 };
 
 const Dashboard = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    orderService
-      .findAll()
-      .then((result) => setOrders(Array.isArray(result) ? result : []))
-      .catch(() => {
-        /* keep empty on failure */
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useOrders();
+  const orders: Order[] = Array.isArray(data) ? data : [];
 
   const incompleteOrders = orders.filter((o) =>
     INCOMPLETE_STATUSES.has(o.Status),

@@ -14,6 +14,7 @@ import {
 import { TutorTooltip } from "../components/TutorTooltip";
 import { usePermission } from "../contexts/PermissionContext";
 import { orderService, Order, CreateOrderInput } from "../services/orderService";
+import { useOrderByTitle, useInvalidateOrders } from "../services/useOrdersQuery";
 import {
   orderTimelineService,
   TimelineEvent,
@@ -72,11 +73,16 @@ const OrderDetails = () => {
   const { hasPermission, userEmail } = usePermission();
   const canEdit = hasPermission("Admin");
 
-  const [order, setOrder] = useState<Order | null>(null);
+  const { data: orderFromCache, isLoading, isError } = useOrderByTitle(id);
+  const invalidateOrders = useInvalidateOrders();
+  // Local override holds the post-edit result until the cache refreshes.
+  const [orderOverride, setOrderOverride] = useState<Order | null>(null);
+  const order = orderOverride ?? orderFromCache ?? null;
+
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const loading = isLoading && !order;
+  const error = isError ? "Failed to load order details." : null;
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<CreateOrderInput>>({});
@@ -128,7 +134,8 @@ const OrderDetails = () => {
     setEditError(null);
     try {
       const updated = await orderService.update(order.id, editForm, userEmail);
-      setOrder(updated);
+      setOrderOverride(updated);
+      invalidateOrders();
       handleEditClose();
     } catch {
       setEditError("Failed to save. Please check the PA flow and try again.");
@@ -140,28 +147,18 @@ const OrderDetails = () => {
   const set = (field: keyof CreateOrderInput, value: string | number) =>
     setEditForm((prev) => ({ ...prev, [field]: value }));
 
+  // Load timeline and service account once the order ID is known from cache.
   useEffect(() => {
-    if (!id) return;
-    const numericId = /^\d+$/.test(id) ? parseInt(id, 10) : null;
-    const orderPromise = numericId !== null
-      ? orderService.findById(numericId)
-      : orderService.findByTitle(id);
-    orderPromise
-      .then((ord) => {
-        setOrder(ord);
-        return Promise.allSettled([
-          orderTimelineService.getByOrder(ord.id),
-          serviceAccountService.findByOrderId(ord.id),
-        ]);
-      })
-      .then(([eventsResult, accountsResult]) => {
-        if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
-        if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
-          setServiceAccount(accountsResult.value[0]);
-      })
-      .catch(() => setError("Failed to load order details."))
-      .finally(() => setLoading(false));
-  }, [id]);
+    if (!order?.id) return;
+    Promise.allSettled([
+      orderTimelineService.getByOrder(order.id),
+      serviceAccountService.findByOrderId(order.id),
+    ]).then(([eventsResult, accountsResult]) => {
+      if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
+      if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
+        setServiceAccount(accountsResult.value[0]);
+    });
+  }, [order?.id]);
 
   if (loading) {
     return (

@@ -33,6 +33,7 @@ export interface Order {
   By?: string;
   OrderFormURL?: string;
   Remark?: string;
+  SubName?: string;
 }
 
 export interface CreateOrderInput {
@@ -67,6 +68,7 @@ export interface CreateOrderInput {
   By?: string;
   OrderFormURL?: string;
   Remark?: string;
+  SubName?: string;
 }
 
 function normalizeChoiceFields<T>(data: T): T {
@@ -115,50 +117,35 @@ async function call<T>(body: object): Promise<T> {
   return withId(normalizeChoiceFields(json as T)) as T;
 }
 
-let ordersCache: Order[] | null = null;
-
-async function findAllCached(): Promise<Order[]> {
-  if (ordersCache) return ordersCache;
-  const orders = await call<Order[]>({ action: "GET_ALL" });
-  ordersCache = orders;
-  return orders;
-}
-
-function invalidateCache() {
-  ordersCache = null;
+async function findAll(): Promise<Order[]> {
+  return call<Order[]>({ action: "GET_ALL" });
 }
 
 export const orderService = {
-  findAll: findAllCached,
+  findAll,
 
-  refresh: async (): Promise<Order[]> => {
-    invalidateCache();
-    return findAllCached();
-  },
+  // kept for manual refresh button — prefer useInvalidateOrders() from useOrdersQuery
+  refresh: findAll,
 
   findById: async (id: number): Promise<Order> => {
-    const orders = await findAllCached();
+    const orders = await findAll();
     const order = orders.find((o) => o.id === id);
     if (!order) throw new Error(`Order not found: ${id}`);
     return order;
   },
 
   findByTitle: async (title: string): Promise<Order> => {
-    const orders = await findAllCached();
+    const orders = await findAll();
     const order = orders.find((o) => o.Title === title);
     if (!order) throw new Error(`Order not found: ${title}`);
     return order;
   },
 
   create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
-    const result = await call<Order>({ action: "CREATE", data, userEmail });
-    invalidateCache();
-    return result;
+    return call<Order>({ action: "CREATE", data, userEmail });
   },
 
   update: async (id: number, data: Partial<CreateOrderInput>, userEmail: string): Promise<Order> => {
-    const result = await call<Order>({ action: "UPDATE", data: { id, ...data }, userEmail });
-    invalidateCache();
-    return result;
+    return call<Order>({ action: "UPDATE", data: { id, ...data }, userEmail });
   },
 };
