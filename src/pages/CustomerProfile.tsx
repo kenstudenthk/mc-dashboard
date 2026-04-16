@@ -106,15 +106,15 @@ const CustomerProfile = () => {
   );
 
   const projectGroups = orders.reduce<Record<string, Order[]>>((acc, order) => {
-    const key = order.SubName?.trim() || "(General)";
+    const key = order.SubName?.trim() || "General";
     if (!acc[key]) acc[key] = [];
     acc[key].push(order);
     return acc;
   }, {});
 
   const sortedGroups = (Object.entries(projectGroups) as [string, Order[]][]).sort(([a], [b]) => {
-    if (a === "(General)") return -1;
-    if (b === "(General)") return 1;
+    if (a === "General") return -1;
+    if (b === "General") return 1;
     return a.localeCompare(b);
   });
 
@@ -437,7 +437,7 @@ const CustomerProfile = () => {
               ) : (
                 <div className="space-y-2">
                   {sortedGroups.map(([groupName, groupOrders]) => {
-                    const isOpen = expandedGroups[groupName] ?? groupName === "(General)";
+                    const isOpen = expandedGroups[groupName] ?? groupName === "General";
                     return (
                       <div key={groupName} className="border border-[#1d1d1f]/06 rounded-xl overflow-hidden">
                         <button
