@@ -11,6 +11,9 @@ import {
   Save,
   X,
   StickyNote,
+  FolderOpen,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { Customer } from "../services/customerService";
@@ -54,6 +57,7 @@ const CustomerProfile = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ email: "", phone: "" });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesData, setNotesData] = useState("");
@@ -101,7 +105,21 @@ const CustomerProfile = () => {
     }),
   );
 
-  const recentOrders = orders.slice(0, 5);
+  const projectGroups = orders.reduce<Record<string, Order[]>>((acc, order) => {
+    const key = order.SubName?.trim() || "(General)";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(order);
+    return acc;
+  }, {});
+
+  const sortedGroups = (Object.entries(projectGroups) as [string, Order[]][]).sort(([a], [b]) => {
+    if (a === "(General)") return 1;
+    if (b === "(General)") return -1;
+    return a.localeCompare(b);
+  });
+
+  const toggleGroup = (key: string) =>
+    setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
@@ -396,13 +414,13 @@ const CustomerProfile = () => {
           </TutorTooltip>
 
           <TutorTooltip
-            text="A quick view of the customer's most recent orders. Click 'View All' to see their complete order history."
+            text="Orders are grouped by project name. Click a project to expand and see its orders."
             position="left"
           >
             <div className="card p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-[17px] font-semibold text-[#1d1d1f]">
-                  Order History
+                  Projects &amp; Orders
                 </h2>
                 <Link
                   to="/orders"
@@ -412,48 +430,76 @@ const CustomerProfile = () => {
                 </Link>
               </div>
 
-              {recentOrders.length === 0 ? (
+              {sortedGroups.length === 0 ? (
                 <p className="text-sm text-[#1d1d1f]/30">
                   No orders found for this customer.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {recentOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="flex items-center justify-between p-3.5 rounded-lg border border-[#1d1d1f]/06 hover:bg-[#f5f5f7] transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f]/40 group-hover:bg-white group-hover:shadow-sm transition-all">
-                          <ShoppingBag className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <Link
-                            to={`/orders/${order.id}`}
-                            className="text-sm font-medium text-[#1d1d1f] hover:text-[#0071e3] transition-colors"
-                          >
-                            {order.Title}
-                          </Link>
-                          <div className="flex items-center gap-1.5 text-xs text-[#1d1d1f]/40 mt-0.5">
-                            <Clock className="w-3 h-3" />
-                            {order.SRD || "—"}
+                <div className="space-y-2">
+                  {sortedGroups.map(([groupName, groupOrders]) => {
+                    const isOpen = expandedGroups[groupName] ?? true;
+                    return (
+                      <div key={groupName} className="border border-[#1d1d1f]/06 rounded-xl overflow-hidden">
+                        <button
+                          onClick={() => toggleGroup(groupName)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-[#f5f5f7] hover:bg-[#ebebed] transition-colors text-left"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <FolderOpen className="w-4 h-4 text-[#0071e3]" />
+                            <span className="text-sm font-semibold text-[#1d1d1f]">
+                              {groupName}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-[#0071e3]">
+                              {groupOrders.length}
+                            </span>
                           </div>
-                        </div>
+                          {isOpen ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-[#1d1d1f]/40" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-[#1d1d1f]/40" />
+                          )}
+                        </button>
+                        {isOpen && (
+                          <div className="divide-y divide-[#1d1d1f]/04">
+                            {groupOrders.map((order) => (
+                              <div
+                                key={order.id}
+                                className="flex items-center justify-between px-4 py-3 hover:bg-[#f5f5f7] transition-colors group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f]/40 group-hover:bg-white group-hover:shadow-sm transition-all">
+                                    <ShoppingBag className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <Link
+                                      to={`/orders/${order.id}`}
+                                      className="text-sm font-medium text-[#1d1d1f] hover:text-[#0071e3] transition-colors"
+                                    >
+                                      {order.Title}
+                                    </Link>
+                                    <div className="flex items-center gap-1.5 text-xs text-[#1d1d1f]/40 mt-0.5">
+                                      <Clock className="w-3 h-3" />
+                                      {order.SRD || "—"}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-xs font-medium text-[#1d1d1f]/70">
+                                    {order.CloudProvider}
+                                  </div>
+                                  <div className="mt-1">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}>
+                                      {order.Status}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs font-medium text-[#1d1d1f]/70">
-                          {order.CloudProvider}
-                        </div>
-                        <div className="mt-1">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}
-                          >
-                            {order.Status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

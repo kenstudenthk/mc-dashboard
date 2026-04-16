@@ -33,6 +33,7 @@ export interface Order {
   By?: string;
   OrderFormURL?: string;
   Remark?: string;
+  SubName?: string;
 }
 
 export interface CreateOrderInput {
@@ -67,6 +68,7 @@ export interface CreateOrderInput {
   By?: string;
   OrderFormURL?: string;
   Remark?: string;
+  SubName?: string;
 }
 
 function normalizeChoiceFields<T>(data: T): T {
