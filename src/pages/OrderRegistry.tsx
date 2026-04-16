@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
-import { orderService, Order } from "../services/orderService";
-import { customerService, Customer } from "../services/customerService";
+import { Order } from "../services/orderService";
+import { Customer } from "../services/customerService";
+import { useOrders, useCustomers, useInvalidateOrders, useInvalidateCustomers } from "../services/useOrdersQuery";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -39,6 +40,14 @@ function TableSkeleton() {
 
 const PAGE_SIZE = 20;
 
+const buildCustomerMap = (customers: Customer[]): Map<string, number> => {
+  const map = new Map<string, number>();
+  customers.forEach((c) => {
+    if (c.Title) map.set(c.Title.toLowerCase(), c.id);
+  });
+  return map;
+};
+
 const OrderRegistry = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
@@ -46,49 +55,21 @@ const OrderRegistry = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [customerMap, setCustomerMap] = useState<Map<string, number>>(
-    new Map(),
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const buildCustomerMap = (customers: Customer[]) => {
-    const map = new Map<string, number>();
-    (Array.isArray(customers) ? customers : []).forEach((c: Customer) => {
-      if (c.Title) map.set(c.Title.toLowerCase(), c.id);
-    });
-    return map;
-  };
+  const { data: ordersData, isLoading: ordersLoading, isError: ordersError, isFetching } = useOrders();
+  const { data: customersData, isLoading: customersLoading } = useCustomers();
+  const invalidateOrders = useInvalidateOrders();
+  const invalidateCustomers = useInvalidateCustomers();
 
-  const loadOrders = useCallback(() => {
-    setError(null);
-    setLoading(true);
-    Promise.all([orderService.findAll(), customerService.findAll()])
-      .then(([orders, customers]) => {
-        setAllOrders(Array.isArray(orders) ? orders : []);
-        setCustomerMap(buildCustomerMap(customers));
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Failed to load orders. Please try again.");
-        setLoading(false);
-      });
-  }, []);
+  const allOrders: Order[] = Array.isArray(ordersData) ? ordersData : [];
+  const customerMap = buildCustomerMap(Array.isArray(customersData) ? customersData : []);
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
+  const loading = ordersLoading || customersLoading;
+  const error = ordersError ? "Failed to load orders. Please try again." : null;
 
   const handleRefresh = () => {
-    setRefreshing(true);
-    Promise.all([orderService.refresh(), customerService.findAll()])
-      .then(([orders, customers]) => {
-        setAllOrders(Array.isArray(orders) ? orders : []);
-        setCustomerMap(buildCustomerMap(customers));
-        setError(null);
-      })
-      .catch(() => setError("Failed to refresh orders. Please try again."))
-      .finally(() => setRefreshing(false));
+    invalidateOrders();
+    invalidateCustomers();
   };
 
   // Reset to page 1 whenever filters change
@@ -180,11 +161,11 @@ const OrderRegistry = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleRefresh}
-            disabled={refreshing}
+            disabled={isFetching}
             className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 disabled:opacity-50 transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Refreshing…" : "Refresh"}
+            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+            {isFetching ? "Refreshing…" : "Refresh"}
           </button>
           <TutorTooltip
             text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
@@ -303,7 +284,7 @@ const OrderRegistry = () => {
           <div className="px-6 py-3 text-sm text-red-600 bg-red-50 border-b border-red-100 flex items-center justify-between">
             <span>{error}</span>
             <button
-              onClick={loadOrders}
+              onClick={handleRefresh}
               className="flex items-center gap-1.5 font-medium text-red-600 hover:text-red-800 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
