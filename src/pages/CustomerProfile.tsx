@@ -13,8 +13,9 @@ import {
   StickyNote,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
-import { customerService, Customer } from "../services/customerService";
-import { orderService, Order } from "../services/orderService";
+import { Customer } from "../services/customerService";
+import { Order } from "../services/orderService";
+import { useCustomerById, useOrders } from "../services/useOrdersQuery";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -43,10 +44,13 @@ const PROVIDER_COLORS: Record<string, string> = {
 const CustomerProfile = () => {
   const { id } = useParams<{ id: string }>();
 
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: customer, isLoading: loading, isError } = useCustomerById(
+    id && !isNaN(Number(id)) ? Number(id) : undefined,
+  );
+  const { data: allOrders } = useOrders();
+  const orders: Order[] =
+    allOrders?.filter((o) => Number(o.CustomerID) === customer?.id) ?? [];
+  const error = isError ? "Failed to load customer details." : null;
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ email: "", phone: "" });
@@ -54,22 +58,13 @@ const CustomerProfile = () => {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesData, setNotesData] = useState("");
 
+  // Initialise form fields once customer data arrives from cache.
   useEffect(() => {
-    if (!id || isNaN(Number(id))) {
-      setError("Invalid customer ID.");
-      setLoading(false);
-      return;
+    if (customer) {
+      setFormData({ email: customer.Email, phone: customer.Phone });
+      setNotesData(customer.SpecialNotes || "");
     }
-    Promise.all([customerService.findById(Number(id)), orderService.findAll()])
-      .then(([cust, allOrders]) => {
-        setCustomer(cust);
-        setFormData({ email: cust.Email, phone: cust.Phone });
-        setNotesData(cust.SpecialNotes || "");
-        setOrders(allOrders.filter((o) => Number(o.CustomerID) === cust.id));
-      })
-      .catch(() => setError("Failed to load customer details."))
-      .finally(() => setLoading(false));
-  }, [id]);
+  }, [customer]);
 
   const handleSave = () => setIsEditing(false);
   const handleSaveNotes = () => setIsEditingNotes(false);
