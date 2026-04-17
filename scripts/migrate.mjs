@@ -179,8 +179,8 @@ async function main() {
       skipped.push({ row: rowNo, reason: "Empty Company Name" });
       continue;
     }
-    if (seenCompanies.has(company)) continue;
-    seenCompanies.add(company);
+    if (seenCompanies.has(company.toLowerCase())) continue;
+    seenCompanies.add(company.toLowerCase());
 
     try {
       const result = await post(CUSTOMERS_URL, {
@@ -198,7 +198,7 @@ async function main() {
         },
       });
       const id = extractId(result);
-      customerMap[company] = id;
+      customerMap[company.toLowerCase()] = id;
       customersCreated++;
       console.log(`  ✅ [${customersCreated}] ${company} → ID ${id}`);
     } catch (err) {
@@ -228,7 +228,7 @@ async function main() {
         userEmail: USER_EMAIL,
         data: {
           Title: serviceNo,
-          CustomerID: customerMap[company] ?? null,
+          CustomerID: customerMap[company.toLowerCase()] ?? null,
           CustomerName: company,
           Status: get(row, hm, "Status") || "Active",
           OrderType: get(row, hm, "Order Type"),
