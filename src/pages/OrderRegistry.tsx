@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw } from "lucide-react";
+import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { Order } from "../services/orderService";
 import { Customer } from "../services/customerService";
 import { useOrders, useCustomers, useInvalidateOrders, useInvalidateCustomers } from "../services/useOrdersQuery";
+import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -55,6 +56,7 @@ const OrderRegistry = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const { data: ordersData, isLoading: ordersLoading, isError: ordersError, isFetching } = useOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
@@ -166,6 +168,13 @@ const OrderRegistry = () => {
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
             {isFetching ? "Refreshing…" : "Refresh"}
+          </button>
+          <button
+            onClick={() => setShowBulkImport(true)}
+            className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            Import
           </button>
           <TutorTooltip
             text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
@@ -477,6 +486,17 @@ const OrderRegistry = () => {
           </div>
         </div>
       </div>
+
+      {showBulkImport && (
+        <BulkImportModal
+          customers={Array.isArray(customersData) ? (customersData as Customer[]) : []}
+          onClose={() => setShowBulkImport(false)}
+          onImportComplete={() => {
+            invalidateOrders();
+            setShowBulkImport(false);
+          }}
+        />
+      )}
     </div>
   );
 };
