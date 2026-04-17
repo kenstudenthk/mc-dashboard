@@ -10,6 +10,9 @@ import {
   Server,
   Building,
   X,
+  Mail,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import CloudProviderLogo from "../components/CloudProviderLogo";
@@ -26,6 +29,8 @@ import {
   ServiceAccount,
 } from "../services/serviceAccountService";
 import { orderStepsService, OrderStep } from "../services/orderStepsService";
+import { emailService, EmailLog } from "../services/emailService";
+import { EmailComposePanel } from "../components/EmailComposePanel";
 
 // ─── Option Lists ─────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = ["Processing", "Account Created", "Completed", "Cancelled", "Pending for order issued", "Pending Closure", "Pending for other parties"];
@@ -198,6 +203,10 @@ const OrderDetails = () => {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  const [isEmailPanelOpen, setIsEmailPanelOpen] = useState(false);
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+  const [emailLogsExpanded, setEmailLogsExpanded] = useState(false);
+
   const handleEditOpen = () => {
     if (!order) return;
     setEditForm({
@@ -257,6 +266,11 @@ const OrderDetails = () => {
   const set = (field: keyof CreateOrderInput, value: string | number) =>
     setEditForm((prev) => ({ ...prev, [field]: value }));
 
+  const refreshEmailLogs = () => {
+    if (!order?.Title) return;
+    emailService.findByOrder(order.Title).then(setEmailLogs).catch(() => {});
+  };
+
   useEffect(() => {
     if (!order?.id) return;
     Promise.allSettled([
@@ -270,6 +284,10 @@ const OrderDetails = () => {
       if (stepsResult.status === "fulfilled") setCompletedSteps(stepsResult.value);
     });
   }, [order?.id]);
+
+  useEffect(() => {
+    refreshEmailLogs();
+  }, [order?.Title]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -332,6 +350,16 @@ const OrderDetails = () => {
           >
             <Download className="w-4 h-4" />
           </button>
+          <TutorTooltip text="Send an email to the customer using a pre-filled template." position="bottom">
+            <button
+              onClick={() => setIsEmailPanelOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+              style={{ background: "#ddf4fd", border: "1px solid #3bd3fd50", color: "#0089ad" }}
+            >
+              <Mail className="w-4 h-4" />
+              Send Email
+            </button>
+          </TutorTooltip>
           {canEdit && (
             <TutorTooltip text="Click here to modify the details of this order." position="bottom">
               <button
@@ -390,6 +418,7 @@ const OrderDetails = () => {
               { label: "Cloud Service Details", icon: <Server className="w-3.5 h-3.5" /> },
               { label: "Provisioning & Tracking", icon: <CheckCircle className="w-3.5 h-3.5" /> },
               { label: "Timeline", icon: <Clock className="w-3.5 h-3.5" /> },
+              { label: "Email History", icon: <Mail className="w-3.5 h-3.5" /> },
             ].map(({ label, icon }, i) => (
               <button
                 key={label}
@@ -583,8 +612,112 @@ const OrderDetails = () => {
               </div>
             </TutorTooltip>
           )}
+
+          {activeSection === 5 && (
+            <div className="card p-6">
+              <div className="flex items-center justify-between mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" style={{ color: "#0089ad" }} />
+                  <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Email History</h2>
+                </div>
+                <span
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                  style={{ background: "#ddf4fd", color: "#0089ad" }}
+                >
+                  {emailLogs.length} sent
+                </span>
+              </div>
+              {emailLogs.length === 0 ? (
+                <div
+                  className="rounded-xl p-6 text-center"
+                  style={{ border: "1px dashed #dad4c8" }}
+                >
+                  <Mail className="w-6 h-6 mx-auto mb-2" style={{ color: "#dad4c8" }} />
+                  <p className="text-sm" style={{ color: "#9f9b93" }}>
+                    No emails sent for this order yet.
+                  </p>
+                  <button
+                    onClick={() => setIsEmailPanelOpen(true)}
+                    className="mt-3 text-sm font-medium transition-colors"
+                    style={{ color: "#0089ad" }}
+                  >
+                    Send the first email →
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {emailLogs.map((log) => (
+                    <div key={log.id}>
+                      <button
+                        onClick={() =>
+                          setEmailLogsExpanded((prev) => !prev)
+                        }
+                        className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left transition-colors hover:bg-[#faf9f7]"
+                        style={{ border: "1px solid #eee9df" }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                              style={
+                                log.Status === "Sent"
+                                  ? { background: "#d1f4e0", color: "#02492a" }
+                                  : { background: "#fde8e8", color: "#b0101a" }
+                              }
+                            >
+                              {log.Status}
+                            </span>
+                            <span className="text-xs font-medium truncate" style={{ color: "#000" }}>
+                              {log.Subject}
+                            </span>
+                          </div>
+                          <p className="text-[11px]" style={{ color: "#9f9b93" }}>
+                            To: {log.SentTo} · {log.SentBy} · {formatDate(log.SentAt)}
+                          </p>
+                        </div>
+                        {emailLogsExpanded ? (
+                          <ChevronUp className="w-3.5 h-3.5 shrink-0 ml-2" style={{ color: "#9f9b93" }} />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 shrink-0 ml-2" style={{ color: "#9f9b93" }} />
+                        )}
+                      </button>
+                      {emailLogsExpanded && (
+                        <div
+                          className="mx-1 px-4 py-3 rounded-b-xl text-xs"
+                          style={{ border: "1px dashed #dad4c8", borderTop: "none", background: "#faf9f7" }}
+                        >
+                          {log.CC && (
+                            <p className="mb-1" style={{ color: "#9f9b93" }}>
+                              CC: {log.CC}
+                            </p>
+                          )}
+                          <p className="mb-1" style={{ color: "#9f9b93" }}>
+                            Template: {log.TemplateName}
+                          </p>
+                          <div
+                            className="mt-2 pt-2 prose prose-sm max-w-none"
+                            style={{ borderTop: "1px solid #dad4c8", color: "#000", fontSize: 12 }}
+                            dangerouslySetInnerHTML={{ __html: log.BodySnapshot }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
+
+      {/* ── Email Compose Panel ──────────────────────────────────────────────── */}
+      <EmailComposePanel
+        isOpen={isEmailPanelOpen}
+        onClose={() => setIsEmailPanelOpen(false)}
+        order={order}
+        serviceAccount={serviceAccount}
+        onSent={refreshEmailLogs}
+      />
 
       {/* ── Edit Slide Panel ─────────────────────────────────────────────── */}
       {/* Backdrop */}
