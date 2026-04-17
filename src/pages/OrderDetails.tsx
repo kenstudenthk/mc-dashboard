@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
+import ServiceTimeline, { ServiceTimelineProps } from "../components/ServiceTimeline";
 import { usePermission } from "../contexts/PermissionContext";
 import { orderService, Order, CreateOrderInput } from "../services/orderService";
 import { useOrderByTitle, useInvalidateOrders } from "../services/useOrdersQuery";
@@ -27,6 +28,22 @@ import {
 // ─── Option Lists ─────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = ["Processing", "Account Created", "Completed", "Cancelled", "Pending for order issued", "Pending Closure", "Pending for other parties"];
 const ORDER_TYPE_OPTIONS = ["New Install", "Misc Change", "Contract Renewal", "Termination", "Pre-Pro"];
+
+// ─── ServiceTimeline mapping ──────────────────────────────────────────────────
+function mapCloudProvider(raw: string): ServiceTimelineProps["provider"] | null {
+  const s = raw?.toLowerCase() ?? "";
+  if (s.includes("alibaba")) return "Alibaba";
+  if (s.includes("azure") || s.includes("microsoft")) return "Azure";
+  if (s.includes("gcp") || s.includes("google")) return "GCP";
+  if (s.includes("huawei") && (s.includes("ha") || s.includes("hospital"))) return "HuaweiHA";
+  if (s.includes("huawei")) return "Huawei";
+  if (s.includes("aws") || s.includes("amazon")) return "AWS";
+  return null;
+}
+
+function mapOrderFlow(orderType: string): ServiceTimelineProps["flow"] {
+  return orderType === "New Install" ? "new" : "migration";
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (iso: string): string => {
@@ -435,6 +452,22 @@ const OrderDetails = () => {
               </dl>
             </div>
           </TutorTooltip>
+
+          {(() => {
+            const provider = mapCloudProvider(order.CloudProvider ?? "");
+            const flow = mapOrderFlow(order.OrderType ?? "");
+            if (!provider) return null;
+            return (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[#1d1d1f]/30">
+                    Provisioning Steps
+                  </span>
+                </div>
+                <ServiceTimeline provider={provider} flow={flow} />
+              </div>
+            );
+          })()}
 
           <TutorTooltip text="A chronological view of the order's lifecycle." position="left">
             <div className="card p-6">
