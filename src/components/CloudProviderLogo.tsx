@@ -102,6 +102,7 @@ const PROVIDER_KEY: Record<string, string> = {
   'google cloud': 'gcp',
   'gcp': 'gcp',
   'huawei cloud': 'huawei',
+  'huawei cloud ha': 'huawei',
   'huawei': 'huawei',
   'alicloud': 'alibaba',
   'alibaba cloud': 'alibaba',

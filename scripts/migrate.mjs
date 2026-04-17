@@ -28,6 +28,8 @@ const ORDERS_URL = process.env.VITE_API_ORDERS_URL;
 const SA_URL = process.env.VITE_API_SERVICE_ACCOUNTS_URL;
 const USER_EMAIL = process.env.MIGRATION_USER_EMAIL || "migration@system";
 const MAX_ROWS = process.env.MAX_ROWS ? Number(process.env.MAX_ROWS) : null;
+// START_ROW is the Excel row number (2 = first data row). Rows before it are skipped.
+const START_ROW = process.env.START_ROW ? Number(process.env.START_ROW) : 2;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -142,6 +144,12 @@ async function main() {
   if (rows.length === 0) {
     console.error("❌ Sheet1 has no rows.");
     process.exit(1);
+  }
+  // START_ROW: Excel row 2 = index 0. Slice off rows before the start row.
+  const startIndex = Math.max(0, START_ROW - 2);
+  if (startIndex > 0) {
+    rows = rows.slice(startIndex);
+    console.log(`⏭️  Skipping to Excel row ${START_ROW} (index ${startIndex})`);
   }
   if (MAX_ROWS) {
     rows = rows.slice(0, MAX_ROWS);

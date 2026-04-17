@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
+import CloudProviderLogo from "../components/CloudProviderLogo";
 import ServiceTimeline, { ServiceTimelineProps } from "../components/ServiceTimeline";
 import { usePermission } from "../contexts/PermissionContext";
 import { orderService, Order, CreateOrderInput } from "../services/orderService";
@@ -24,6 +25,7 @@ import {
   serviceAccountService,
   ServiceAccount,
 } from "../services/serviceAccountService";
+import { orderStepsService, OrderStep } from "../services/orderStepsService";
 
 // ─── Option Lists ─────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = ["Processing", "Account Created", "Completed", "Cancelled", "Pending for order issued", "Pending Closure", "Pending for other parties"];
@@ -59,27 +61,28 @@ const formatDate = (iso: string): string => {
   }
 };
 
-const getStatusColor = (status: string) => {
+// Clay swatch status colors
+const getStatusStyle = (status: string): { background: string; color: string } => {
   switch (status) {
-    case "Completed": return "bg-green-100 text-green-700";
-    case "Account Created": return "bg-blue-100 text-blue-700";
-    case "Processing": return "bg-yellow-100 text-yellow-700";
-    case "Cancelled": return "bg-red-100 text-red-700";
-    default: return "bg-gray-100 text-gray-700";
+    case "Completed":        return { background: "#84e7a5", color: "#02492a" };
+    case "Account Created":  return { background: "#3bd3fd33", color: "#0089ad" };
+    case "Processing":       return { background: "#f8cc65", color: "#9d6a09" };
+    case "Cancelled":        return { background: "#fc798133", color: "#b0101a" };
+    default:                 return { background: "#eee9df", color: "#55534e" };
   }
 };
 
 // ─── Display Components ───────────────────────────────────────────────────────
 const InfoField = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
-    <dt className="label-text text-[#1d1d1f]/35 mb-1">{label}</dt>
-    <dd className="text-sm font-medium text-[#1d1d1f]">{value || "—"}</dd>
+  <div className="py-2.5 border-b last:border-0" style={{ borderColor: "#eee9df" }}>
+    <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>{label}</dt>
+    <dd className="text-sm font-medium" style={{ color: "#000" }}>{value || "—"}</dd>
   </div>
 );
 
 // ─── Edit Panel Components ────────────────────────────────────────────────────
 const inputClass = (val: string) =>
-  `w-full px-3.5 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30 ${val ? "bg-white border-[#0071e3]/40" : "bg-[#f5f5f7] border-[#1d1d1f]/08"}`;
+  `w-full px-3.5 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition-all text-sm placeholder:text-[#9f9b93] ${val ? "bg-white border-black/30" : "bg-[#faf9f7] border-[#dad4c8]"}`;
 
 const PanelField = ({
   label,
@@ -91,7 +94,7 @@ const PanelField = ({
   span2?: boolean;
 }) => (
   <div className={`space-y-1 ${span2 ? "col-span-2" : ""}`}>
-    <label className="text-xs font-medium text-[#1d1d1f]/50">{label}</label>
+    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>{label}</label>
     {children}
   </div>
 );
@@ -108,18 +111,19 @@ const PanelToggle = ({
   onChange: (v: string) => void;
 }) => (
   <div className="space-y-1">
-    <label className="text-xs font-medium text-[#1d1d1f]/50">{label}</label>
-    <div className="flex items-center gap-1 p-1 bg-[#f5f5f7] rounded-lg border border-[#1d1d1f]/08 w-fit">
+    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>{label}</label>
+    <div className="flex items-center gap-1 p-1 rounded-lg w-fit" style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}>
       {options.map((opt) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(value === opt ? "" : opt)}
-          className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+          className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+          style={
             value === opt
-              ? "bg-[#0071e3] text-white shadow-sm"
-              : "text-[#1d1d1f]/40 hover:text-[#1d1d1f]/70"
-          }`}
+              ? { background: "#000", color: "#fff" }
+              : { color: "#9f9b93" }
+          }
         >
           {opt}
         </button>
@@ -140,18 +144,19 @@ const PanelSegmented = ({
   onChange: (v: string) => void;
 }) => (
   <div className="space-y-1">
-    <label className="text-xs font-medium text-[#1d1d1f]/50">{label}</label>
-    <div className="flex items-center gap-1 p-1 bg-[#f5f5f7] rounded-lg border border-[#1d1d1f]/08">
+    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>{label}</label>
+    <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}>
       {options.map((opt) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(value === opt ? "" : opt)}
-          className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+          className="flex-1 py-1.5 rounded-md text-xs font-medium transition-all"
+          style={
             value === opt
-              ? "bg-[#0071e3] text-white shadow-sm"
-              : "text-[#1d1d1f]/40 hover:text-[#1d1d1f]/70"
-          }`}
+              ? { background: "#000", color: "#fff" }
+              : { color: "#9f9b93" }
+          }
         >
           {opt}
         </button>
@@ -162,10 +167,10 @@ const PanelSegmented = ({
 
 const PanelSectionLabel = ({ title }: { title: string }) => (
   <div className="flex items-center gap-2 pt-1 pb-0.5">
-    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#1d1d1f]/30">
+    <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#9f9b93" }}>
       {title}
     </span>
-    <div className="flex-1 h-px bg-[#1d1d1f]/06" />
+    <div className="flex-1 h-px" style={{ background: "#dad4c8" }} />
   </div>
 );
 
@@ -175,6 +180,8 @@ const OrderDetails = () => {
   const { hasPermission, userEmail } = usePermission();
   const canEdit = hasPermission("Admin");
 
+  const [activeSection, setActiveSection] = useState(0);
+
   const { data: orderFromCache, isLoading, isError } = useOrderByTitle(id);
   const invalidateOrders = useInvalidateOrders();
   const [orderOverride, setOrderOverride] = useState<Order | null>(null);
@@ -182,6 +189,7 @@ const OrderDetails = () => {
 
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<OrderStep[]>([]);
   const loading = isLoading && !order;
   const error = isError ? "Failed to load order details." : null;
 
@@ -254,16 +262,18 @@ const OrderDetails = () => {
     Promise.allSettled([
       orderTimelineService.getByOrder(order.id),
       serviceAccountService.findByOrderId(order.id),
-    ]).then(([eventsResult, accountsResult]) => {
+      orderStepsService.getByOrderId(order.id),
+    ]).then(([eventsResult, accountsResult, stepsResult]) => {
       if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
       if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
         setServiceAccount(accountsResult.value[0]);
+      if (stepsResult.status === "fulfilled") setCompletedSteps(stepsResult.value);
     });
   }, [order?.id]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-[#1d1d1f]/30 text-sm">
+      <div className="flex items-center justify-center py-24 text-sm" style={{ color: "#9f9b93" }}>
         Loading…
       </div>
     );
@@ -271,11 +281,13 @@ const OrderDetails = () => {
 
   if (error || !order) {
     return (
-      <div className="flex items-center justify-center py-24 text-red-500 text-sm">
+      <div className="flex items-center justify-center py-24 text-sm" style={{ color: "#fc7981" }}>
         {error ?? "Order not found."}
       </div>
     );
   }
+
+  const statusStyle = getStatusStyle(order.Status);
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto pb-12">
@@ -284,39 +296,47 @@ const OrderDetails = () => {
         <div className="flex items-center gap-4">
           <Link
             to="/orders"
-            className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors"
+            className="p-2 rounded-xl transition-colors hover:bg-white"
+            style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
           >
-            <ArrowLeft className="w-4 h-4 text-[#1d1d1f]/60" />
+            <ArrowLeft className="w-4 h-4" style={{ color: "#9f9b93" }} />
           </Link>
           <div>
             <div className="flex items-center gap-3">
               <h1
-                className="text-[28px] font-semibold text-[#1d1d1f]"
-                style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
+                className="text-[28px] font-semibold"
+                style={{ color: "#000", letterSpacing: "-0.56px", lineHeight: "1.1" }}
               >
                 {order.Title}
               </h1>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}
+                className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
+                style={statusStyle}
               >
                 {order.Status}
               </span>
             </div>
-            <p className="text-sm text-[#1d1d1f]/45 mt-1">SRD: {formatDate(order.SRD)}</p>
+            <p className="text-sm mt-1" style={{ color: "#9f9b93" }}>SRD: {formatDate(order.SRD)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50">
+          <button
+            className="p-2 rounded-xl transition-colors hover:bg-white"
+            style={{ background: "#faf9f7", border: "1px solid #dad4c8", color: "#9f9b93" }}
+          >
             <Printer className="w-4 h-4" />
           </button>
-          <button className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50">
+          <button
+            className="p-2 rounded-xl transition-colors hover:bg-white"
+            style={{ background: "#faf9f7", border: "1px solid #dad4c8", color: "#9f9b93" }}
+          >
             <Download className="w-4 h-4" />
           </button>
           {canEdit && (
             <TutorTooltip text="Click here to modify the details of this order." position="bottom">
               <button
                 onClick={handleEditOpen}
-                className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm"
+                className="gradient-cta px-5 py-2 font-medium text-sm"
               >
                 Edit Order
               </button>
@@ -325,184 +345,245 @@ const OrderDetails = () => {
         </div>
       </div>
 
-      {/* Detail Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-5">
-          <TutorTooltip
-            text="This section contains the core technical details about the cloud service provisioned for this order."
-            position="top"
-          >
-            <div className="card p-6">
-              <div className="flex items-center gap-2 mb-4 border-b border-[#1d1d1f]/06 pb-4">
-                <Server className="w-4 h-4 text-[#0071e3]" />
-                <h2 className="text-[17px] font-semibold text-[#1d1d1f]">Cloud Service Details</h2>
+      {/* Horizontal Provisioning Steps */}
+      {(() => {
+        const provider = mapCloudProvider(order.CloudProvider ?? "");
+        const flow = mapOrderFlow(order.OrderType ?? "");
+        if (!provider) return null;
+        return (
+          <ServiceTimeline
+            provider={provider}
+            flow={flow}
+            horizontal
+            completedSteps={completedSteps}
+            onCompleteStep={async (stepKey, stepLabel) => {
+              await orderStepsService.complete(order.id, stepKey, stepLabel, userEmail);
+              const updated = await orderStepsService.getByOrderId(order.id);
+              setCompletedSteps(updated);
+            }}
+            onUncompleteStep={async (stepKey) => {
+              await orderStepsService.uncomplete(order.id, stepKey, userEmail);
+              const updated = await orderStepsService.getByOrderId(order.id);
+              setCompletedSteps(updated);
+            }}
+          />
+        );
+      })()}
+
+      {/* Section layout — sidebar nav + content */}
+      <div className="flex gap-6 items-start">
+        {/* Sticky sidebar */}
+        <aside
+          className="w-52 shrink-0 bg-white rounded-2xl p-3"
+          style={{
+            position: "sticky",
+            top: "1.5rem",
+            border: "1px solid #dad4c8",
+            boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+          }}
+        >
+          <p className="label-text px-3 pt-1 pb-2" style={{ color: "#9f9b93" }}>SECTIONS</p>
+          <div className="space-y-0.5">
+            {[
+              { label: "Order Information", icon: <FileText className="w-3.5 h-3.5" /> },
+              { label: "Customer", icon: <Building className="w-3.5 h-3.5" /> },
+              { label: "Cloud Service Details", icon: <Server className="w-3.5 h-3.5" /> },
+              { label: "Provisioning & Tracking", icon: <CheckCircle className="w-3.5 h-3.5" /> },
+              { label: "Timeline", icon: <Clock className="w-3.5 h-3.5" /> },
+            ].map(({ label, icon }, i) => (
+              <button
+                key={label}
+                onClick={() => setActiveSection(i)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all text-left"
+                style={
+                  activeSection === i
+                    ? { background: "#eee9df", color: "#000" }
+                    : { color: "#9f9b93" }
+                }
+              >
+                <span style={{ color: activeSection === i ? "#078a52" : "#c5bfb5" }}>{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Section content */}
+        <main className="flex-1 min-w-0">
+          {activeSection === 0 && (
+            <div className="card p-6 space-y-0">
+              <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                <FileText className="w-4 h-4" style={{ color: "#078a52" }} />
+                <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Order Information</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <dl>
-                  <InfoField label="Product Subscribe" value={order.CloudProvider} />
+                  <InfoField label="Order Title" value={order.Title} />
+                  <InfoField label="Project Name" value={order.SubName} />
+                  <InfoField label="Status" value={
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold" style={statusStyle}>
+                      {order.Status}
+                    </span>
+                  } />
                   <InfoField label="Order Type" value={order.OrderType} />
-                  <InfoField label="Service Type" value={order.ServiceType} />
-                  <InfoField
-                    label="Amount"
-                    value={`$${order.Amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-                  />
-                  <InfoField label="Billing Account / Secondary ID" value={serviceAccount?.SecondaryID} />
                 </dl>
                 <dl>
-                  <InfoField label="Account ID / Root ID / UID" value={serviceAccount?.PrimaryAccountID ?? order.AccountID} />
-                  <InfoField label="Account Name / Cloud Checker Name" value={serviceAccount?.AccountName} />
-                  <InfoField label="Domain" value={serviceAccount?.Domain} />
-                  <InfoField label="Login Email" value={serviceAccount?.LoginEmail} />
-                  <InfoField label="Other Account Information" value={serviceAccount?.OtherInfo} />
+                  <InfoField label="SRD" value={formatDate(order.SRD)} />
+                  <InfoField label="Service Type" value={order.ServiceType} />
+                  <InfoField label="Amount" value={`$${order.Amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
+                  <InfoField label="OASIS Number" value={order.OasisNumber} />
                 </dl>
               </div>
-            </div>
-          </TutorTooltip>
-
-          <div className="card p-6">
-            <div className="flex items-center gap-2 mb-4 border-b border-[#1d1d1f]/06 pb-4">
-              <FileText className="w-4 h-4 text-[#0071e3]" />
-              <h2 className="text-[17px] font-semibold text-[#1d1d1f]">Provisioning & Tracking</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-              <dl>
-                <InfoField label="OASIS Number" value={order.OasisNumber} />
-                <InfoField label="Order Receive Date" value={formatDate(order.OrderReceiveDate ?? "")} />
-                <InfoField label="CxS Complete Date" value={order.CxSCompleteDate ? formatDate(order.CxSCompleteDate) : "TBC"} />
-                <InfoField label="CxS Request No." value={order.CxSRequestNo} />
-                <InfoField label="TID" value={order.TID} />
-                {order.SDNumber ? (
-                  <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
-                    <dt className="label-text text-[#1d1d1f]/35 mb-1">SD Number</dt>
-                    <dd className="text-sm font-medium">
-                      <a
-                        href={`http://10.8.100.3:8080/pabx/servlet/IncidentDetailServlet?incidentId=${order.SDNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#0071e3] hover:underline"
-                      >
-                        {order.SDNumber}
-                      </a>
-                    </dd>
-                  </div>
-                ) : (
-                  <InfoField label="SD Number" value={order.SDNumber} />
-                )}
-              </dl>
-              <dl>
-                <InfoField label="PS Job (Y/N)" value={order.PSJob} />
-                <InfoField label="T2 / T3" value={order.T2T3} />
-                <InfoField label="Welcome Letter" value={order.WelcomeLetter} />
-                <InfoField label="Handled By" value={order.By} />
-                {order.OrderFormURL && (
-                  <div className="py-2.5 border-b border-[#1d1d1f]/04 last:border-0">
-                    <dt className="label-text text-[#1d1d1f]/35 mb-1">Order Form</dt>
-                    <dd className="text-sm font-medium">
-                      <a
-                        href={order.OrderFormURL}
-                        download
-                        rel="noopener noreferrer"
-                        className="text-[#0071e3] hover:underline inline-flex items-center gap-1"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Download File
-                      </a>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-            {order.Remark && (
-              <div className="mt-4 pt-4 border-t border-[#1d1d1f]/06">
-                <dt className="label-text text-[#1d1d1f]/35 mb-1">Remark</dt>
-                <dd className="text-sm text-[#1d1d1f] whitespace-pre-wrap">{order.Remark}</dd>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-5">
-          <TutorTooltip text="Quick details about the customer associated with this order." position="left">
-            <div className="card p-6">
-              <div className="flex items-center gap-2 mb-4 border-b border-[#1d1d1f]/06 pb-4">
-                <Building className="w-4 h-4 text-[#0071e3]" />
-                <h2 className="text-[17px] font-semibold text-[#1d1d1f]">Customer</h2>
-              </div>
-              <Link
-                to={`/customers/${order.CustomerID}`}
-                className="text-sm font-semibold text-[#0071e3] hover:underline transition-colors block mb-2"
-              >
-                {order.CustomerName}
-              </Link>
-              <p className="text-xs text-[#1d1d1f]/35 mb-4">ID #{order.CustomerID}</p>
-              <dl>
-                <InfoField label="Contact Person" value={order.ContactPerson} />
-                <InfoField label="Contact No." value={order.ContactNo} />
-                <InfoField label="Contact Email" value={order.ContactEmail} />
-                {order.BillingAddress && (
-                  <div className="py-2.5">
-                    <dt className="label-text text-[#1d1d1f]/35 mb-1">Billing Address</dt>
-                    <dd className="text-sm font-medium text-[#1d1d1f] whitespace-pre-wrap">
-                      {order.BillingAddress}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </TutorTooltip>
-
-          {(() => {
-            const provider = mapCloudProvider(order.CloudProvider ?? "");
-            const flow = mapOrderFlow(order.OrderType ?? "");
-            if (!provider) return null;
-            return (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[#1d1d1f]/30">
-                    Provisioning Steps
-                  </span>
-                </div>
-                <ServiceTimeline provider={provider} flow={flow} />
-              </div>
-            );
-          })()}
-
-          <TutorTooltip text="A chronological view of the order's lifecycle." position="left">
-            <div className="card p-6">
-              <h2 className="text-[17px] font-semibold text-[#1d1d1f] mb-4">Timeline</h2>
-              {timeline.length === 0 ? (
-                <p className="text-sm text-[#1d1d1f]/30">No timeline events yet.</p>
-              ) : (
-                <div className="space-y-5 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#1d1d1f]/10 before:to-transparent">
-                  {timeline.map((event) => (
-                    <div key={event.id} className="relative flex items-start gap-4">
-                      <div
-                        className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-white shadow shrink-0 z-10 ${
-                          event.Completed ? "bg-green-500" : "bg-[#0071e3]"
-                        }`}
-                      >
-                        {event.Completed ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          <Clock className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div className="pt-2">
-                        <div className="font-semibold text-[#1d1d1f] text-sm">{event.Title}</div>
-                        <div className="text-xs text-[#1d1d1f]/45">{formatDate(event.EventDate)}</div>
-                        {event.Description && (
-                          <div className="text-xs text-[#1d1d1f]/45 mt-0.5">{event.Description}</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              {order.Remark && (
+                <div className="mt-4 pt-4" style={{ borderTop: "1px solid #eee9df" }}>
+                  <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>Remark</dt>
+                  <dd className="text-sm whitespace-pre-wrap" style={{ color: "#000" }}>{order.Remark}</dd>
                 </div>
               )}
             </div>
-          </TutorTooltip>
-        </div>
+          )}
+
+          {activeSection === 1 && (
+            <TutorTooltip text="Quick details about the customer associated with this order." position="top">
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                  <Building className="w-4 h-4" style={{ color: "#078a52" }} />
+                  <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Customer</h2>
+                </div>
+                <Link
+                  to={`/customers/${order.CustomerID}`}
+                  className="text-sm font-semibold hover:underline transition-colors block mb-2"
+                  style={{ color: "#078a52" }}
+                >
+                  {order.CustomerName}
+                </Link>
+                <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>ID #{order.CustomerID}</p>
+                <dl>
+                  <InfoField label="Contact Person" value={order.ContactPerson} />
+                  <InfoField label="Contact No." value={order.ContactNo} />
+                  <InfoField label="Contact Email" value={order.ContactEmail} />
+                  {order.BillingAddress && (
+                    <div className="py-2.5">
+                      <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>Billing Address</dt>
+                      <dd className="text-sm font-medium whitespace-pre-wrap" style={{ color: "#000" }}>{order.BillingAddress}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            </TutorTooltip>
+          )}
+
+          {activeSection === 2 && (
+            <TutorTooltip text="This section contains the core technical details about the cloud service provisioned for this order." position="top">
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                  <Server className="w-4 h-4" style={{ color: "#078a52" }} />
+                  <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Cloud Service Details</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                  <dl>
+                    <InfoField label="Product Subscribe" value={
+                      <CloudProviderLogo
+                        provider={order.CloudProvider ?? ""}
+                        size={22}
+                        nameClassName="text-sm font-medium"
+                      />
+                    } />
+                    <InfoField label="Billing Account / Secondary ID" value={serviceAccount?.SecondaryID} />
+                    <InfoField label="Account ID / Root ID / UID" value={serviceAccount?.PrimaryAccountID ?? order.AccountID} />
+                  </dl>
+                  <dl>
+                    <InfoField label="Account Name / Cloud Checker Name" value={serviceAccount?.AccountName} />
+                    <InfoField label="Domain" value={serviceAccount?.Domain} />
+                    <InfoField label="Login Email" value={serviceAccount?.LoginEmail} />
+                    <InfoField label="Other Account Information" value={serviceAccount?.OtherInfo} />
+                  </dl>
+                </div>
+              </div>
+            </TutorTooltip>
+          )}
+
+          {activeSection === 3 && (
+            <div className="card p-6">
+              <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                <FileText className="w-4 h-4" style={{ color: "#078a52" }} />
+                <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Provisioning & Tracking</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                <dl>
+                  <InfoField label="Order Receive Date" value={formatDate(order.OrderReceiveDate ?? "")} />
+                  <InfoField label="CxS Complete Date" value={order.CxSCompleteDate ? formatDate(order.CxSCompleteDate) : "TBC"} />
+                  <InfoField label="CxS Request No." value={order.CxSRequestNo} />
+                  <InfoField label="TID" value={order.TID} />
+                  {order.SDNumber ? (
+                    <div className="py-2.5 border-b last:border-0" style={{ borderColor: "#eee9df" }}>
+                      <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>SD Number</dt>
+                      <dd className="text-sm font-medium">
+                        <a
+                          href={`http://10.8.100.3:8080/pabx/servlet/IncidentDetailServlet?incidentId=${order.SDNumber}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                          style={{ color: "#078a52" }}
+                        >
+                          {order.SDNumber}
+                        </a>
+                      </dd>
+                    </div>
+                  ) : (
+                    <InfoField label="SD Number" value={order.SDNumber} />
+                  )}
+                </dl>
+                <dl>
+                  <InfoField label="PS Job (Y/N)" value={order.PSJob} />
+                  <InfoField label="T2 / T3" value={order.T2T3} />
+                  <InfoField label="Welcome Letter" value={order.WelcomeLetter} />
+                  <InfoField label="Handled By" value={order.By} />
+                  {order.OrderFormURL && (
+                    <div className="py-2.5 border-b last:border-0" style={{ borderColor: "#eee9df" }}>
+                      <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>Order Form</dt>
+                      <dd className="text-sm font-medium">
+                        <a href={order.OrderFormURL} download rel="noopener noreferrer" className="hover:underline inline-flex items-center gap-1" style={{ color: "#078a52" }}>
+                          <Download className="w-3.5 h-3.5" />
+                          Download File
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 4 && (
+            <TutorTooltip text="A chronological view of the order's lifecycle." position="top">
+              <div className="card p-6">
+                <h2 className="text-[17px] font-semibold mb-4" style={{ color: "#000" }}>Timeline</h2>
+                {timeline.length === 0 ? (
+                  <p className="text-sm" style={{ color: "#9f9b93" }}>No timeline events yet.</p>
+                ) : (
+                  <div className="space-y-5 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#dad4c8] before:to-transparent">
+                    {timeline.map((event) => (
+                      <div key={event.id} className="relative flex items-start gap-4">
+                        <div
+                          className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-white shadow shrink-0 z-10"
+                          style={{ background: event.Completed ? "#078a52" : "#000" }}
+                        >
+                          {event.Completed ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                        </div>
+                        <div className="pt-2">
+                          <div className="font-semibold text-sm" style={{ color: "#000" }}>{event.Title}</div>
+                          <div className="text-xs" style={{ color: "#9f9b93" }}>{formatDate(event.EventDate)}</div>
+                          {event.Description && <div className="text-xs mt-0.5" style={{ color: "#9f9b93" }}>{event.Description}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TutorTooltip>
+          )}
+        </main>
       </div>
 
       {/* ── Edit Slide Panel ─────────────────────────────────────────────── */}
@@ -521,14 +602,15 @@ const OrderDetails = () => {
         }`}
       >
         {/* Panel Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1d1d1f]/06 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: "1px solid #dad4c8" }}>
           <div>
-            <h2 className="text-[16px] font-semibold text-[#1d1d1f]">Edit Order</h2>
-            <p className="text-xs text-[#1d1d1f]/40 mt-0.5">{order?.Title}</p>
+            <h2 className="text-[16px] font-semibold" style={{ color: "#000" }}>Edit Order</h2>
+            <p className="text-xs mt-0.5" style={{ color: "#9f9b93" }}>{order?.Title}</p>
           </div>
           <button
             onClick={handleEditClose}
-            className="p-1.5 rounded-lg text-[#1d1d1f]/35 hover:text-[#1d1d1f]/60 hover:bg-[#f5f5f7] transition-colors"
+            className="p-1.5 rounded-lg transition-colors hover:bg-[#faf9f7]"
+            style={{ color: "#9f9b93" }}
           >
             <X className="w-4 h-4" />
           </button>
@@ -537,7 +619,7 @@ const OrderDetails = () => {
         {/* Panel Body */}
         <form onSubmit={handleEditSave} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
           {editError && (
-            <div className="px-4 py-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+            <div className="px-4 py-3 text-sm rounded-xl" style={{ color: "#b0101a", background: "#fc798120", border: "1px solid #fc798150" }}>
               {editError}
             </div>
           )}
@@ -648,11 +730,12 @@ const OrderDetails = () => {
         </form>
 
         {/* Panel Footer */}
-        <div className="px-6 py-4 border-t border-[#1d1d1f]/06 flex gap-3 shrink-0">
+        <div className="px-6 py-4 flex gap-3 shrink-0" style={{ borderTop: "1px solid #dad4c8" }}>
           <button
             type="button"
             onClick={handleEditClose}
-            className="flex-1 px-4 py-2.5 border border-[#1d1d1f]/08 text-[#1d1d1f]/70 font-medium rounded-lg hover:bg-[#f5f5f7] transition-colors text-sm"
+            className="flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors text-sm hover:bg-[#faf9f7]"
+            style={{ border: "1px solid #dad4c8", color: "#55534e" }}
           >
             Cancel
           </button>
@@ -660,7 +743,10 @@ const OrderDetails = () => {
             type="button"
             onClick={handleEditSave}
             disabled={editSaving}
-            className="flex-1 px-4 py-2.5 bg-[#0071e3] text-white font-medium rounded-lg hover:bg-[#0071e3]/90 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2.5 text-white font-medium rounded-xl transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: "#000" }}
+            onMouseEnter={(e) => { if (!editSaving) (e.currentTarget as HTMLButtonElement).style.background = "#333"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#000"; }}
           >
             {editSaving ? "Saving…" : "Save Changes"}
           </button>

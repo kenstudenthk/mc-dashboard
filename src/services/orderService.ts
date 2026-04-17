@@ -145,7 +145,18 @@ export const orderService = {
     return call<Order>({ action: "CREATE", data, userEmail });
   },
 
-  update: async (id: number, data: Partial<CreateOrderInput>, userEmail: string): Promise<Order> => {
-    return call<Order>({ action: "UPDATE", data: { id, ...data }, userEmail });
+  update: async (
+    id: number,
+    data: Partial<CreateOrderInput>,
+    userEmail: string,
+  ): Promise<Order> => {
+    const sanitized: Partial<CreateOrderInput> = { ...data };
+    if (sanitized.CustomerID !== undefined)
+      sanitized.CustomerID = Number(sanitized.CustomerID);
+    return call<Order>({
+      action: "UPDATE",
+      data: { id, ...sanitized },
+      userEmail,
+    });
   },
 };

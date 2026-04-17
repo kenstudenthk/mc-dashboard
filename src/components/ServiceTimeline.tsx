@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Check } from "lucide-react";
+import CloudProviderLogo from "./CloudProviderLogo";
+import type { OrderStep } from "../services/orderStepsService";
 
 interface TimelineStep {
   id: number;
@@ -93,16 +95,30 @@ const PROVIDER_LABELS: Record<Provider, string> = {
 export interface ServiceTimelineProps {
   provider: Provider;
   flow: Flow;
+  completedSteps?: OrderStep[];
+  onCompleteStep?: (stepKey: string, stepLabel: string) => void;
+  onUncompleteStep?: (stepKey: string) => void;
   onProgressChange?: (step: number, flow: Flow) => void;
+  horizontal?: boolean;
 }
 
-function getStepState(stepId: number, currentStep: number): StepState {
-  if (stepId < currentStep) return "done";
-  if (stepId === currentStep) return "active";
-  return "upcoming";
+function makeStepKey(flow: Flow, stepId: number): string {
+  return `${flow}_${stepId}`;
 }
 
-export default function ServiceTimeline({ provider, flow, onProgressChange }: ServiceTimelineProps): React.ReactElement {
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+export default function ServiceTimeline({
+  provider,
+  flow,
+  completedSteps,
+  onCompleteStep,
+  onUncompleteStep,
+  onProgressChange,
+  horizontal = false,
+}: ServiceTimelineProps): React.ReactElement {
   const flows = TIMELINE_DATA[provider];
   const hasMigration = Boolean(flows.migration);
   const resolvedFlow: Flow = flow === "migration" && !hasMigration ? "new" : flow;
@@ -110,22 +126,34 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
   const [activeFlow, setActiveFlow] = useState<Flow>(resolvedFlow);
   const [currentStep, setCurrentStep] = useState<number>(1);
 
-  // Reset progress when flow or provider changes
-  useEffect(() => {
-    setCurrentStep(1);
-  }, [activeFlow, provider]);
+  // Build lookup: StepKey → OrderStep (for timestamp display)
+  const completedMap = new Map<string, OrderStep>(
+    (completedSteps ?? []).map((s) => [s.StepKey, s]),
+  );
 
   const steps = activeFlow === "migration" && flows.migration ? flows.migration : flows.new;
   const totalSteps = steps.length;
-  const isAllDone = currentStep > totalSteps;
 
-  function handleStepClick(stepId: number): void {
-    const next = stepId === currentStep ? stepId : stepId;
-    setCurrentStep(next);
-    onProgressChange?.(next, activeFlow);
+  // Sync currentStep when completedSteps loads or activeFlow changes
+  useEffect(() => {
+    const first = steps.find((s) => !completedMap.has(makeStepKey(activeFlow, s.id)));
+    setCurrentStep(first?.id ?? totalSteps + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedSteps, activeFlow]);
+
+  function getStepState(stepId: number): StepState {
+    if (completedMap.has(makeStepKey(activeFlow, stepId))) return "done";
+    if (stepId === currentStep) return "active";
+    return "upcoming";
   }
 
+  const isAllDone = currentStep > totalSteps;
+  const activeStep = steps.find((s) => s.id === currentStep) ?? null;
+
   function handleMarkDone(): void {
+    if (activeStep) {
+      onCompleteStep?.(makeStepKey(activeFlow, activeStep.id), activeStep.title);
+    }
     const next = currentStep + 1;
     setCurrentStep(next);
     onProgressChange?.(next, activeFlow);
@@ -140,24 +168,23 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
     onProgressChange?.(1, activeFlow);
   }
 
-  return (
-    <div
-      className="bg-white rounded-2xl p-5"
-      style={{
-        border: "1px solid #dad4c8",
-        boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-1 gap-3 flex-wrap">
+  /* ── Shared header ── */
+  const header = (
+    <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+      <div className="flex items-center gap-2">
+        <CloudProviderLogo provider={PROVIDER_LABELS[provider]} size={20} showName={false} />
         <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#9f9b93" }}>
           {PROVIDER_LABELS[provider]}
         </span>
+      </div>
+      <div className="flex items-center gap-3">
+        {isAllDone && (
+          <button onClick={handleReset} className="text-xs font-medium underline" style={{ color: "#9f9b93" }}>
+            Reset
+          </button>
+        )}
         {hasMigration && (
-          <div
-            className="flex items-center rounded-full p-0.5 gap-0.5"
-            style={{ border: "1px solid #dad4c8", background: "#faf9f7" }}
-          >
+          <div className="flex items-center rounded-full p-0.5 gap-0.5" style={{ border: "1px solid #dad4c8", background: "#faf9f7" }}>
             {(["new", "migration"] as Flow[]).map((f) => (
               <button
                 key={f}
@@ -165,7 +192,7 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
                 className="rounded-full px-3 py-1 text-xs font-semibold transition-all"
                 style={
                   activeFlow === f
-                    ? { background: "#ffffff", color: "#000", boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset" }
+                    ? { background: "#ffffff", color: "#000", boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px" }
                     : { color: "#9f9b93" }
                 }
               >
@@ -175,21 +202,150 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
           </div>
         )}
       </div>
+    </div>
+  );
+
+  /* ── Horizontal layout ── */
+  if (horizontal) {
+    return (
+      <div
+        className="bg-white rounded-2xl p-5"
+        style={{ border: "1px solid #dad4c8", boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset" }}
+      >
+        {header}
+
+        {/* Progress bar */}
+        <div className="mb-5">
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#eee9df" }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ background: "#078a52", width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Step circles row */}
+        <div className="flex items-start">
+          {steps.map((step, index) => {
+            const state = getStepState(step.id);
+            const isLast = index === steps.length - 1;
+            const doneEntry = completedMap.get(makeStepKey(activeFlow, step.id));
+            return (
+              <React.Fragment key={step.id}>
+                <div className="flex flex-col items-center" style={{ minWidth: 0, flex: 1 }}>
+                  <button
+                    onClick={() => state !== "active" && setCurrentStep(step.id)}
+                    className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-all duration-200 focus:outline-none"
+                    style={
+                      state === "done"
+                        ? { background: "#078a52", border: "none", cursor: "pointer" }
+                        : state === "active"
+                        ? { background: "#000000", border: "none", cursor: "default", boxShadow: "0 0 0 3px #faf9f7, 0 0 0 5px #000" }
+                        : { background: "#f5f3ef", border: "1.5px solid #dad4c8", cursor: "pointer" }
+                    }
+                  >
+                    {state === "done" ? (
+                      <Check size={14} color="#ffffff" strokeWidth={3} />
+                    ) : (
+                      <span className="text-xs font-semibold" style={{ color: state === "active" ? "#ffffff" : "#9f9b93" }}>
+                        {step.id}
+                      </span>
+                    )}
+                  </button>
+                  <p
+                    className="text-xs text-center mt-1.5 px-1 leading-tight"
+                    style={{
+                      fontWeight: state === "active" ? 700 : state === "done" ? 500 : 400,
+                      color: state === "upcoming" ? "#c5bfb5" : "#000",
+                      textDecoration: state === "done" ? "line-through" : "none",
+                    }}
+                  >
+                    {step.title}
+                  </p>
+                  {state === "active" && (
+                    <span className="text-[10px] font-semibold rounded-full px-2 py-0.5 mt-1" style={{ background: "#f8cc65", color: "#000" }}>
+                      In Progress
+                    </span>
+                  )}
+                  {state === "done" && (
+                    <div className="flex flex-col items-center gap-0.5 mt-1">
+                      <span className="text-[10px] font-medium rounded-full px-2 py-0.5" style={{ background: "#84e7a5", color: "#02492a" }}>
+                        Done
+                      </span>
+                      {doneEntry && (
+                        <span className="text-[9px]" style={{ color: "#9f9b93" }}>{formatDate(doneEntry.CompletedAt)}</span>
+                      )}
+                      {onUncompleteStep && (
+                        <button
+                          onClick={() => onUncompleteStep(makeStepKey(activeFlow, step.id))}
+                          className="text-[9px] underline mt-0.5"
+                          style={{ color: "#c5bfb5" }}
+                        >
+                          Undo
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {!isLast && (
+                  <div
+                    className="h-px mt-4 transition-all duration-500"
+                    style={{ flex: 1, background: state === "done" ? "#84e7a5" : "#dad4c8", minWidth: "1rem" }}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Active step description */}
+        {!isAllDone && activeStep && (
+          <div className="mt-4 rounded-xl px-4 py-3" style={{ background: "#faf9f7", border: "1.5px solid #000" }}>
+            <p className="text-sm font-bold text-black mb-0.5">{activeStep.title}</p>
+            <p className="text-xs leading-relaxed" style={{ color: "#55534e" }}>{activeStep.description}</p>
+            <button
+              onClick={handleMarkDone}
+              className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: "#078a52", color: "#ffffff", border: "none" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#02492a"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#078a52"; }}
+            >
+              <Check size={12} strokeWidth={3} />
+              Mark as Done
+            </button>
+          </div>
+        )}
+
+        {/* All done banner */}
+        {isAllDone && (
+          <div className="mt-4 rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#84e7a5", border: "1px solid #078a52" }}>
+            <Check size={16} color="#02492a" strokeWidth={3} />
+            <span className="text-sm font-semibold" style={{ color: "#02492a" }}>All steps completed — provisioning done!</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Vertical layout (original) ── */
+  return (
+    <div
+      className="bg-white rounded-2xl p-5"
+      style={{
+        border: "1px solid #dad4c8",
+        boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+      }}
+    >
+      {header}
 
       {/* Progress bar */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-medium" style={{ color: "#55534e" }}>
-            {isAllDone
-              ? "All steps completed"
-              : `Step ${currentStep} of ${totalSteps}`}
+            {isAllDone ? "All steps completed" : `Step ${currentStep} of ${totalSteps}`}
           </span>
           {isAllDone && (
-            <button
-              onClick={handleReset}
-              className="text-xs font-medium underline"
-              style={{ color: "#9f9b93" }}
-            >
+            <button onClick={handleReset} className="text-xs font-medium underline" style={{ color: "#9f9b93" }}>
               Reset
             </button>
           )}
@@ -197,10 +353,7 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#eee9df" }}>
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{
-              background: "#078a52",
-              width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%`,
-            }}
+            style={{ background: "#078a52", width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%` }}
           />
         </div>
       </div>
@@ -208,16 +361,14 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
       {/* Steps */}
       <div>
         {steps.map((step, index) => {
-          const state = getStepState(step.id, currentStep);
+          const state = getStepState(step.id);
           const isLast = index === steps.length - 1;
-
+          const doneEntry = completedMap.get(makeStepKey(activeFlow, step.id));
           return (
             <div key={step.id} className="flex gap-3">
-              {/* Circle + connector */}
               <div className="flex flex-col items-center" style={{ width: 32 }}>
                 <button
-                  onClick={() => handleStepClick(step.id)}
-                  title={state === "done" ? "Click to go back to this step" : "Click to jump to this step"}
+                  onClick={() => state !== "active" && setCurrentStep(step.id)}
                   className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-all duration-200 focus:outline-none"
                   style={
                     state === "done"
@@ -230,10 +381,7 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
                   {state === "done" ? (
                     <Check size={14} color="#ffffff" strokeWidth={3} />
                   ) : (
-                    <span
-                      className="text-xs font-semibold"
-                      style={{ color: state === "active" ? "#ffffff" : "#9f9b93" }}
-                    >
+                    <span className="text-xs font-semibold" style={{ color: state === "active" ? "#ffffff" : "#9f9b93" }}>
                       {step.id}
                     </span>
                   )}
@@ -241,22 +389,15 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
                 {!isLast && (
                   <div
                     className="w-px flex-1 mt-1 transition-all duration-500"
-                    style={{
-                      background: state === "done" ? "#84e7a5" : "#dad4c8",
-                      minHeight: "1.5rem",
-                    }}
+                    style={{ background: state === "done" ? "#84e7a5" : "#dad4c8", minHeight: "1.5rem" }}
                   />
                 )}
               </div>
-
-              {/* Step content */}
               <div
-                className={`flex-1 rounded-xl px-3 py-2.5 mb-2 transition-all duration-200 ${isLast ? "" : ""}`}
+                className="flex-1 rounded-xl px-3 py-2.5 mb-2 transition-all duration-200"
                 style={
                   state === "active"
                     ? { background: "#faf9f7", border: "1.5px solid #000", marginBottom: "0.5rem" }
-                    : state === "done"
-                    ? { background: "transparent", border: "1.5px solid transparent", marginBottom: "0.5rem" }
                     : { background: "transparent", border: "1.5px solid transparent", marginBottom: "0.5rem" }
                 }
               >
@@ -272,37 +413,38 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
                     {step.title}
                   </p>
                   {state === "active" && (
-                    <span
-                      className="text-xs font-semibold rounded-full px-2 py-0.5"
-                      style={{ background: "#f8cc65", color: "#000" }}
-                    >
+                    <span className="text-xs font-semibold rounded-full px-2 py-0.5" style={{ background: "#f8cc65", color: "#000" }}>
                       In Progress
                     </span>
                   )}
                   {state === "done" && (
-                    <span
-                      className="text-xs font-medium rounded-full px-2 py-0.5"
-                      style={{ background: "#84e7a5", color: "#02492a" }}
-                    >
+                    <span className="text-xs font-medium rounded-full px-2 py-0.5" style={{ background: "#84e7a5", color: "#02492a" }}>
                       Done
                     </span>
                   )}
                 </div>
-                <p
-                  className="text-xs mt-0.5 leading-relaxed"
-                  style={{ color: state === "upcoming" ? "#dad4c8" : "#55534e" }}
-                >
+                <p className="text-xs mt-0.5 leading-relaxed" style={{ color: state === "upcoming" ? "#dad4c8" : "#55534e" }}>
                   {step.description}
                 </p>
+                {state === "done" && doneEntry && (
+                  <p className="text-[10px] mt-1" style={{ color: "#9f9b93" }}>
+                    Completed {formatDate(doneEntry.CompletedAt)} by {doneEntry.CompletedBy}
+                  </p>
+                )}
+                {state === "done" && onUncompleteStep && (
+                  <button
+                    onClick={() => onUncompleteStep(makeStepKey(activeFlow, step.id))}
+                    className="text-[10px] underline mt-0.5"
+                    style={{ color: "#c5bfb5" }}
+                  >
+                    Undo
+                  </button>
+                )}
                 {state === "active" && !isAllDone && (
                   <button
                     onClick={handleMarkDone}
                     className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: "#078a52",
-                      color: "#ffffff",
-                      border: "none",
-                    }}
+                    style={{ background: "#078a52", color: "#ffffff", border: "none" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#02492a"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#078a52"; }}
                   >
@@ -318,14 +460,9 @@ export default function ServiceTimeline({ provider, flow, onProgressChange }: Se
 
       {/* All done banner */}
       {isAllDone && (
-        <div
-          className="mt-2 rounded-xl px-4 py-3 flex items-center gap-2"
-          style={{ background: "#84e7a5", border: "1px solid #078a52" }}
-        >
+        <div className="mt-2 rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#84e7a5", border: "1px solid #078a52" }}>
           <Check size={16} color="#02492a" strokeWidth={3} />
-          <span className="text-sm font-semibold" style={{ color: "#02492a" }}>
-            All steps completed — provisioning done!
-          </span>
+          <span className="text-sm font-semibold" style={{ color: "#02492a" }}>All steps completed — provisioning done!</span>
         </div>
       )}
     </div>
