@@ -1,5 +1,4 @@
 const API_URL = import.meta.env.VITE_API_EMAIL_TEMPLATES_URL as string;
-if (!API_URL) throw new Error("VITE_API_EMAIL_TEMPLATES_URL is not set");
 
 export interface EmailTemplate {
   id: number;
@@ -69,6 +68,7 @@ function withId(data: unknown): unknown {
 }
 
 async function call<T>(body: object): Promise<T> {
+  if (!API_URL) throw new Error("VITE_API_EMAIL_TEMPLATES_URL is not set");
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
