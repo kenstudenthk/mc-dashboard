@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
 import { X, Mail, ChevronLeft, Send, Loader2 } from "lucide-react";
 import { Order } from "../services/orderService";
 import { ServiceAccount } from "../services/serviceAccountService";
@@ -67,6 +68,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
   onSent,
 }) => {
   const { userEmail } = usePermission();
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -78,6 +80,12 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -104,12 +112,17 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
 
   const handleSend = async () => {
     if (!selected) return;
+    const trimmedTo = to.trim();
+    if (!trimmedTo) {
+      setError("Recipient email address is required.");
+      return;
+    }
     setSending(true);
     setError(null);
     try {
       await emailService.send({
-        to,
-        cc: cc || undefined,
+        to: trimmedTo,
+        cc: cc.trim() || undefined,
         subject,
         body,
         orderId: order.id,
@@ -119,7 +132,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
       });
       setSuccess(true);
       onSent?.();
-      setTimeout(onClose, 1800);
+      closeTimerRef.current = setTimeout(onClose, 1800);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to send email.");
     } finally {
@@ -397,7 +410,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                       <div
                         className="prose prose-sm max-w-none text-sm"
                         style={{ color: "#000" }}
-                        dangerouslySetInnerHTML={{ __html: body }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }}
                       />
                     </div>
                   </div>

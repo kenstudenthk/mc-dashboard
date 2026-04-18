@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -55,16 +55,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   minHeight = 180,
   placeholder,
 }) => {
+  const isInternalUpdate = useRef(false);
+
   const editor = useEditor({
     extensions: [StarterKit, Underline, TextStyle, Color],
     content: value,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      isInternalUpdate.current = true;
+      onChange(editor.getHTML());
+    },
   });
 
   useEffect(() => {
     if (!editor) return;
-    const current = editor.getHTML();
-    if (current !== value) {
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
+    if (editor.getHTML() !== value) {
       editor.commands.setContent(value || "");
     }
   }, [value, editor]);
@@ -73,7 +81,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <div
-      className="rounded-lg overflow-hidden"
+      className="rounded-lg overflow-hidden relative"
       style={{ border: "1px solid #717989" }}
     >
       {/* Toolbar */}
@@ -173,7 +181,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         }}
       />
 
-      {!editor.getText() && placeholder && (
+      {editor.isEmpty && placeholder && (
         <div
           className="absolute top-0 left-0 px-3 py-2.5 text-sm pointer-events-none"
           style={{ color: "#9f9b93" }}

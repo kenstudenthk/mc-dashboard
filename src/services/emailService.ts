@@ -1,7 +1,8 @@
-const URL = import.meta.env.VITE_API_EMAIL_URL as string;
+const API_URL = import.meta.env.VITE_API_EMAIL_URL as string;
+if (!API_URL) throw new Error("VITE_API_EMAIL_URL is not set");
 
 export interface EmailLog {
-  id: number;
+  id?: number;
   Title: string;
   OrderTitle: string;
   OrderID: number;
@@ -51,7 +52,7 @@ function withId(data: unknown): unknown {
 }
 
 async function call<T>(body: object): Promise<T> {
-  const res = await fetch(URL, {
+  const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -69,8 +70,8 @@ async function call<T>(body: object): Promise<T> {
 }
 
 export const emailService = {
-  send: (input: SendEmailInput): Promise<{ logId: number }> =>
-    call<{ logId: number }>({ action: "SEND", data: input }),
+  send: ({ userEmail, ...rest }: SendEmailInput): Promise<{ logId: number }> =>
+    call<{ logId: number }>({ action: "SEND", data: rest, userEmail }),
 
   findByOrder: (orderTitle: string): Promise<EmailLog[]> =>
     call<EmailLog[]>({ action: "GET_BY_ORDER", data: { orderTitle } }),

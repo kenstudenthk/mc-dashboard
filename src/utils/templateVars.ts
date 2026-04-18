@@ -31,12 +31,16 @@ export function resolveTemplate(
     ContactPerson: order.ContactPerson ?? "",
     ContactEmail: order.ContactEmail ?? "",
     SRD: order.SRD ? formatDate(order.SRD) : "",
-    Amount: order.Amount ? formatCurrency(order.Amount) : "",
+    Amount:
+      order.Amount != null && Number.isFinite(order.Amount)
+        ? formatCurrency(order.Amount)
+        : "",
     OasisNumber: order.OasisNumber ?? "",
     AccountName: serviceAccount?.AccountName ?? "",
     BillingAddress: order.BillingAddress ?? "",
-    AccountID: serviceAccount?.PrimaryAccountID ?? order.AccountID ?? "",
-    LoginEmail: serviceAccount?.LoginEmail ?? order.AccountLoginEmail ?? "",
+    // SP text columns return "" for unset — use || so empty string falls through
+    AccountID: serviceAccount?.PrimaryAccountID || order.AccountID || "",
+    LoginEmail: serviceAccount?.LoginEmail || order.AccountLoginEmail || "",
   };
 
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
@@ -44,7 +48,12 @@ export function resolveTemplate(
   });
 }
 
-export function getUnresolvedVars(template: string): string[] {
-  const matches = template.matchAll(/\{\{(\w+)\}\}/g);
-  return [...matches].map((m) => m[1]);
+export function getUnresolvedVars(
+  template: string,
+  order: Order,
+  serviceAccount?: ServiceAccount | null,
+): string[] {
+  const resolved = resolveTemplate(template, order, serviceAccount);
+  const remaining = resolved.matchAll(/\{\{(\w+)\}\}/g);
+  return [...new Set([...remaining].map((m) => m[1]))];
 }

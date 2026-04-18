@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import DOMPurify from "dompurify";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -205,7 +206,7 @@ const OrderDetails = () => {
 
   const [isEmailPanelOpen, setIsEmailPanelOpen] = useState(false);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
-  const [emailLogsExpanded, setEmailLogsExpanded] = useState(false);
+  const [expandedEmailIds, setExpandedEmailIds] = useState<Set<number>>(new Set());
 
   const handleEditOpen = () => {
     if (!order) return;
@@ -646,12 +647,19 @@ const OrderDetails = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {emailLogs.map((log) => (
-                    <div key={log.id}>
+                  {emailLogs.map((log) => {
+                    const logId = log.id ?? 0;
+                    const isExpanded = expandedEmailIds.has(logId);
+                    const toggleExpand = () =>
+                      setExpandedEmailIds((prev) => {
+                        const next = new Set(prev);
+                        isExpanded ? next.delete(logId) : next.add(logId);
+                        return next;
+                      });
+                    return (
+                    <div key={logId}>
                       <button
-                        onClick={() =>
-                          setEmailLogsExpanded((prev) => !prev)
-                        }
+                        onClick={toggleExpand}
                         className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left transition-colors hover:bg-[#faf9f7]"
                         style={{ border: "1px solid #eee9df" }}
                       >
@@ -675,13 +683,13 @@ const OrderDetails = () => {
                             To: {log.SentTo} · {log.SentBy} · {formatDate(log.SentAt)}
                           </p>
                         </div>
-                        {emailLogsExpanded ? (
+                        {isExpanded ? (
                           <ChevronUp className="w-3.5 h-3.5 shrink-0 ml-2" style={{ color: "#9f9b93" }} />
                         ) : (
                           <ChevronDown className="w-3.5 h-3.5 shrink-0 ml-2" style={{ color: "#9f9b93" }} />
                         )}
                       </button>
-                      {emailLogsExpanded && (
+                      {isExpanded && (
                         <div
                           className="mx-1 px-4 py-3 rounded-b-xl text-xs"
                           style={{ border: "1px dashed #dad4c8", borderTop: "none", background: "#faf9f7" }}
@@ -697,12 +705,13 @@ const OrderDetails = () => {
                           <div
                             className="mt-2 pt-2 prose prose-sm max-w-none"
                             style={{ borderTop: "1px solid #dad4c8", color: "#000", fontSize: 12 }}
-                            dangerouslySetInnerHTML={{ __html: log.BodySnapshot }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(log.BodySnapshot) }}
                           />
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
