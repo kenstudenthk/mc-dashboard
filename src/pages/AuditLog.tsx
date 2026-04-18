@@ -7,6 +7,7 @@ import {
   Trash2,
   Clock,
   FileText,
+  Mail,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
@@ -67,6 +68,8 @@ const AuditLog = () => {
         return <Edit className="w-3.5 h-3.5" />;
       case "Delete":
         return <Trash2 className="w-3.5 h-3.5" />;
+      case "Email":
+        return <Mail className="w-3.5 h-3.5" />;
       default:
         return <FileText className="w-3.5 h-3.5" />;
     }
@@ -80,6 +83,8 @@ const AuditLog = () => {
         return "bg-blue-100 text-blue-700 border-blue-200";
       case "Delete":
         return "bg-red-100 text-red-700 border-red-200";
+      case "Email":
+        return "border text-[#0089ad]";
       default:
         return "bg-gray-100 text-gray-600 border-gray-200";
     }
@@ -135,6 +140,7 @@ const AuditLog = () => {
                   <option value="Create">Create</option>
                   <option value="Update">Update</option>
                   <option value="Delete">Delete</option>
+                  <option value="Email">Email</option>
                 </select>
               </div>
             </TutorTooltip>
@@ -204,6 +210,11 @@ const AuditLog = () => {
                     <td className="px-6 py-3.5">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getActionColor(log.Action)}`}
+                        style={
+                          log.Action === "Email"
+                            ? { background: "#ddf4fd", borderColor: "#3bd3fd50" }
+                            : undefined
+                        }
                       >
                         {getActionIcon(log.Action)}
                         {log.Action}

@@ -4,7 +4,7 @@ export interface AuditLog {
   id: number;
   Title: string;
   UserEmail: string;
-  Action: "Create" | "Update" | "Delete";
+  Action: "Create" | "Update" | "Delete" | "Email";
   TargetID: string;
   Details: string;
   Created?: string;

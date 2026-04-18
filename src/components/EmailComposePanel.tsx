@@ -5,7 +5,7 @@ import { Order } from "../services/orderService";
 import { ServiceAccount } from "../services/serviceAccountService";
 import { EmailTemplate, emailTemplateService } from "../services/emailTemplateService";
 import { emailService } from "../services/emailService";
-import { resolveTemplate } from "../utils/templateVars";
+import { resolveTemplate, getUnresolvedVars } from "../utils/templateVars";
 import { RichTextEditor } from "./RichTextEditor";
 import { usePermission } from "../contexts/PermissionContext";
 
@@ -359,6 +359,33 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                     minHeight={220}
                     placeholder="Email body…"
                   />
+                  {(() => {
+                    const unresolved = selected
+                      ? getUnresolvedVars(body, order, serviceAccount)
+                      : [];
+                    if (unresolved.length === 0) return null;
+                    return (
+                      <div
+                        className="flex items-start gap-2 px-3 py-2 rounded-lg mt-1.5"
+                        style={{ background: "#fff3e0", border: "1px solid #fc7981" }}
+                      >
+                        <span className="text-xs font-semibold shrink-0 mt-0.5" style={{ color: "#b0101a" }}>
+                          Unfilled:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {unresolved.map((v) => (
+                            <span
+                              key={v}
+                              className="text-[11px] font-mono px-1.5 py-0.5 rounded"
+                              style={{ background: "#fc798133", color: "#b0101a" }}
+                            >
+                              {`{{${v}}}`}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </>
