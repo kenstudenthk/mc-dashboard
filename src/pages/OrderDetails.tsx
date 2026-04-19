@@ -20,7 +20,7 @@ import CloudProviderLogo from "../components/CloudProviderLogo";
 import ServiceTimeline, { ServiceTimelineProps } from "../components/ServiceTimeline";
 import { usePermission } from "../contexts/PermissionContext";
 import { orderService, Order, CreateOrderInput } from "../services/orderService";
-import { useOrderByTitle, useInvalidateOrders } from "../services/useOrdersQuery";
+import { useOrderById, useInvalidateOrders } from "../services/useOrdersQuery";
 import {
   orderTimelineService,
   TimelineEvent,
@@ -188,7 +188,8 @@ const OrderDetails = () => {
 
   const [activeSection, setActiveSection] = useState(0);
 
-  const { data: orderFromCache, isLoading, isError } = useOrderByTitle(id);
+  const parsedId = id ? parseInt(id, 10) : undefined;
+  const { data: orderFromCache, isLoading, isError } = useOrderById(parsedId);
   const invalidateOrders = useInvalidateOrders();
   const [orderOverride, setOrderOverride] = useState<Order | null>(null);
   const order = orderOverride ?? orderFromCache ?? null;

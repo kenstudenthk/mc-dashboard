@@ -4,7 +4,7 @@ import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload } from "lu
 import { TutorTooltip } from "../components/TutorTooltip";
 import { Order } from "../services/orderService";
 import { Customer } from "../services/customerService";
-import { useOrders, useCustomers, useInvalidateOrders, useInvalidateCustomers } from "../services/useOrdersQuery";
+import { useOrders, useCustomers, useInvalidateOrders, useInvalidateCustomers, useInitialOrders } from "../services/useOrdersQuery";
 import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
 
 const formatDate = (iso: string): string => {
@@ -58,8 +58,9 @@ const OrderRegistry = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showBulkImport, setShowBulkImport] = useState(false);
 
-  const { data: ordersData, isLoading: ordersLoading, isError: ordersError, isFetching } = useOrders();
+  const { data: ordersData, isLoading: ordersLoading } = useInitialOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
+  const { isFetching } = useOrders(); // background full-load indicator
   const invalidateOrders = useInvalidateOrders();
   const invalidateCustomers = useInvalidateCustomers();
 
@@ -67,7 +68,6 @@ const OrderRegistry = () => {
   const customerMap = buildCustomerMap(Array.isArray(customersData) ? customersData : []);
 
   const loading = ordersLoading || customersLoading;
-  const error = ordersError ? "Failed to load orders. Please try again." : null;
 
   const handleRefresh = () => {
     invalidateOrders();
@@ -286,19 +286,6 @@ const OrderRegistry = () => {
                 ))}
               </select>
             </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="px-6 py-3 text-sm text-red-600 bg-red-50 border-b border-red-100 flex items-center justify-between">
-            <span>{error}</span>
-            <button
-              onClick={handleRefresh}
-              className="flex items-center gap-1.5 font-medium text-red-600 hover:text-red-800 transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Retry
-            </button>
           </div>
         )}
 

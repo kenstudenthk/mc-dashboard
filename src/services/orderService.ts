@@ -121,17 +121,21 @@ async function findAll(): Promise<Order[]> {
   return call<Order[]>({ action: "GET_ALL" });
 }
 
+// Paginated fetch — for fast initial load (e.g. top 100)
+// Power Automate needs a separate flow/action: GET_PAGE with OData $top and $skip
+async function findPaginated(limit: number, offset: number): Promise<Order[]> {
+  return call<Order[]>({ action: "GET_PAGE", limit, offset });
+}
+
 export const orderService = {
   findAll,
+  findPaginated,
 
   // kept for manual refresh button — prefer useInvalidateOrders() from useOrdersQuery
   refresh: findAll,
 
   findById: async (id: number): Promise<Order> => {
-    const orders = await findAll();
-    const order = orders.find((o) => o.id === id);
-    if (!order) throw new Error(`Order not found: ${id}`);
-    return order;
+    return call<Order>({ action: "GET_BY_TITLE", id });
   },
 
   findByTitle: async (title: string): Promise<Order> => {
