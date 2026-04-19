@@ -148,7 +148,7 @@ const OrderRegistry = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
         <div>
           <h1
             className="text-[28px] font-semibold text-[#1d1d1f]"
@@ -160,7 +160,7 @@ const OrderRegistry = () => {
             Manage and track all cloud provisioning orders.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleRefresh}
             disabled={isFetching}
@@ -291,7 +291,7 @@ const OrderRegistry = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead>
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-[#1d1d1f]/06">
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
                   Service No.
@@ -329,86 +329,198 @@ const OrderRegistry = () => {
                     order.OrderType !== "Termination";
 
                   return (
-                    <tr
-                      key={order.id}
-                      className={`border-b border-[#1d1d1f]/04 transition-colors group ${isTerminated ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-[#f5f5f7]"}`}
-                    >
-                      <td
-                        className={`px-6 py-3.5 text-xs font-semibold hover:underline ${isTerminated ? "text-red-600" : "text-[#0071e3]"}`}
+                    <>
+                      {/* ── Mobile card (hidden on md+) ── */}
+                      <tr
+                        key={`card-${order.id}`}
+                        className="md:hidden border-b border-[#1d1d1f]/04"
                       >
-                        <Link to={`/orders/${order.id}`}>{order.Title}</Link>
-                      </td>
-                      <td className="px-6 py-3.5 text-sm">
-                        {customerMap.get(
-                          (order.CustomerName ?? "").toLowerCase(),
-                        ) ? (
-                          <Link
-                            to={`/customers/${customerMap.get((order.CustomerName ?? "").toLowerCase())}`}
-                            className={`hover:underline transition-colors ${isTerminated ? "text-red-500 hover:text-red-700" : "text-[#1d1d1f]/70 hover:text-[#0071e3]"}`}
-                          >
-                            {order.CustomerName}
-                          </Link>
-                        ) : (
-                          <span
-                            className={
+                        <td colSpan={8} className="px-4 py-3">
+                          <div
+                            className={`rounded-xl border p-3 gap-2 flex flex-col ${
                               isTerminated
-                                ? "text-red-500"
-                                : "text-[#1d1d1f]/70"
-                            }
+                                ? "bg-red-50/40 border-red-100"
+                                : "bg-white border-[#1d1d1f]/06"
+                            }`}
                           >
-                            {order.CustomerName}
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className={`px-6 py-3.5 text-sm font-medium ${isTerminated ? "text-red-600" : "text-[#1d1d1f]"}`}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <Link
+                                  to={`/orders/${order.id}`}
+                                  className={`text-xs font-semibold truncate ${
+                                    isTerminated ? "text-red-600" : "text-[#0071e3]"
+                                  }`}
+                                >
+                                  {order.Title}
+                                </Link>
+                                <span
+                                  className={`text-xs truncate ${
+                                    isTerminated
+                                      ? "text-red-500"
+                                      : "text-[#1d1d1f]/70"
+                                  }`}
+                                >
+                                  {order.CustomerName}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${getStatusColor(
+                                  order.Status,
+                                )}`}
+                              >
+                                {order.Status}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 mt-1">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] text-[#1d1d1f]/40 uppercase tracking-wider label-text">
+                                  Product
+                                </span>
+                                <span
+                                  className={`text-xs font-medium ${
+                                    isTerminated ? "text-red-600" : "text-[#1d1d1f]"
+                                  }`}
+                                >
+                                  {order.CloudProvider}
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-0.5 text-right">
+                                <span className="text-[10px] text-[#1d1d1f]/40 uppercase tracking-wider label-text">
+                                  SRD
+                                </span>
+                                <span
+                                  className={`text-xs ${
+                                    isTerminated
+                                      ? "text-red-500"
+                                      : "text-[#1d1d1f]/45"
+                                  }`}
+                                >
+                                  {formatDate(order.SRD)}
+                                </span>
+                              </div>
+                              <Link
+                                to={`/orders/${order.id}`}
+                                className={`p-1.5 rounded-lg flex-shrink-0 ${
+                                  isTerminated
+                                    ? "text-red-400 bg-red-50"
+                                    : "text-[#1d1d1f]/35 bg-[#f5f5f7]"
+                                }`}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Link>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* ── Desktop table row (hidden on mobile) ── */}
+                      <tr
+                        key={order.id}
+                        className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row ${
+                          isTerminated
+                            ? "bg-red-50/30 hover:bg-red-50/50"
+                            : "hover:bg-[#f5f5f7]"
+                        }`}
                       >
-                        {order.CloudProvider}
-                        {isTerminated && (
-                          <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            Terminated
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className={`px-6 py-3.5 font-mono text-xs truncate max-w-[120px] ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"}`}
-                        title={order.AccountID}
-                      >
-                        {order.AccountID ?? "—"}
-                      </td>
-                      <td
-                        className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"}`}
-                      >
-                        {order.OrderType}
-                      </td>
-                      <td
-                        className={`px-6 py-3.5 text-sm ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"}`}
-                      >
-                        {formatDate(order.SRD)}
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}
+                        <td
+                          className={`px-6 py-3.5 text-xs font-semibold hover:underline ${
+                            isTerminated ? "text-red-600" : "text-[#0071e3]"
+                          }`}
                         >
-                          {order.Status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Link
-                            to={`/orders/${order.id}`}
-                            className={`p-1.5 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-50" : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"}`}
+                          <Link to={`/orders/${order.id}`}>{order.Title}</Link>
+                        </td>
+                        <td className="px-6 py-3.5 text-sm">
+                          {customerMap.get(
+                            (order.CustomerName ?? "").toLowerCase(),
+                          ) ? (
+                            <Link
+                              to={`/customers/${customerMap.get((order.CustomerName ?? "").toLowerCase())}`}
+                              className={`hover:underline transition-colors ${
+                                isTerminated
+                                  ? "text-red-500 hover:text-red-700"
+                                  : "text-[#1d1d1f]/70 hover:text-[#0071e3]"
+                              }`}
+                            >
+                              {order.CustomerName}
+                            </Link>
+                          ) : (
+                            <span
+                              className={
+                                isTerminated ? "text-red-500" : "text-[#1d1d1f]/70"
+                              }
+                            >
+                              {order.CustomerName}
+                            </span>
+                          )}
+                        </td>
+                        <td
+                          className={`px-6 py-3.5 text-sm font-medium ${
+                            isTerminated ? "text-red-600" : "text-[#1d1d1f]"
+                          }`}
+                        >
+                          {order.CloudProvider}
+                          {isTerminated && (
+                            <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              Terminated
+                            </span>
+                          )}
+                        </td>
+                        <td
+                          className={`px-6 py-3.5 font-mono text-xs truncate max-w-[120px] ${
+                            isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"
+                          }`}
+                          title={order.AccountID}
+                        >
+                          {order.AccountID ?? "—"}
+                        </td>
+                        <td
+                          className={`px-6 py-3.5 text-sm ${
+                            isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"
+                          }`}
+                        >
+                          {order.OrderType}
+                        </td>
+                        <td
+                          className={`px-6 py-3.5 text-sm ${
+                            isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"
+                          }`}
+                        >
+                          {formatDate(order.SRD)}
+                        </td>
+                        <td className="px-6 py-3.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(
+                              order.Status,
+                            )}`}
                           >
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          <button
-                            className={`p-1.5 rounded-lg transition-colors ${isTerminated ? "text-red-400 hover:text-red-600 hover:bg-red-50" : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"}`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                            {order.Status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Link
+                              to={`/orders/${order.id}`}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                isTerminated
+                                  ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                  : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
+                              }`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            <button
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                isTerminated
+                                  ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                  : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"
+                              }`}
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </>
                   );
                 })
               ) : (
@@ -425,7 +537,7 @@ const OrderRegistry = () => {
           </table>
         </div>
 
-        <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45">
+        <div className="p-4 border-t border-[#1d1d1f]/06 flex items-center justify-between text-xs text-[#1d1d1f]/45 flex-col sm:flex-row gap-2">
           <span>
             {filteredOrders.length === 0
               ? "No entries"
@@ -439,30 +551,35 @@ const OrderRegistry = () => {
             >
               Prev
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
-              .reduce<(number | "…")[]>((acc, p, idx, arr) => {
-                if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("…");
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((item, idx) =>
-                item === "…" ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-[#1d1d1f]/30">…</span>
-                ) : (
-                  <button
-                    key={item}
-                    onClick={() => setCurrentPage(item as number)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium ${
-                      currentPage === item
-                        ? "bg-[#0071e3] text-white"
-                        : "border border-[#1d1d1f]/08 hover:bg-[#f5f5f7] text-[#1d1d1f]/60"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                )
-              )}
+            <span className="hidden sm:flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("…");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === "…" ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 py-1 text-[#1d1d1f]/30">…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item as number)}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                        currentPage === item
+                          ? "bg-[#0071e3] text-white"
+                          : "border border-[#1d1d1f]/08 hover:bg-[#f5f5f7] text-[#1d1d1f]/60"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+            </span>
+            <span className="sm:hidden px-2 py-1 text-[#1d1d1f]/60">
+              {currentPage}/{totalPages}
+            </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
