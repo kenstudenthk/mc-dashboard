@@ -18,25 +18,24 @@ export function useOrders() {
 
 /**
  * Staged loading for fast first paint.
- * 1. Immediately shows the first 100 orders (cached indefinitely until invalidate).
- * 2. Silently loads ALL orders in the background and merges into the same cache key.
+ * 1. Immediately returns the first 100 orders.
+ * 2. Kicks off full load in the background, updates ORDERS_KEY cache silently.
  * Uses staleTime:Infinity so the initial 100 never trigger a refetch on mount.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
-      const [initial, all] = await Promise.all([
-        orderService.findPaginated(INITIAL_LIMIT, 0),
-        orderService.findAll(),
-      ]);
-      // Merge into main cache so other consumers get the full list
-      queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
+      // Fast: return 100 immediately
+      const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
+      // Slow: load all in background, update cache without blocking UI
+      orderService.findAll().then((all) => {
+        queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
+      });
       return initial;
     },
     staleTime: Infinity,      // Never auto-refetch initial 100
     gcTime: 10 * 60 * 1000,   // 10 min cache
-    placeholderData: undefined,
   });
 }
 
