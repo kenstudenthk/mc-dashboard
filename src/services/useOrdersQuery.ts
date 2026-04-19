@@ -8,32 +8,34 @@ export const ORDERS_INITIAL_KEY = ['orders-initial'] as const;
 export const CUSTOMERS_KEY = ['customers'] as const;
 
 const INITIAL_LIMIT = 100;
+// GET_ALL times out in Power Automate (504) when dataset is large.
+// Use a large GET_PAGE instead — OData $top/$skip returns only this batch,
+// which SharePoint serves quickly and stays within the 2-min PA timeout.
+const BACKGROUND_LIMIT = 1000;
 
-// Full order list via GET_ALL — used by search/lookup hooks.
+// Full order list — uses GET_PAGE with a large limit to avoid GET_ALL 504 timeout.
 export function useOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_KEY,
-    queryFn: () => orderService.findAll(),
+    queryFn: () => orderService.findPaginated(BACKGROUND_LIMIT, 0),
   });
 }
 
 /**
  * Staged loading for fast first paint.
- * 1. GET_PAGE → returns first 100 orders immediately so the table renders fast.
- * 2. GET_ALL in background → upgrades the cache to the full dataset silently.
- *    If GET_ALL fails the initial 100 remain visible with no disruption.
+ * 1. GET_PAGE(100) → renders table immediately.
+ * 2. GET_PAGE(1000) in background → upgrades cache to full dataset silently.
+ *    Avoids GET_ALL which causes a 504 timeout in Power Automate.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
       const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      orderService.findAll().then((all) => {
+      orderService.findPaginated(BACKGROUND_LIMIT, 0).then((all) => {
         queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
         queryClient.setQueryData<Order[]>(ORDERS_INITIAL_KEY, all);
-      }).catch(() => {
-        // GET_ALL failed — keep showing the initial 100, no disruption to user
-      });
+      }).catch(() => {});
       return initial;
     },
     staleTime: Infinity,
