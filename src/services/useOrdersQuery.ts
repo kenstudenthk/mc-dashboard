@@ -8,40 +8,33 @@ export const ORDERS_INITIAL_KEY = ['orders-initial'] as const;
 export const CUSTOMERS_KEY = ['customers'] as const;
 
 const INITIAL_LIMIT = 100;
+const FULL_LIMIT = 1000;
 
+// Full order list — used by search/lookup hooks and as background cache.
+// Uses GET_PAGE with a large limit so GET_ALL is never required.
 export function useOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_KEY,
-    queryFn: () => orderService.findAll(),
+    queryFn: () => orderService.findPaginated(FULL_LIMIT, 0),
   });
 }
 
 /**
  * Staged loading for fast first paint.
- * 1. Immediately returns the first 100 orders.
- * 2. Kicks off full load in the background, updates ORDERS_KEY cache silently.
- * Uses staleTime:Infinity so the initial 100 never trigger a refetch on mount.
+ * 1. Returns the first 100 orders immediately via GET_PAGE.
+ * 2. Kicks off a larger GET_PAGE(1000) in the background to warm ORDERS_KEY.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
-      let initial: Order[];
-      let isPaginated = true;
-      try {
-        // Fast path: return 100 immediately if backend supports GET_PAGE
-        initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      } catch {
-        // GET_PAGE not yet added to the Power Automate flow — fall back to full load
-        initial = await orderService.findAll();
-        isPaginated = false;
-      }
-      if (isPaginated) {
-        // Kick off full load in background only when paginated fetch succeeded
-        orderService.findAll().then((all) => {
-          queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
-        }).catch(() => {});
-      }
+      const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
+      // Warm the full-list cache in the background
+      orderService.findPaginated(FULL_LIMIT, 0).then((all) => {
+        queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
+        // Upgrade the initial view to the full dataset silently
+        queryClient.setQueryData<Order[]>(ORDERS_INITIAL_KEY, all);
+      }).catch(() => {});
       return initial;
     },
     staleTime: Infinity,
