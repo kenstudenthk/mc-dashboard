@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink, Mail } from 'lucide-react';
 import { usePermission } from '../contexts/PermissionContext';
 import { TutorTooltip } from './TutorTooltip';
 
@@ -16,9 +16,10 @@ const Sidebar = () => {
     { icon: ExternalLink, label: 'Quick Links', path: '/quick-links' },
   ];
 
-  // Only show Audit Log to Admin and above
+  // Only show Audit Log and Email Templates to Admin and above
   if (hasPermission('Admin')) {
     navItems.push({ icon: ClipboardList, label: 'Audit Log', path: '/audit-log' });
+    navItems.push({ icon: Mail, label: 'Email Templates', path: '/email-templates' });
   }
 
   const bottomNavItems = [
