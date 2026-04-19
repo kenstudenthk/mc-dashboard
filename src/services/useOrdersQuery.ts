@@ -8,33 +8,32 @@ export const ORDERS_INITIAL_KEY = ['orders-initial'] as const;
 export const CUSTOMERS_KEY = ['customers'] as const;
 
 const INITIAL_LIMIT = 100;
-const FULL_LIMIT = 1000;
 
-// Full order list — used by search/lookup hooks and as background cache.
-// Uses GET_PAGE with a large limit so GET_ALL is never required.
+// Full order list via GET_ALL — used by search/lookup hooks.
 export function useOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_KEY,
-    queryFn: () => orderService.findPaginated(FULL_LIMIT, 0),
+    queryFn: () => orderService.findAll(),
   });
 }
 
 /**
  * Staged loading for fast first paint.
- * 1. Returns the first 100 orders immediately via GET_PAGE.
- * 2. Kicks off a larger GET_PAGE(1000) in the background to warm ORDERS_KEY.
+ * 1. GET_PAGE → returns first 100 orders immediately so the table renders fast.
+ * 2. GET_ALL in background → upgrades the cache to the full dataset silently.
+ *    If GET_ALL fails the initial 100 remain visible with no disruption.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
       const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      // Warm the full-list cache in the background
-      orderService.findPaginated(FULL_LIMIT, 0).then((all) => {
+      orderService.findAll().then((all) => {
         queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
-        // Upgrade the initial view to the full dataset silently
         queryClient.setQueryData<Order[]>(ORDERS_INITIAL_KEY, all);
-      }).catch(() => {});
+      }).catch(() => {
+        // GET_ALL failed — keep showing the initial 100, no disruption to user
+      });
       return initial;
     },
     staleTime: Infinity,
