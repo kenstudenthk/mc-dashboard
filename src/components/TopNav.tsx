@@ -5,17 +5,21 @@ import {
   ChevronRight,
   Shield,
   GraduationCap,
+  Menu,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { usePermission, Role } from "../contexts/PermissionContext";
 import { useTutor } from "../contexts/TutorContext";
 
-const TopNav = () => {
+interface TopNavProps {
+  onMenuOpen?: () => void;
+}
+
+const TopNav = ({ onMenuOpen }: TopNavProps) => {
   const location = useLocation();
   const { currentRole, setCurrentRole, userEmail } = usePermission();
   const { isTutorMode, toggleTutorMode } = useTutor();
 
-  // Simple breadcrumb logic based on path
   const getBreadcrumbs = () => {
     const paths = location.pathname.split("/").filter(Boolean);
     if (paths.length === 0) return [{ label: "Dashboard", path: "/" }];
@@ -25,7 +29,6 @@ const TopNav = () => {
 
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
-      // Format label: capitalize and replace dashes
       let label =
         path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
       if (path === "orders" && paths.length > 1 && paths[1] !== "new") {
@@ -40,31 +43,41 @@ const TopNav = () => {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="h-16 px-8 flex items-center justify-between glass-panel sticky top-0 z-10">
-      <div className="flex items-center text-sm text-[#1d1d1f]/50" style={{ letterSpacing: '-0.224px' }}>
-        {breadcrumbs.map((crumb, index) => (
-          <React.Fragment key={crumb.path}>
-            {index > 0 && (
-              <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-[#1d1d1f]/25" />
-            )}
-            {index === breadcrumbs.length - 1 ? (
-              <span className="text-[#1d1d1f] font-medium">{crumb.label}</span>
-            ) : (
-              <Link
-                to={crumb.path}
-                className="hover:text-[#0071e3] transition-colors"
-              >
-                {crumb.label}
-              </Link>
-            )}
-          </React.Fragment>
-        ))}
+    <header className="h-16 px-4 md:px-8 flex items-center justify-between glass-panel sticky top-0 z-10">
+      <div className="flex items-center gap-2 md:gap-0">
+        <button
+          className="md:hidden p-1.5 -ml-1 text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors rounded-lg hover:bg-[#1d1d1f]/06"
+          onClick={onMenuOpen}
+          aria-label="Open navigation"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center text-sm text-[#1d1d1f]/50" style={{ letterSpacing: '-0.224px' }}>
+          {breadcrumbs.map((crumb, index) => (
+            <React.Fragment key={crumb.path}>
+              {index > 0 && (
+                <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-[#1d1d1f]/25" />
+              )}
+              {index === breadcrumbs.length - 1 ? (
+                <span className="text-[#1d1d1f] font-medium">{crumb.label}</span>
+              ) : (
+                <Link
+                  to={crumb.path}
+                  className="hover:text-[#0071e3] transition-colors hidden sm:inline"
+                >
+                  {crumb.label}
+                </Link>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <button
           onClick={toggleTutorMode}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
             isTutorMode
               ? "bg-purple-100 text-purple-700 border-purple-200"
               : "bg-[#f5f5f7] text-[#1d1d1f]/60 border-[#1d1d1f]/10 hover:bg-[#ededf2]"
@@ -75,7 +88,7 @@ const TopNav = () => {
         </button>
 
         {currentRole === "Developer" && (
-          <div className="flex items-center gap-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-[11px] px-3 py-1.5">
+          <div className="hidden sm:flex items-center gap-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-[11px] px-3 py-1.5">
             <Shield className="w-3.5 h-3.5 text-[#0071e3]" />
             <select
               value={currentRole}
@@ -104,7 +117,7 @@ const TopNav = () => {
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
         </button>
 
-        <div className="flex items-center gap-2.5 pl-4 border-l border-[#1d1d1f]/08">
+        <div className="flex items-center gap-2.5 pl-3 md:pl-4 border-l border-[#1d1d1f]/08">
           <div className="text-right hidden md:block">
             <div className="text-xs font-semibold text-[#1d1d1f]" style={{ letterSpacing: '-0.224px' }}>
               {userEmail || "Not signed in"}
