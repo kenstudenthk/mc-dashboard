@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import TopNav from './TopNav';
-import { useIsMobile } from '../hooks/useIsMobile';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
-  const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-[#f5f5f7]">
-      {isMobile && drawerOpen && (
+      {/* Backdrop — only rendered when drawer is open; hidden on desktop via md:hidden */}
+      {drawerOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setDrawerOpen(false)}
         />
       )}
 
       <Sidebar
-        isMobileDrawer={isMobile}
         isDrawerOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       />

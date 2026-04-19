@@ -58,7 +58,7 @@ const OrderRegistry = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showBulkImport, setShowBulkImport] = useState(false);
 
-  const { data: ordersData, isLoading: ordersLoading } = useInitialOrders();
+  const { data: ordersData, isLoading: ordersLoading, isError: ordersError } = useInitialOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
   const { isFetching } = useOrders(); // background full-load indicator
   const invalidateOrders = useInvalidateOrders();
@@ -148,6 +148,13 @@ const OrderRegistry = () => {
 
   return (
     <div className="space-y-6">
+      {ordersError && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <span className="font-medium">Failed to load orders.</span>
+          <span className="text-red-500">Check that the API URL is configured and the Power Automate flow is running.</span>
+          <button onClick={handleRefresh} className="ml-auto underline hover:no-underline shrink-0">Retry</button>
+        </div>
+      )}
       <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
         <div>
           <h1

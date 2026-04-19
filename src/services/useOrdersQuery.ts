@@ -26,16 +26,26 @@ export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
-      // Fast: return 100 immediately
-      const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      // Slow: load all in background, update cache without blocking UI
-      orderService.findAll().then((all) => {
-        queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
-      });
+      let initial: Order[];
+      let isPaginated = true;
+      try {
+        // Fast path: return 100 immediately if backend supports GET_PAGE
+        initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
+      } catch {
+        // GET_PAGE not yet added to the Power Automate flow — fall back to full load
+        initial = await orderService.findAll();
+        isPaginated = false;
+      }
+      if (isPaginated) {
+        // Kick off full load in background only when paginated fetch succeeded
+        orderService.findAll().then((all) => {
+          queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
+        }).catch(() => {});
+      }
       return initial;
     },
-    staleTime: Infinity,      // Never auto-refetch initial 100
-    gcTime: 10 * 60 * 1000,   // 10 min cache
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
