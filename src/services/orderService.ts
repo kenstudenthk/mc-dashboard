@@ -122,8 +122,38 @@ async function findAll(): Promise<Order[]> {
   return call<Order[]>({ action: "GET_ALL" });
 }
 
-// Paginated fetch — uses the dedicated GET_PAGE flow (VITE_API_ORDERS_PAGE_URL).
-// The separate flow avoids the 504 timeout that affects GET_ALL on the main flow.
+// Strips trailing whitespace/newlines that the SharePoint REST API (OData v3)
+// appends to text field values.
+function trimStrings<T>(data: T): T {
+  if (Array.isArray(data)) return data.map(trimStrings) as T;
+  if (data !== null && typeof data === "object") {
+    return Object.fromEntries(
+      Object.entries(data as Record<string, unknown>).map(([k, v]) => [
+        k,
+        typeof v === "string" ? v.trim() : trimStrings(v),
+      ]),
+    ) as T;
+  }
+  return data;
+}
+
+// Extracts the items array from OData v4 ({ value: [...] })
+// or OData v3 ({ d: { results: [...] } }) response shapes.
+function extractItems(data: unknown): unknown[] | null {
+  if (Array.isArray(data)) return data;
+  if (data !== null && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.value)) return obj.value;
+    if (obj.d && typeof obj.d === "object") {
+      const d = obj.d as Record<string, unknown>;
+      if (Array.isArray(d.results)) return d.results;
+    }
+  }
+  return null;
+}
+
+// Paginated fetch — uses the dedicated GET_PAGE flow (VITE_API_GET_PAGE_URL).
+// Handles both OData v4 (value:[]) and OData v3 (d.results:[]) response shapes.
 async function findPaginated(limit: number, offset: number): Promise<Order[]> {
   const res = await fetch(PAGE_URL, {
     method: "POST",
@@ -132,14 +162,15 @@ async function findPaginated(limit: number, offset: number): Promise<Order[]> {
   });
   if (!res.ok) throw new Error(`orderService paginated error: ${res.status}`);
   const json = await res.json();
+
+  let raw: unknown = json;
   if (json != null && typeof json === "object" && "success" in json) {
     if (!json.success) throw new Error(json.error?.message ?? "API error");
-    if (Array.isArray(json.data?.value))
-      return withId(normalizeChoiceFields(json.data.value)) as Order[];
-    if (json.data != null)
-      return withId(normalizeChoiceFields(json.data)) as Order[];
+    raw = json.data ?? json;
   }
-  return withId(normalizeChoiceFields(json)) as Order[];
+
+  const items = extractItems(raw) ?? (Array.isArray(raw) ? raw : []);
+  return withId(trimStrings(normalizeChoiceFields(items))) as Order[];
 }
 
 export const orderService = {
