@@ -58,13 +58,13 @@ const OrderRegistry = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showBulkImport, setShowBulkImport] = useState(false);
 
-  const { data: ordersData, isLoading: ordersLoading, isError: ordersError } = useInitialOrders();
+  const { data: initialData, isLoading: ordersLoading, isError: ordersError } = useInitialOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
-  const { isFetching } = useOrders(); // background full-load indicator
+  const { data: fullData, isFetching } = useOrders();
   const invalidateOrders = useInvalidateOrders();
   const invalidateCustomers = useInvalidateCustomers();
 
-  const allOrders: Order[] = Array.isArray(ordersData) ? ordersData : [];
+  const allOrders: Order[] = Array.isArray(fullData) ? fullData : (Array.isArray(initialData) ? initialData : []);
   const customerMap = buildCustomerMap(Array.isArray(customersData) ? customersData : []);
 
   const loading = ordersLoading || customersLoading;
