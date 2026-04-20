@@ -8,31 +8,37 @@ export const ORDERS_INITIAL_KEY = ['orders-initial'] as const;
 export const CUSTOMERS_KEY = ['customers'] as const;
 
 const INITIAL_LIMIT = 100;
-// GET_ALL times out in Power Automate (504) when dataset is large.
-// Use a large GET_PAGE instead — OData $top/$skip returns only this batch,
-// which SharePoint serves quickly and stays within the 2-min PA timeout.
-const BACKGROUND_LIMIT = 1000;
+// Each background page is small enough to complete within PA's 2-min timeout.
+// With ~1000 total orders this means ~5 background requests of 200 each.
+const BG_PAGE_SIZE = 200;
 
-// Full order list — uses GET_PAGE with a large limit to avoid GET_ALL 504 timeout.
-export function useOrders() {
-  return useQuery<Order[]>({
-    queryKey: ORDERS_KEY,
-    queryFn: () => orderService.findPaginated(BACKGROUND_LIMIT, 0),
-  });
+// Fetches all remaining pages starting from `startOffset`, sequentially.
+async function fetchRemainingPages(startOffset: number): Promise<Order[]> {
+  const collected: Order[] = [];
+  let offset = startOffset;
+  while (true) {
+    const page = await orderService.findPaginated(BG_PAGE_SIZE, offset);
+    if (page.length === 0) break;
+    collected.push(...page);
+    if (page.length < BG_PAGE_SIZE) break; // reached last page
+    offset += BG_PAGE_SIZE;
+  }
+  return collected;
 }
 
 /**
  * Staged loading for fast first paint.
- * 1. GET_PAGE(100) → renders table immediately.
- * 2. GET_PAGE(1000) in background → upgrades cache to full dataset silently.
- *    Avoids GET_ALL which causes a 504 timeout in Power Automate.
+ * 1. GET_PAGE(100, 0)  → renders the table immediately.
+ * 2. Sequential GET_PAGE(200, 100), GET_PAGE(200, 300), … in background
+ *    → each small request avoids the PA 504 timeout; cache upgrades silently.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
       const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      orderService.findPaginated(BACKGROUND_LIMIT, 0).then((all) => {
+      fetchRemainingPages(INITIAL_LIMIT).then((rest) => {
+        const all = [...initial, ...rest];
         queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
         queryClient.setQueryData<Order[]>(ORDERS_INITIAL_KEY, all);
       }).catch(() => {});
@@ -40,6 +46,19 @@ export function useInitialOrders() {
     },
     staleTime: Infinity,
     gcTime: 10 * 60 * 1000,
+  });
+}
+
+// Full list via sequential GET_PAGE — used by search/lookup hooks.
+export function useOrders() {
+  return useQuery<Order[]>({
+    queryKey: ORDERS_KEY,
+    queryFn: async () => {
+      const first = await orderService.findPaginated(BG_PAGE_SIZE, 0);
+      if (first.length < BG_PAGE_SIZE) return first;
+      const rest = await fetchRemainingPages(BG_PAGE_SIZE);
+      return [...first, ...rest];
+    },
   });
 }
 
