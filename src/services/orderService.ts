@@ -10,7 +10,7 @@ export interface Order {
   Status: string;
   SRD: string;
   CloudProvider: string;
-  Amount: number;
+  Amount?: number;
   AccountID?: string;
   ServiceType?: string;
   OasisNumber?: string;

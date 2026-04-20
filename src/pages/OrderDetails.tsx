@@ -17,9 +17,15 @@ import {
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import CloudProviderLogo from "../components/CloudProviderLogo";
-import ServiceTimeline, { ServiceTimelineProps } from "../components/ServiceTimeline";
+import ServiceTimeline, {
+  ServiceTimelineProps,
+} from "../components/ServiceTimeline";
 import { usePermission } from "../contexts/PermissionContext";
-import { orderService, Order, CreateOrderInput } from "../services/orderService";
+import {
+  orderService,
+  Order,
+  CreateOrderInput,
+} from "../services/orderService";
 import { useOrderById, useInvalidateOrders } from "../services/useOrdersQuery";
 import {
   orderTimelineService,
@@ -34,16 +40,33 @@ import { emailService, EmailLog } from "../services/emailService";
 import { EmailComposePanel } from "../components/EmailComposePanel";
 
 // ─── Option Lists ─────────────────────────────────────────────────────────────
-const STATUS_OPTIONS = ["Processing", "Account Created", "Completed", "Cancelled", "Pending for order issued", "Pending Closure", "Pending for other parties"];
-const ORDER_TYPE_OPTIONS = ["New Install", "Misc Change", "Contract Renewal", "Termination", "Pre-Pro"];
+const STATUS_OPTIONS = [
+  "Processing",
+  "Account Created",
+  "Completed",
+  "Cancelled",
+  "Pending for order issued",
+  "Pending Closure",
+  "Pending for other parties",
+];
+const ORDER_TYPE_OPTIONS = [
+  "New Install",
+  "Misc Change",
+  "Contract Renewal",
+  "Termination",
+  "Pre-Pro",
+];
 
 // ─── ServiceTimeline mapping ──────────────────────────────────────────────────
-function mapCloudProvider(raw: string): ServiceTimelineProps["provider"] | null {
+function mapCloudProvider(
+  raw: string,
+): ServiceTimelineProps["provider"] | null {
   const s = raw?.toLowerCase() ?? "";
   if (s.includes("alibaba")) return "Alibaba";
   if (s.includes("azure") || s.includes("microsoft")) return "Azure";
   if (s.includes("gcp") || s.includes("google")) return "GCP";
-  if (s.includes("huawei") && (s.includes("ha") || s.includes("hospital"))) return "HuaweiHA";
+  if (s.includes("huawei") && (s.includes("ha") || s.includes("hospital")))
+    return "HuaweiHA";
   if (s.includes("huawei")) return "Huawei";
   if (s.includes("aws") || s.includes("amazon")) return "AWS";
   return null;
@@ -68,21 +91,41 @@ const formatDate = (iso: string): string => {
 };
 
 // Clay swatch status colors
-const getStatusStyle = (status: string): { background: string; color: string } => {
+const getStatusStyle = (
+  status: string,
+): { background: string; color: string } => {
   switch (status) {
-    case "Completed":        return { background: "#84e7a5", color: "#02492a" };
-    case "Account Created":  return { background: "#3bd3fd33", color: "#0089ad" };
-    case "Processing":       return { background: "#f8cc65", color: "#9d6a09" };
-    case "Cancelled":        return { background: "#fc798133", color: "#b0101a" };
-    default:                 return { background: "#eee9df", color: "#55534e" };
+    case "Completed":
+      return { background: "#84e7a5", color: "#02492a" };
+    case "Account Created":
+      return { background: "#3bd3fd33", color: "#0089ad" };
+    case "Processing":
+      return { background: "#f8cc65", color: "#9d6a09" };
+    case "Cancelled":
+      return { background: "#fc798133", color: "#b0101a" };
+    default:
+      return { background: "#eee9df", color: "#55534e" };
   }
 };
 
 // ─── Display Components ───────────────────────────────────────────────────────
-const InfoField = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="py-2.5 border-b last:border-0" style={{ borderColor: "#eee9df" }}>
-    <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>{label}</dt>
-    <dd className="text-sm font-medium" style={{ color: "#000" }}>{value || "—"}</dd>
+const InfoField = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <div
+    className="py-2.5 border-b last:border-0"
+    style={{ borderColor: "#eee9df" }}
+  >
+    <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>
+      {label}
+    </dt>
+    <dd className="text-sm font-medium" style={{ color: "#000" }}>
+      {value || "—"}
+    </dd>
   </div>
 );
 
@@ -100,7 +143,9 @@ const PanelField = ({
   span2?: boolean;
 }) => (
   <div className={`space-y-1 ${span2 ? "col-span-2" : ""}`}>
-    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>{label}</label>
+    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>
+      {label}
+    </label>
     {children}
   </div>
 );
@@ -117,8 +162,13 @@ const PanelToggle = ({
   onChange: (v: string) => void;
 }) => (
   <div className="space-y-1">
-    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>{label}</label>
-    <div className="flex items-center gap-1 p-1 rounded-lg w-fit" style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}>
+    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>
+      {label}
+    </label>
+    <div
+      className="flex items-center gap-1 p-1 rounded-lg w-fit"
+      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+    >
       {options.map((opt) => (
         <button
           key={opt}
@@ -150,8 +200,13 @@ const PanelSegmented = ({
   onChange: (v: string) => void;
 }) => (
   <div className="space-y-1">
-    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>{label}</label>
-    <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}>
+    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>
+      {label}
+    </label>
+    <div
+      className="flex items-center gap-1 p-1 rounded-lg"
+      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+    >
       {options.map((opt) => (
         <button
           key={opt}
@@ -173,7 +228,10 @@ const PanelSegmented = ({
 
 const PanelSectionLabel = ({ title }: { title: string }) => (
   <div className="flex items-center gap-2 pt-1 pb-0.5">
-    <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#9f9b93" }}>
+    <span
+      className="text-[10px] font-semibold uppercase tracking-widest"
+      style={{ color: "#9f9b93" }}
+    >
       {title}
     </span>
     <div className="flex-1 h-px" style={{ background: "#dad4c8" }} />
@@ -195,7 +253,9 @@ const OrderDetails = () => {
   const order = orderOverride ?? orderFromCache ?? null;
 
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(null);
+  const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(
+    null,
+  );
   const [completedSteps, setCompletedSteps] = useState<OrderStep[]>([]);
   const loading = isLoading && !order;
   const error = isError ? "Failed to load order details." : null;
@@ -207,7 +267,9 @@ const OrderDetails = () => {
 
   const [isEmailPanelOpen, setIsEmailPanelOpen] = useState(false);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
-  const [expandedEmailIds, setExpandedEmailIds] = useState<Set<number>>(new Set());
+  const [expandedEmailIds, setExpandedEmailIds] = useState<Set<number>>(
+    new Set(),
+  );
 
   const handleEditOpen = () => {
     if (!order) return;
@@ -270,7 +332,10 @@ const OrderDetails = () => {
 
   const refreshEmailLogs = () => {
     if (!order?.Title) return;
-    emailService.findByOrder(order.Title).then(setEmailLogs).catch(() => {});
+    emailService
+      .findByOrder(order.Title)
+      .then(setEmailLogs)
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -281,9 +346,13 @@ const OrderDetails = () => {
       orderStepsService.getByOrderId(order.id),
     ]).then(([eventsResult, accountsResult, stepsResult]) => {
       if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
-      if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
+      if (
+        accountsResult.status === "fulfilled" &&
+        accountsResult.value.length > 0
+      )
         setServiceAccount(accountsResult.value[0]);
-      if (stepsResult.status === "fulfilled") setCompletedSteps(stepsResult.value);
+      if (stepsResult.status === "fulfilled")
+        setCompletedSteps(stepsResult.value);
     });
   }, [order?.id]);
 
@@ -293,7 +362,10 @@ const OrderDetails = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-sm" style={{ color: "#9f9b93" }}>
+      <div
+        className="flex items-center justify-center py-24 text-sm"
+        style={{ color: "#9f9b93" }}
+      >
         Loading…
       </div>
     );
@@ -301,7 +373,10 @@ const OrderDetails = () => {
 
   if (error || !order) {
     return (
-      <div className="flex items-center justify-center py-24 text-sm" style={{ color: "#fc7981" }}>
+      <div
+        className="flex items-center justify-center py-24 text-sm"
+        style={{ color: "#fc7981" }}
+      >
         {error ?? "Order not found."}
       </div>
     );
@@ -325,7 +400,11 @@ const OrderDetails = () => {
             <div className="flex items-center gap-3">
               <h1
                 className="text-[28px] font-semibold"
-                style={{ color: "#000", letterSpacing: "-0.56px", lineHeight: "1.1" }}
+                style={{
+                  color: "#000",
+                  letterSpacing: "-0.56px",
+                  lineHeight: "1.1",
+                }}
               >
                 {order.Title}
               </h1>
@@ -336,34 +415,54 @@ const OrderDetails = () => {
                 {order.Status}
               </span>
             </div>
-            <p className="text-sm mt-1" style={{ color: "#9f9b93" }}>SRD: {formatDate(order.SRD)}</p>
+            <p className="text-sm mt-1" style={{ color: "#9f9b93" }}>
+              SRD: {formatDate(order.SRD)}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             className="p-2 rounded-xl transition-colors hover:bg-white"
-            style={{ background: "#faf9f7", border: "1px solid #dad4c8", color: "#9f9b93" }}
+            style={{
+              background: "#faf9f7",
+              border: "1px solid #dad4c8",
+              color: "#9f9b93",
+            }}
           >
             <Printer className="w-4 h-4" />
           </button>
           <button
             className="p-2 rounded-xl transition-colors hover:bg-white"
-            style={{ background: "#faf9f7", border: "1px solid #dad4c8", color: "#9f9b93" }}
+            style={{
+              background: "#faf9f7",
+              border: "1px solid #dad4c8",
+              color: "#9f9b93",
+            }}
           >
             <Download className="w-4 h-4" />
           </button>
-          <TutorTooltip text="Send an email to the customer using a pre-filled template." position="bottom">
+          <TutorTooltip
+            text="Send an email to the customer using a pre-filled template."
+            position="bottom"
+          >
             <button
               onClick={() => setIsEmailPanelOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-              style={{ background: "#ddf4fd", border: "1px solid #3bd3fd50", color: "#0089ad" }}
+              style={{
+                background: "#ddf4fd",
+                border: "1px solid #3bd3fd50",
+                color: "#0089ad",
+              }}
             >
               <Mail className="w-4 h-4" />
               Send Email
             </button>
           </TutorTooltip>
           {canEdit && (
-            <TutorTooltip text="Click here to modify the details of this order." position="bottom">
+            <TutorTooltip
+              text="Click here to modify the details of this order."
+              position="bottom"
+            >
               <button
                 onClick={handleEditOpen}
                 className="gradient-cta px-5 py-2 font-medium text-sm"
@@ -387,7 +486,12 @@ const OrderDetails = () => {
             horizontal
             completedSteps={completedSteps}
             onCompleteStep={async (stepKey, stepLabel) => {
-              await orderStepsService.complete(order.id, stepKey, stepLabel, userEmail);
+              await orderStepsService.complete(
+                order.id,
+                stepKey,
+                stepLabel,
+                userEmail,
+              );
               const updated = await orderStepsService.getByOrderId(order.id);
               setCompletedSteps(updated);
             }}
@@ -409,18 +513,33 @@ const OrderDetails = () => {
             position: "sticky",
             top: "1.5rem",
             border: "1px solid #dad4c8",
-            boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+            boxShadow:
+              "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
           }}
         >
-          <p className="label-text px-3 pt-1 pb-2" style={{ color: "#9f9b93" }}>SECTIONS</p>
+          <p className="label-text px-3 pt-1 pb-2" style={{ color: "#9f9b93" }}>
+            SECTIONS
+          </p>
           <div className="space-y-0.5">
             {[
-              { label: "Order Information", icon: <FileText className="w-3.5 h-3.5" /> },
+              {
+                label: "Order Information",
+                icon: <FileText className="w-3.5 h-3.5" />,
+              },
               { label: "Customer", icon: <Building className="w-3.5 h-3.5" /> },
-              { label: "Cloud Service Details", icon: <Server className="w-3.5 h-3.5" /> },
-              { label: "Provisioning & Tracking", icon: <CheckCircle className="w-3.5 h-3.5" /> },
+              {
+                label: "Cloud Service Details",
+                icon: <Server className="w-3.5 h-3.5" />,
+              },
+              {
+                label: "Provisioning & Tracking",
+                icon: <CheckCircle className="w-3.5 h-3.5" />,
+              },
               { label: "Timeline", icon: <Clock className="w-3.5 h-3.5" /> },
-              { label: "Email History", icon: <Mail className="w-3.5 h-3.5" /> },
+              {
+                label: "Email History",
+                icon: <Mail className="w-3.5 h-3.5" />,
+              },
             ].map(({ label, icon }, i) => (
               <button
                 key={label}
@@ -432,7 +551,11 @@ const OrderDetails = () => {
                     : { color: "#9f9b93" }
                 }
               >
-                <span style={{ color: activeSection === i ? "#078a52" : "#c5bfb5" }}>{icon}</span>
+                <span
+                  style={{ color: activeSection === i ? "#078a52" : "#c5bfb5" }}
+                >
+                  {icon}
+                </span>
                 {label}
               </button>
             ))}
@@ -443,43 +566,85 @@ const OrderDetails = () => {
         <main className="flex-1 min-w-0">
           {activeSection === 0 && (
             <div className="card p-6 space-y-0">
-              <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+              <div
+                className="flex items-center gap-2 mb-4 pb-4"
+                style={{ borderBottom: "1px solid #eee9df" }}
+              >
                 <FileText className="w-4 h-4" style={{ color: "#078a52" }} />
-                <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Order Information</h2>
+                <h2
+                  className="text-[17px] font-semibold"
+                  style={{ color: "#000" }}
+                >
+                  Order Information
+                </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <dl>
                   <InfoField label="Order Title" value={order.Title} />
                   <InfoField label="Project Name" value={order.SubName} />
-                  <InfoField label="Status" value={
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold" style={statusStyle}>
-                      {order.Status}
-                    </span>
-                  } />
+                  <InfoField
+                    label="Status"
+                    value={
+                      <span
+                        className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
+                        style={statusStyle}
+                      >
+                        {order.Status}
+                      </span>
+                    }
+                  />
                   <InfoField label="Order Type" value={order.OrderType} />
                 </dl>
                 <dl>
                   <InfoField label="SRD" value={formatDate(order.SRD)} />
                   <InfoField label="Service Type" value={order.ServiceType} />
-                  <InfoField label="Amount" value={`$${order.Amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
+                  <InfoField
+                    label="Amount"
+                    value={
+                      order.Amount != null
+                        ? `$${Number(order.Amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                        : "—"
+                    }
+                  />
                   <InfoField label="OASIS Number" value={order.OasisNumber} />
                 </dl>
               </div>
               {order.Remark && (
-                <div className="mt-4 pt-4" style={{ borderTop: "1px solid #eee9df" }}>
-                  <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>Remark</dt>
-                  <dd className="text-sm whitespace-pre-wrap" style={{ color: "#000" }}>{order.Remark}</dd>
+                <div
+                  className="mt-4 pt-4"
+                  style={{ borderTop: "1px solid #eee9df" }}
+                >
+                  <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>
+                    Remark
+                  </dt>
+                  <dd
+                    className="text-sm whitespace-pre-wrap"
+                    style={{ color: "#000" }}
+                  >
+                    {order.Remark}
+                  </dd>
                 </div>
               )}
             </div>
           )}
 
           {activeSection === 1 && (
-            <TutorTooltip text="Quick details about the customer associated with this order." position="top">
+            <TutorTooltip
+              text="Quick details about the customer associated with this order."
+              position="top"
+            >
               <div className="card p-6">
-                <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                <div
+                  className="flex items-center gap-2 mb-4 pb-4"
+                  style={{ borderBottom: "1px solid #eee9df" }}
+                >
                   <Building className="w-4 h-4" style={{ color: "#078a52" }} />
-                  <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Customer</h2>
+                  <h2
+                    className="text-[17px] font-semibold"
+                    style={{ color: "#000" }}
+                  >
+                    Customer
+                  </h2>
                 </div>
                 <Link
                   to={`/customers/${order.CustomerID}`}
@@ -488,15 +653,30 @@ const OrderDetails = () => {
                 >
                   {order.CustomerName}
                 </Link>
-                <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>ID #{order.CustomerID}</p>
+                <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>
+                  ID #{order.CustomerID}
+                </p>
                 <dl>
-                  <InfoField label="Contact Person" value={order.ContactPerson} />
+                  <InfoField
+                    label="Contact Person"
+                    value={order.ContactPerson}
+                  />
                   <InfoField label="Contact No." value={order.ContactNo} />
                   <InfoField label="Contact Email" value={order.ContactEmail} />
                   {order.BillingAddress && (
                     <div className="py-2.5">
-                      <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>Billing Address</dt>
-                      <dd className="text-sm font-medium whitespace-pre-wrap" style={{ color: "#000" }}>{order.BillingAddress}</dd>
+                      <dt
+                        className="label-text mb-1"
+                        style={{ color: "#9f9b93" }}
+                      >
+                        Billing Address
+                      </dt>
+                      <dd
+                        className="text-sm font-medium whitespace-pre-wrap"
+                        style={{ color: "#000" }}
+                      >
+                        {order.BillingAddress}
+                      </dd>
                     </div>
                   )}
                 </dl>
@@ -505,29 +685,60 @@ const OrderDetails = () => {
           )}
 
           {activeSection === 2 && (
-            <TutorTooltip text="This section contains the core technical details about the cloud service provisioned for this order." position="top">
+            <TutorTooltip
+              text="This section contains the core technical details about the cloud service provisioned for this order."
+              position="top"
+            >
               <div className="card p-6">
-                <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+                <div
+                  className="flex items-center gap-2 mb-4 pb-4"
+                  style={{ borderBottom: "1px solid #eee9df" }}
+                >
                   <Server className="w-4 h-4" style={{ color: "#078a52" }} />
-                  <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Cloud Service Details</h2>
+                  <h2
+                    className="text-[17px] font-semibold"
+                    style={{ color: "#000" }}
+                  >
+                    Cloud Service Details
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                   <dl>
-                    <InfoField label="Product Subscribe" value={
-                      <CloudProviderLogo
-                        provider={order.CloudProvider ?? ""}
-                        size={22}
-                        nameClassName="text-sm font-medium"
-                      />
-                    } />
-                    <InfoField label="Billing Account / Secondary ID" value={serviceAccount?.SecondaryID} />
-                    <InfoField label="Account ID / Root ID / UID" value={serviceAccount?.PrimaryAccountID ?? order.AccountID} />
+                    <InfoField
+                      label="Product Subscribe"
+                      value={
+                        <CloudProviderLogo
+                          provider={order.CloudProvider ?? ""}
+                          size={22}
+                          nameClassName="text-sm font-medium"
+                        />
+                      }
+                    />
+                    <InfoField
+                      label="Billing Account / Secondary ID"
+                      value={serviceAccount?.SecondaryID}
+                    />
+                    <InfoField
+                      label="Account ID / Root ID / UID"
+                      value={
+                        serviceAccount?.PrimaryAccountID ?? order.AccountID
+                      }
+                    />
                   </dl>
                   <dl>
-                    <InfoField label="Account Name / Cloud Checker Name" value={serviceAccount?.AccountName} />
+                    <InfoField
+                      label="Account Name / Cloud Checker Name"
+                      value={serviceAccount?.AccountName}
+                    />
                     <InfoField label="Domain" value={serviceAccount?.Domain} />
-                    <InfoField label="Login Email" value={serviceAccount?.LoginEmail} />
-                    <InfoField label="Other Account Information" value={serviceAccount?.OtherInfo} />
+                    <InfoField
+                      label="Login Email"
+                      value={serviceAccount?.LoginEmail}
+                    />
+                    <InfoField
+                      label="Other Account Information"
+                      value={serviceAccount?.OtherInfo}
+                    />
                   </dl>
                 </div>
               </div>
@@ -536,19 +747,48 @@ const OrderDetails = () => {
 
           {activeSection === 3 && (
             <div className="card p-6">
-              <div className="flex items-center gap-2 mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+              <div
+                className="flex items-center gap-2 mb-4 pb-4"
+                style={{ borderBottom: "1px solid #eee9df" }}
+              >
                 <FileText className="w-4 h-4" style={{ color: "#078a52" }} />
-                <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Provisioning & Tracking</h2>
+                <h2
+                  className="text-[17px] font-semibold"
+                  style={{ color: "#000" }}
+                >
+                  Provisioning & Tracking
+                </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <dl>
-                  <InfoField label="Order Receive Date" value={formatDate(order.OrderReceiveDate ?? "")} />
-                  <InfoField label="CxS Complete Date" value={order.CxSCompleteDate ? formatDate(order.CxSCompleteDate) : "TBC"} />
-                  <InfoField label="CxS Request No." value={order.CxSRequestNo} />
+                  <InfoField
+                    label="Order Receive Date"
+                    value={formatDate(order.OrderReceiveDate ?? "")}
+                  />
+                  <InfoField
+                    label="CxS Complete Date"
+                    value={
+                      order.CxSCompleteDate
+                        ? formatDate(order.CxSCompleteDate)
+                        : "TBC"
+                    }
+                  />
+                  <InfoField
+                    label="CxS Request No."
+                    value={order.CxSRequestNo}
+                  />
                   <InfoField label="TID" value={order.TID} />
                   {order.SDNumber ? (
-                    <div className="py-2.5 border-b last:border-0" style={{ borderColor: "#eee9df" }}>
-                      <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>SD Number</dt>
+                    <div
+                      className="py-2.5 border-b last:border-0"
+                      style={{ borderColor: "#eee9df" }}
+                    >
+                      <dt
+                        className="label-text mb-1"
+                        style={{ color: "#9f9b93" }}
+                      >
+                        SD Number
+                      </dt>
                       <dd className="text-sm font-medium">
                         <a
                           href={`http://10.8.100.3:8080/pabx/servlet/IncidentDetailServlet?incidentId=${order.SDNumber}`}
@@ -568,13 +808,30 @@ const OrderDetails = () => {
                 <dl>
                   <InfoField label="PS Job (Y/N)" value={order.PSJob} />
                   <InfoField label="T2 / T3" value={order.T2T3} />
-                  <InfoField label="Welcome Letter" value={order.WelcomeLetter} />
+                  <InfoField
+                    label="Welcome Letter"
+                    value={order.WelcomeLetter}
+                  />
                   <InfoField label="Handled By" value={order.By} />
                   {order.OrderFormURL && (
-                    <div className="py-2.5 border-b last:border-0" style={{ borderColor: "#eee9df" }}>
-                      <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>Order Form</dt>
+                    <div
+                      className="py-2.5 border-b last:border-0"
+                      style={{ borderColor: "#eee9df" }}
+                    >
+                      <dt
+                        className="label-text mb-1"
+                        style={{ color: "#9f9b93" }}
+                      >
+                        Order Form
+                      </dt>
                       <dd className="text-sm font-medium">
-                        <a href={order.OrderFormURL} download rel="noopener noreferrer" className="hover:underline inline-flex items-center gap-1" style={{ color: "#078a52" }}>
+                        <a
+                          href={order.OrderFormURL}
+                          download
+                          rel="noopener noreferrer"
+                          className="hover:underline inline-flex items-center gap-1"
+                          style={{ color: "#078a52" }}
+                        >
                           <Download className="w-3.5 h-3.5" />
                           Download File
                         </a>
@@ -587,25 +844,58 @@ const OrderDetails = () => {
           )}
 
           {activeSection === 4 && (
-            <TutorTooltip text="A chronological view of the order's lifecycle." position="top">
+            <TutorTooltip
+              text="A chronological view of the order's lifecycle."
+              position="top"
+            >
               <div className="card p-6">
-                <h2 className="text-[17px] font-semibold mb-4" style={{ color: "#000" }}>Timeline</h2>
+                <h2
+                  className="text-[17px] font-semibold mb-4"
+                  style={{ color: "#000" }}
+                >
+                  Timeline
+                </h2>
                 {timeline.length === 0 ? (
-                  <p className="text-sm" style={{ color: "#9f9b93" }}>No timeline events yet.</p>
+                  <p className="text-sm" style={{ color: "#9f9b93" }}>
+                    No timeline events yet.
+                  </p>
                 ) : (
                   <div className="space-y-5 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#dad4c8] before:to-transparent">
                     {timeline.map((event) => (
-                      <div key={event.id} className="relative flex items-start gap-4">
+                      <div
+                        key={event.id}
+                        className="relative flex items-start gap-4"
+                      >
                         <div
                           className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-white shadow shrink-0 z-10"
-                          style={{ background: event.Completed ? "#078a52" : "#000" }}
+                          style={{
+                            background: event.Completed ? "#078a52" : "#000",
+                          }}
                         >
-                          {event.Completed ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                          {event.Completed ? (
+                            <CheckCircle className="w-4 h-4" />
+                          ) : (
+                            <Clock className="w-4 h-4" />
+                          )}
                         </div>
                         <div className="pt-2">
-                          <div className="font-semibold text-sm" style={{ color: "#000" }}>{event.Title}</div>
-                          <div className="text-xs" style={{ color: "#9f9b93" }}>{formatDate(event.EventDate)}</div>
-                          {event.Description && <div className="text-xs mt-0.5" style={{ color: "#9f9b93" }}>{event.Description}</div>}
+                          <div
+                            className="font-semibold text-sm"
+                            style={{ color: "#000" }}
+                          >
+                            {event.Title}
+                          </div>
+                          <div className="text-xs" style={{ color: "#9f9b93" }}>
+                            {formatDate(event.EventDate)}
+                          </div>
+                          {event.Description && (
+                            <div
+                              className="text-xs mt-0.5"
+                              style={{ color: "#9f9b93" }}
+                            >
+                              {event.Description}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -617,10 +907,18 @@ const OrderDetails = () => {
 
           {activeSection === 5 && (
             <div className="card p-6">
-              <div className="flex items-center justify-between mb-4 pb-4" style={{ borderBottom: "1px solid #eee9df" }}>
+              <div
+                className="flex items-center justify-between mb-4 pb-4"
+                style={{ borderBottom: "1px solid #eee9df" }}
+              >
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" style={{ color: "#0089ad" }} />
-                  <h2 className="text-[17px] font-semibold" style={{ color: "#000" }}>Email History</h2>
+                  <h2
+                    className="text-[17px] font-semibold"
+                    style={{ color: "#000" }}
+                  >
+                    Email History
+                  </h2>
                 </div>
                 <span
                   className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
@@ -634,7 +932,10 @@ const OrderDetails = () => {
                   className="rounded-xl p-6 text-center"
                   style={{ border: "1px dashed #dad4c8" }}
                 >
-                  <Mail className="w-6 h-6 mx-auto mb-2" style={{ color: "#dad4c8" }} />
+                  <Mail
+                    className="w-6 h-6 mx-auto mb-2"
+                    style={{ color: "#dad4c8" }}
+                  />
                   <p className="text-sm" style={{ color: "#9f9b93" }}>
                     No emails sent for this order yet.
                   </p>
@@ -658,59 +959,88 @@ const OrderDetails = () => {
                         return next;
                       });
                     return (
-                    <div key={logId}>
-                      <button
-                        onClick={toggleExpand}
-                        className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left transition-colors hover:bg-[#faf9f7]"
-                        style={{ border: "1px solid #eee9df" }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                              style={
-                                log.Status === "Sent"
-                                  ? { background: "#d1f4e0", color: "#02492a" }
-                                  : { background: "#fde8e8", color: "#b0101a" }
-                              }
-                            >
-                              {log.Status}
-                            </span>
-                            <span className="text-xs font-medium truncate" style={{ color: "#000" }}>
-                              {log.Subject}
-                            </span>
-                          </div>
-                          <p className="text-[11px]" style={{ color: "#9f9b93" }}>
-                            To: {log.SentTo} · {log.SentBy} · {formatDate(log.SentAt)}
-                          </p>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronUp className="w-3.5 h-3.5 shrink-0 ml-2" style={{ color: "#9f9b93" }} />
-                        ) : (
-                          <ChevronDown className="w-3.5 h-3.5 shrink-0 ml-2" style={{ color: "#9f9b93" }} />
-                        )}
-                      </button>
-                      {isExpanded && (
-                        <div
-                          className="mx-1 px-4 py-3 rounded-b-xl text-xs"
-                          style={{ border: "1px dashed #dad4c8", borderTop: "none", background: "#faf9f7" }}
+                      <div key={logId}>
+                        <button
+                          onClick={toggleExpand}
+                          className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left transition-colors hover:bg-[#faf9f7]"
+                          style={{ border: "1px solid #eee9df" }}
                         >
-                          {log.CC && (
-                            <p className="mb-1" style={{ color: "#9f9b93" }}>
-                              CC: {log.CC}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span
+                                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                style={
+                                  log.Status === "Sent"
+                                    ? {
+                                        background: "#d1f4e0",
+                                        color: "#02492a",
+                                      }
+                                    : {
+                                        background: "#fde8e8",
+                                        color: "#b0101a",
+                                      }
+                                }
+                              >
+                                {log.Status}
+                              </span>
+                              <span
+                                className="text-xs font-medium truncate"
+                                style={{ color: "#000" }}
+                              >
+                                {log.Subject}
+                              </span>
+                            </div>
+                            <p
+                              className="text-[11px]"
+                              style={{ color: "#9f9b93" }}
+                            >
+                              To: {log.SentTo} · {log.SentBy} ·{" "}
+                              {formatDate(log.SentAt)}
                             </p>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp
+                              className="w-3.5 h-3.5 shrink-0 ml-2"
+                              style={{ color: "#9f9b93" }}
+                            />
+                          ) : (
+                            <ChevronDown
+                              className="w-3.5 h-3.5 shrink-0 ml-2"
+                              style={{ color: "#9f9b93" }}
+                            />
                           )}
-                          <p className="mb-1" style={{ color: "#9f9b93" }}>
-                            Template: {log.TemplateName}
-                          </p>
+                        </button>
+                        {isExpanded && (
                           <div
-                            className="mt-2 pt-2 prose prose-sm max-w-none"
-                            style={{ borderTop: "1px solid #dad4c8", color: "#000", fontSize: 12 }}
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(log.BodySnapshot) }}
-                          />
-                        </div>
-                      )}
-                    </div>
+                            className="mx-1 px-4 py-3 rounded-b-xl text-xs"
+                            style={{
+                              border: "1px dashed #dad4c8",
+                              borderTop: "none",
+                              background: "#faf9f7",
+                            }}
+                          >
+                            {log.CC && (
+                              <p className="mb-1" style={{ color: "#9f9b93" }}>
+                                CC: {log.CC}
+                              </p>
+                            )}
+                            <p className="mb-1" style={{ color: "#9f9b93" }}>
+                              Template: {log.TemplateName}
+                            </p>
+                            <div
+                              className="mt-2 pt-2 prose prose-sm max-w-none"
+                              style={{
+                                borderTop: "1px solid #dad4c8",
+                                color: "#000",
+                                fontSize: 12,
+                              }}
+                              dangerouslySetInnerHTML={{
+                                __html: DOMPurify.sanitize(log.BodySnapshot),
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -733,7 +1063,9 @@ const OrderDetails = () => {
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isEditOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isEditOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={handleEditClose}
       />
@@ -745,10 +1077,17 @@ const OrderDetails = () => {
         }`}
       >
         {/* Panel Header */}
-        <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: "1px solid #dad4c8" }}>
+        <div
+          className="flex items-center justify-between px-6 py-4 shrink-0"
+          style={{ borderBottom: "1px solid #dad4c8" }}
+        >
           <div>
-            <h2 className="text-[16px] font-semibold" style={{ color: "#000" }}>Edit Order</h2>
-            <p className="text-xs mt-0.5" style={{ color: "#9f9b93" }}>{order?.Title}</p>
+            <h2 className="text-[16px] font-semibold" style={{ color: "#000" }}>
+              Edit Order
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: "#9f9b93" }}>
+              {order?.Title}
+            </p>
           </div>
           <button
             onClick={handleEditClose}
@@ -760,9 +1099,19 @@ const OrderDetails = () => {
         </div>
 
         {/* Panel Body */}
-        <form onSubmit={handleEditSave} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+        <form
+          onSubmit={handleEditSave}
+          className="overflow-y-auto flex-1 px-6 py-5 space-y-5"
+        >
           {editError && (
-            <div className="px-4 py-3 text-sm rounded-xl" style={{ color: "#b0101a", background: "#fc798120", border: "1px solid #fc798150" }}>
+            <div
+              className="px-4 py-3 text-sm rounded-xl"
+              style={{
+                color: "#b0101a",
+                background: "#fc798120",
+                border: "1px solid #fc798150",
+              }}
+            >
               {editError}
             </div>
           )}
@@ -772,33 +1121,85 @@ const OrderDetails = () => {
             <PanelSectionLabel title="Order Info" />
             <div className="grid grid-cols-2 gap-3">
               <PanelField label="Order Title" span2>
-                <input type="text" required value={editForm.Title ?? ""} onChange={(e) => set("Title", e.target.value)} className={inputClass(editForm.Title ?? "")} />
+                <input
+                  type="text"
+                  required
+                  value={editForm.Title ?? ""}
+                  onChange={(e) => set("Title", e.target.value)}
+                  className={inputClass(editForm.Title ?? "")}
+                />
               </PanelField>
               <PanelField label="Project Name" span2>
-                <input type="text" value={editForm.SubName ?? ""} onChange={(e) => set("SubName", e.target.value)} className={inputClass(editForm.SubName ?? "")} placeholder="e.g. Project Alpha" />
+                <input
+                  type="text"
+                  value={editForm.SubName ?? ""}
+                  onChange={(e) => set("SubName", e.target.value)}
+                  className={inputClass(editForm.SubName ?? "")}
+                  placeholder="e.g. Project Alpha"
+                />
               </PanelField>
               <PanelField label="Status">
-                <select value={editForm.Status ?? ""} onChange={(e) => set("Status", e.target.value)} className={inputClass(editForm.Status ?? "")}>
-                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                <select
+                  value={editForm.Status ?? ""}
+                  onChange={(e) => set("Status", e.target.value)}
+                  className={inputClass(editForm.Status ?? "")}
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </PanelField>
               <PanelField label="Order Type">
-                <select value={editForm.OrderType ?? ""} onChange={(e) => set("OrderType", e.target.value)} className={inputClass(editForm.OrderType ?? "")}>
+                <select
+                  value={editForm.OrderType ?? ""}
+                  onChange={(e) => set("OrderType", e.target.value)}
+                  className={inputClass(editForm.OrderType ?? "")}
+                >
                   <option value="">Select…</option>
-                  {ORDER_TYPE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {ORDER_TYPE_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </PanelField>
               <PanelField label="SRD">
-                <input type="date" value={editForm.SRD ?? ""} onChange={(e) => set("SRD", e.target.value)} className={inputClass(editForm.SRD ?? "")} />
+                <input
+                  type="date"
+                  value={editForm.SRD ?? ""}
+                  onChange={(e) => set("SRD", e.target.value)}
+                  className={inputClass(editForm.SRD ?? "")}
+                />
               </PanelField>
               <PanelField label="Cloud Provider">
-                <input type="text" value={editForm.CloudProvider ?? ""} onChange={(e) => set("CloudProvider", e.target.value)} className={inputClass(editForm.CloudProvider ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.CloudProvider ?? ""}
+                  onChange={(e) => set("CloudProvider", e.target.value)}
+                  className={inputClass(editForm.CloudProvider ?? "")}
+                />
               </PanelField>
               <PanelField label="Service Type">
-                <input type="text" value={editForm.ServiceType ?? ""} onChange={(e) => set("ServiceType", e.target.value)} className={inputClass(editForm.ServiceType ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.ServiceType ?? ""}
+                  onChange={(e) => set("ServiceType", e.target.value)}
+                  className={inputClass(editForm.ServiceType ?? "")}
+                />
               </PanelField>
               <PanelField label="Amount ($)">
-                <input type="number" min={0} step="0.01" value={editForm.Amount ?? ""} onChange={(e) => set("Amount", parseFloat(e.target.value) || 0)} className={inputClass(String(editForm.Amount ?? ""))} />
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={editForm.Amount ?? ""}
+                  onChange={(e) =>
+                    set("Amount", parseFloat(e.target.value) || 0)
+                  }
+                  className={inputClass(String(editForm.Amount ?? ""))}
+                />
               </PanelField>
             </div>
           </section>
@@ -808,35 +1209,91 @@ const OrderDetails = () => {
             <PanelSectionLabel title="Tracking" />
             <div className="grid grid-cols-2 gap-3">
               <PanelField label="OASIS Number">
-                <input type="text" value={editForm.OasisNumber ?? ""} onChange={(e) => set("OasisNumber", e.target.value)} className={inputClass(editForm.OasisNumber ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.OasisNumber ?? ""}
+                  onChange={(e) => set("OasisNumber", e.target.value)}
+                  className={inputClass(editForm.OasisNumber ?? "")}
+                />
               </PanelField>
               <PanelField label="CxS Request No.">
-                <input type="text" value={editForm.CxSRequestNo ?? ""} onChange={(e) => set("CxSRequestNo", e.target.value)} className={inputClass(editForm.CxSRequestNo ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.CxSRequestNo ?? ""}
+                  onChange={(e) => set("CxSRequestNo", e.target.value)}
+                  className={inputClass(editForm.CxSRequestNo ?? "")}
+                />
               </PanelField>
               <PanelField label="Order Receive Date">
-                <input type="date" value={editForm.OrderReceiveDate ?? ""} onChange={(e) => set("OrderReceiveDate", e.target.value)} className={inputClass(editForm.OrderReceiveDate ?? "")} />
+                <input
+                  type="date"
+                  value={editForm.OrderReceiveDate ?? ""}
+                  onChange={(e) => set("OrderReceiveDate", e.target.value)}
+                  className={inputClass(editForm.OrderReceiveDate ?? "")}
+                />
               </PanelField>
               <PanelField label="CxS Complete Date">
-                <input type="date" value={editForm.CxSCompleteDate ?? ""} onChange={(e) => set("CxSCompleteDate", e.target.value)} className={inputClass(editForm.CxSCompleteDate ?? "")} />
+                <input
+                  type="date"
+                  value={editForm.CxSCompleteDate ?? ""}
+                  onChange={(e) => set("CxSCompleteDate", e.target.value)}
+                  className={inputClass(editForm.CxSCompleteDate ?? "")}
+                />
               </PanelField>
               <PanelField label="TID">
-                <input type="text" value={editForm.TID ?? ""} onChange={(e) => set("TID", e.target.value)} className={inputClass(editForm.TID ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.TID ?? ""}
+                  onChange={(e) => set("TID", e.target.value)}
+                  className={inputClass(editForm.TID ?? "")}
+                />
               </PanelField>
               <PanelField label="SD Number">
-                <input type="text" value={editForm.SDNumber ?? ""} onChange={(e) => set("SDNumber", e.target.value)} className={inputClass(editForm.SDNumber ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.SDNumber ?? ""}
+                  onChange={(e) => set("SDNumber", e.target.value)}
+                  className={inputClass(editForm.SDNumber ?? "")}
+                />
               </PanelField>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <PanelToggle label="PS Job" options={["Y", "N"]} value={editForm.PSJob ?? ""} onChange={(v) => set("PSJob", v)} />
-              <PanelToggle label="Welcome Letter" options={["Yes", "No"]} value={editForm.WelcomeLetter ?? ""} onChange={(v) => set("WelcomeLetter", v)} />
+              <PanelToggle
+                label="PS Job"
+                options={["Y", "N"]}
+                value={editForm.PSJob ?? ""}
+                onChange={(v) => set("PSJob", v)}
+              />
+              <PanelToggle
+                label="Welcome Letter"
+                options={["Yes", "No"]}
+                value={editForm.WelcomeLetter ?? ""}
+                onChange={(v) => set("WelcomeLetter", v)}
+              />
             </div>
-            <PanelSegmented label="T2 / T3" options={["T1", "T2", "T3", "N/A"]} value={editForm.T2T3 ?? ""} onChange={(v) => set("T2T3", v)} />
+            <PanelSegmented
+              label="T2 / T3"
+              options={["T1", "T2", "T3", "N/A"]}
+              value={editForm.T2T3 ?? ""}
+              onChange={(v) => set("T2T3", v)}
+            />
             <div className="grid grid-cols-2 gap-3">
               <PanelField label="Handled By">
-                <input type="text" value={editForm.By ?? ""} onChange={(e) => set("By", e.target.value)} className={inputClass(editForm.By ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.By ?? ""}
+                  onChange={(e) => set("By", e.target.value)}
+                  className={inputClass(editForm.By ?? "")}
+                />
               </PanelField>
               <PanelField label="Order Form URL" span2>
-                <input type="url" value={editForm.OrderFormURL ?? ""} onChange={(e) => set("OrderFormURL", e.target.value)} className={inputClass(editForm.OrderFormURL ?? "")} placeholder="https://…" />
+                <input
+                  type="url"
+                  value={editForm.OrderFormURL ?? ""}
+                  onChange={(e) => set("OrderFormURL", e.target.value)}
+                  className={inputClass(editForm.OrderFormURL ?? "")}
+                  placeholder="https://…"
+                />
               </PanelField>
             </div>
           </section>
@@ -846,19 +1303,43 @@ const OrderDetails = () => {
             <PanelSectionLabel title="Customer" />
             <div className="grid grid-cols-2 gap-3">
               <PanelField label="Customer Name" span2>
-                <input type="text" value={editForm.CustomerName ?? ""} onChange={(e) => set("CustomerName", e.target.value)} className={inputClass(editForm.CustomerName ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.CustomerName ?? ""}
+                  onChange={(e) => set("CustomerName", e.target.value)}
+                  className={inputClass(editForm.CustomerName ?? "")}
+                />
               </PanelField>
               <PanelField label="Contact Person">
-                <input type="text" value={editForm.ContactPerson ?? ""} onChange={(e) => set("ContactPerson", e.target.value)} className={inputClass(editForm.ContactPerson ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.ContactPerson ?? ""}
+                  onChange={(e) => set("ContactPerson", e.target.value)}
+                  className={inputClass(editForm.ContactPerson ?? "")}
+                />
               </PanelField>
               <PanelField label="Contact No.">
-                <input type="text" value={editForm.ContactNo ?? ""} onChange={(e) => set("ContactNo", e.target.value)} className={inputClass(editForm.ContactNo ?? "")} />
+                <input
+                  type="text"
+                  value={editForm.ContactNo ?? ""}
+                  onChange={(e) => set("ContactNo", e.target.value)}
+                  className={inputClass(editForm.ContactNo ?? "")}
+                />
               </PanelField>
               <PanelField label="Contact Email" span2>
-                <input type="email" value={editForm.ContactEmail ?? ""} onChange={(e) => set("ContactEmail", e.target.value)} className={inputClass(editForm.ContactEmail ?? "")} />
+                <input
+                  type="email"
+                  value={editForm.ContactEmail ?? ""}
+                  onChange={(e) => set("ContactEmail", e.target.value)}
+                  className={inputClass(editForm.ContactEmail ?? "")}
+                />
               </PanelField>
               <PanelField label="Billing Address" span2>
-                <textarea value={editForm.BillingAddress ?? ""} onChange={(e) => set("BillingAddress", e.target.value)} className={`${inputClass(editForm.BillingAddress ?? "")} min-h-[70px] resize-none`} />
+                <textarea
+                  value={editForm.BillingAddress ?? ""}
+                  onChange={(e) => set("BillingAddress", e.target.value)}
+                  className={`${inputClass(editForm.BillingAddress ?? "")} min-h-[70px] resize-none`}
+                />
               </PanelField>
             </div>
           </section>
@@ -867,13 +1348,20 @@ const OrderDetails = () => {
           <section className="space-y-3">
             <PanelSectionLabel title="Notes" />
             <PanelField label="Remark">
-              <textarea value={editForm.Remark ?? ""} onChange={(e) => set("Remark", e.target.value)} className={`${inputClass(editForm.Remark ?? "")} min-h-[100px] resize-none`} />
+              <textarea
+                value={editForm.Remark ?? ""}
+                onChange={(e) => set("Remark", e.target.value)}
+                className={`${inputClass(editForm.Remark ?? "")} min-h-[100px] resize-none`}
+              />
             </PanelField>
           </section>
         </form>
 
         {/* Panel Footer */}
-        <div className="px-6 py-4 flex gap-3 shrink-0" style={{ borderTop: "1px solid #dad4c8" }}>
+        <div
+          className="px-6 py-4 flex gap-3 shrink-0"
+          style={{ borderTop: "1px solid #dad4c8" }}
+        >
           <button
             type="button"
             onClick={handleEditClose}
@@ -888,8 +1376,14 @@ const OrderDetails = () => {
             disabled={editSaving}
             className="flex-1 px-4 py-2.5 text-white font-medium rounded-xl transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ background: "#000" }}
-            onMouseEnter={(e) => { if (!editSaving) (e.currentTarget as HTMLButtonElement).style.background = "#333"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#000"; }}
+            onMouseEnter={(e) => {
+              if (!editSaving)
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#333";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#000";
+            }}
           >
             {editSaving ? "Saving…" : "Save Changes"}
           </button>
