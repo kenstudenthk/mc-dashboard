@@ -1,4 +1,5 @@
 const URL = import.meta.env.VITE_API_ORDERS_URL as string;
+const PAGE_URL = import.meta.env.VITE_API_GET_PAGE_URL as string;
 
 export interface Order {
   id: number;
@@ -121,10 +122,24 @@ async function findAll(): Promise<Order[]> {
   return call<Order[]>({ action: "GET_ALL" });
 }
 
-// Paginated fetch — for fast initial load (e.g. top 100)
-// Power Automate needs a separate flow/action: GET_PAGE with OData $top and $skip
+// Paginated fetch — uses the dedicated GET_PAGE flow (VITE_API_ORDERS_PAGE_URL).
+// The separate flow avoids the 504 timeout that affects GET_ALL on the main flow.
 async function findPaginated(limit: number, offset: number): Promise<Order[]> {
-  return call<Order[]>({ action: "GET_PAGE", limit, offset });
+  const res = await fetch(PAGE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "GET_PAGE", limit, offset }),
+  });
+  if (!res.ok) throw new Error(`orderService paginated error: ${res.status}`);
+  const json = await res.json();
+  if (json != null && typeof json === "object" && "success" in json) {
+    if (!json.success) throw new Error(json.error?.message ?? "API error");
+    if (Array.isArray(json.data?.value))
+      return withId(normalizeChoiceFields(json.data.value)) as Order[];
+    if (json.data != null)
+      return withId(normalizeChoiceFields(json.data)) as Order[];
+  }
+  return withId(normalizeChoiceFields(json)) as Order[];
 }
 
 export const orderService = {

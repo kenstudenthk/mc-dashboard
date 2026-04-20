@@ -8,44 +8,57 @@ export const ORDERS_INITIAL_KEY = ['orders-initial'] as const;
 export const CUSTOMERS_KEY = ['customers'] as const;
 
 const INITIAL_LIMIT = 100;
+// Each background page is small enough to complete within PA's 2-min timeout.
+// With ~1000 total orders this means ~5 background requests of 200 each.
+const BG_PAGE_SIZE = 200;
 
-export function useOrders() {
-  return useQuery<Order[]>({
-    queryKey: ORDERS_KEY,
-    queryFn: () => orderService.findAll(),
-  });
+// Fetches all remaining pages starting from `startOffset`, sequentially.
+async function fetchRemainingPages(startOffset: number): Promise<Order[]> {
+  const collected: Order[] = [];
+  let offset = startOffset;
+  while (true) {
+    const page = await orderService.findPaginated(BG_PAGE_SIZE, offset);
+    if (page.length === 0) break;
+    collected.push(...page);
+    if (page.length < BG_PAGE_SIZE) break; // reached last page
+    offset += BG_PAGE_SIZE;
+  }
+  return collected;
 }
 
 /**
  * Staged loading for fast first paint.
- * 1. Immediately returns the first 100 orders.
- * 2. Kicks off full load in the background, updates ORDERS_KEY cache silently.
- * Uses staleTime:Infinity so the initial 100 never trigger a refetch on mount.
+ * 1. GET_PAGE(100, 0)  → renders the table immediately.
+ * 2. Sequential GET_PAGE(200, 100), GET_PAGE(200, 300), … in background
+ *    → each small request avoids the PA 504 timeout; cache upgrades silently.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
-      let initial: Order[];
-      let isPaginated = true;
-      try {
-        // Fast path: return 100 immediately if backend supports GET_PAGE
-        initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      } catch {
-        // GET_PAGE not yet added to the Power Automate flow — fall back to full load
-        initial = await orderService.findAll();
-        isPaginated = false;
-      }
-      if (isPaginated) {
-        // Kick off full load in background only when paginated fetch succeeded
-        orderService.findAll().then((all) => {
-          queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
-        }).catch(() => {});
-      }
+      const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
+      fetchRemainingPages(INITIAL_LIMIT).then((rest) => {
+        const all = [...initial, ...rest];
+        queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
+        queryClient.setQueryData<Order[]>(ORDERS_INITIAL_KEY, all);
+      }).catch(() => {});
       return initial;
     },
     staleTime: Infinity,
     gcTime: 10 * 60 * 1000,
+  });
+}
+
+// Full list via sequential GET_PAGE — used by search/lookup hooks.
+export function useOrders() {
+  return useQuery<Order[]>({
+    queryKey: ORDERS_KEY,
+    queryFn: async () => {
+      const first = await orderService.findPaginated(BG_PAGE_SIZE, 0);
+      if (first.length < BG_PAGE_SIZE) return first;
+      const rest = await fetchRemainingPages(BG_PAGE_SIZE);
+      return [...first, ...rest];
+    },
   });
 }
 
