@@ -1,5 +1,5 @@
 const URL = import.meta.env.VITE_API_ORDERS_URL as string;
-const PAGE_URL = import.meta.env.VITE_API_ORDERS_PAGE_URL as string;
+const PAGE_URL = import.meta.env.VITE_API_GET_PAGE_URL as string;
 
 export interface Order {
   id: number;
