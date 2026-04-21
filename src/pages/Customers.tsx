@@ -99,6 +99,7 @@ const Customers = () => {
         <TutorTooltip
           text="Click here to add a new customer to the database."
           position="bottom"
+          componentName="Customers.AddButton"
         >
           <button
             onClick={() => setShowModal(true)}
@@ -115,6 +116,7 @@ const Customers = () => {
             text="Search for a customer by their name, ID, email, or phone number."
             position="bottom"
             wrapperClass="relative"
+            componentName="Customers.SearchFilter"
           >
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
@@ -201,6 +203,7 @@ const Customers = () => {
                         <TutorTooltip
                           text="Click the customer name to view their detailed profile, including order history and special notes."
                           position="right"
+                          componentName="Customers.Table"
                         >
                           <div>
                             <Link

@@ -192,6 +192,7 @@ const Settings = () => {
           <TutorTooltip
             text="Navigate between different settings categories. The available categories depend on your current role."
             position="right"
+            componentName="Settings.Navigation"
           >
             <div className="card p-1.5 flex flex-col gap-0.5">
               {visibleTabs.map((tab) => (
