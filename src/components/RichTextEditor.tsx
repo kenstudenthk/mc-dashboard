@@ -1,9 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { Color } from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
+
+export interface RichTextEditorHandle {
+  insertText: (text: string) => void;
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -49,12 +53,12 @@ const ToolbarBtn = ({
   </button>
 );
 
-export const RichTextEditor: React.FC<RichTextEditorProps> = ({
+export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(function RichTextEditor({
   value,
   onChange,
   minHeight = 180,
   placeholder,
-}) => {
+}, ref) {
   const isInternalUpdate = useRef(false);
 
   const editor = useEditor({
@@ -76,6 +80,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       editor.commands.setContent(value || "");
     }
   }, [value, editor]);
+
+  useImperativeHandle(ref, () => ({
+    insertText: (text: string) => {
+      editor?.chain().focus().insertContent(text).run();
+    },
+  }), [editor]);
 
   if (!editor) return null;
 
@@ -191,6 +201,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default RichTextEditor;

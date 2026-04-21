@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Loader2 } from "lucide-react";
 import {
   EmailTemplate,
@@ -7,7 +7,7 @@ import {
   SERVICE_TYPE_OPTIONS,
   TEMPLATE_CATEGORY_OPTIONS,
 } from "../services/emailTemplateService";
-import { RichTextEditor } from "./RichTextEditor";
+import { RichTextEditor, RichTextEditorHandle } from "./RichTextEditor";
 import { usePermission } from "../contexts/PermissionContext";
 
 interface EmailTemplateEditPanelProps {
@@ -69,6 +69,8 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!template;
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const bodyEditorRef = useRef<RichTextEditorHandle>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -101,9 +103,21 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
   const insertVar = (field: "Subject" | "Body", varName: string) => {
     const token = `{{${varName}}}`;
     if (field === "Subject") {
-      set("Subject", form.Subject + token);
+      const el = subjectRef.current;
+      if (el) {
+        const start = el.selectionStart ?? form.Subject.length;
+        const end = el.selectionEnd ?? form.Subject.length;
+        const newVal = form.Subject.slice(0, start) + token + form.Subject.slice(end);
+        set("Subject", newVal);
+        requestAnimationFrame(() => {
+          el.focus();
+          el.selectionStart = el.selectionEnd = start + token.length;
+        });
+      } else {
+        set("Subject", form.Subject + token);
+      }
     } else {
-      set("BodyHTML", form.BodyHTML + token);
+      bodyEditorRef.current?.insertText(token);
     }
   };
 
@@ -304,6 +318,7 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
 
           <LabelRow label="Subject *">
             <input
+              ref={subjectRef}
               className={inputClass}
               style={inputStyle}
               value={form.Subject}
@@ -314,6 +329,7 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
 
           <LabelRow label="Body">
             <RichTextEditor
+              ref={bodyEditorRef}
               value={form.BodyHTML}
               onChange={(html) => set("BodyHTML", html)}
               minHeight={240}
