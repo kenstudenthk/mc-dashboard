@@ -4,7 +4,7 @@ import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload } from "lu
 import { TutorTooltip } from "../components/TutorTooltip";
 import { Order } from "../services/orderService";
 import { Customer } from "../services/customerService";
-import { useOrders, useCustomers, useInvalidateOrders, useInvalidateCustomers, useInitialOrders } from "../services/useOrdersQuery";
+import { useCustomers, useInvalidateOrders, useInvalidateCustomers, useInitialOrders, useIsBackgroundLoading } from "../services/useOrdersQuery";
 import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
 
 const formatDate = (iso: string): string => {
@@ -60,11 +60,11 @@ const OrderRegistry = () => {
 
   const { data: initialData, isLoading: ordersLoading, isError: ordersError } = useInitialOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
-  const { data: fullData, isFetching } = useOrders();
+  const isFetching = useIsBackgroundLoading();
   const invalidateOrders = useInvalidateOrders();
   const invalidateCustomers = useInvalidateCustomers();
 
-  const allOrders: Order[] = Array.isArray(fullData) ? fullData : (Array.isArray(initialData) ? initialData : []);
+  const allOrders: Order[] = Array.isArray(initialData) ? initialData : [];
   const customerMap = buildCustomerMap(Array.isArray(customersData) ? customersData : []);
 
   const loading = ordersLoading || customersLoading;

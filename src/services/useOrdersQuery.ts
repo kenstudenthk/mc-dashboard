@@ -1,47 +1,53 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { queryClient } from '../main';
 import { orderService, Order } from './orderService';
 import { customerService, Customer } from './customerService';
+
+// Module-level background loading tracker — avoids duplicate GET_PAGE calls
+// when OrderRegistry mounts both useInitialOrders and useOrders simultaneously.
+let bgLoading = false;
+const bgListeners = new Set<() => void>();
+function setBgLoading(val: boolean) {
+  bgLoading = val;
+  bgListeners.forEach((fn) => fn());
+}
+
+export function useIsBackgroundLoading(): boolean {
+  const [loading, setLoading] = useState(bgLoading);
+  useEffect(() => {
+    const notify = () => setLoading(bgLoading);
+    bgListeners.add(notify);
+    return () => { bgListeners.delete(notify); };
+  }, []);
+  return loading;
+}
 
 export const ORDERS_KEY = ['orders'] as const;
 export const ORDERS_INITIAL_KEY = ['orders-initial'] as const;
 export const CUSTOMERS_KEY = ['customers'] as const;
 
 const INITIAL_LIMIT = 100;
-// Each background page is small enough to complete within PA's 2-min timeout.
-// With ~1000 total orders this means ~5 background requests of 200 each.
-const BG_PAGE_SIZE = 200;
-
-// Fetches all remaining pages starting from `startOffset`, sequentially.
-async function fetchRemainingPages(startOffset: number): Promise<Order[]> {
-  const collected: Order[] = [];
-  let offset = startOffset;
-  while (true) {
-    const page = await orderService.findPaginated(BG_PAGE_SIZE, offset);
-    if (page.length === 0) break;
-    collected.push(...page);
-    if (page.length < BG_PAGE_SIZE) break; // reached last page
-    offset += BG_PAGE_SIZE;
-  }
-  return collected;
-}
+// Single background request fetches everything — avoids $skip pagination
+// which is unreliable in SharePoint REST API.
+const BG_FULL_LIMIT = 5000;
 
 /**
  * Staged loading for fast first paint.
- * 1. GET_PAGE(100, 0)  → renders the table immediately.
- * 2. Sequential GET_PAGE(200, 100), GET_PAGE(200, 300), … in background
- *    → each small request avoids the PA 504 timeout; cache upgrades silently.
+ * 1. GET_PAGE(100, 0)  → renders the table immediately (~2s).
+ * 2. GET_PAGE(5000, 0) in background → single request gets all orders (~8-10s).
+ *    Avoids $skip pagination which is unreliable in SharePoint REST API.
  */
 export function useInitialOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_INITIAL_KEY,
     queryFn: async () => {
       const initial = await orderService.findPaginated(INITIAL_LIMIT, 0);
-      fetchRemainingPages(INITIAL_LIMIT).then((rest) => {
-        const all = [...initial, ...rest];
+      setBgLoading(true);
+      orderService.findPaginated(BG_FULL_LIMIT, 0).then((all) => {
         queryClient.setQueryData<Order[]>(ORDERS_KEY, all);
         queryClient.setQueryData<Order[]>(ORDERS_INITIAL_KEY, all);
-      }).catch(() => {});
+      }).catch(() => {}).finally(() => setBgLoading(false));
       return initial;
     },
     staleTime: Infinity,
@@ -49,16 +55,13 @@ export function useInitialOrders() {
   });
 }
 
-// Full list via sequential GET_PAGE — used by search/lookup hooks.
+// Full list — used by search/lookup hooks.
 export function useOrders() {
   return useQuery<Order[]>({
     queryKey: ORDERS_KEY,
-    queryFn: async () => {
-      const first = await orderService.findPaginated(BG_PAGE_SIZE, 0);
-      if (first.length < BG_PAGE_SIZE) return first;
-      const rest = await fetchRemainingPages(BG_PAGE_SIZE);
-      return [...first, ...rest];
-    },
+    queryFn: () => orderService.findPaginated(BG_FULL_LIMIT, 0),
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
