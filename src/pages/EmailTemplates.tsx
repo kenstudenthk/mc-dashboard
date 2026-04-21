@@ -8,24 +8,25 @@ import {
 } from "../services/emailTemplateService";
 import { EmailTemplateEditPanel } from "../components/EmailTemplateEditPanel";
 import { usePermission } from "../contexts/PermissionContext";
+import { TutorTooltip } from "../components/TutorTooltip";
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  "Welcome Letter":      { bg: "#d1f4e0", text: "#02492a" },
-  "Order Confirmation":  { bg: "#ddf4fd", text: "#0089ad" },
-  "Account Created":     { bg: "#fef9c3", text: "#9d6a09" },
-  "Closure Notice":      { bg: "#fde8e8", text: "#b0101a" },
-  "Status Update":       { bg: "#ede9ff", text: "#43089f" },
-  "General":             { bg: "#eee9df", text: "#55534e" },
+  "Welcome Letter": { bg: "#d1f4e0", text: "#02492a" },
+  "Order Confirmation": { bg: "#ddf4fd", text: "#0089ad" },
+  "Account Created": { bg: "#fef9c3", text: "#9d6a09" },
+  "Closure Notice": { bg: "#fde8e8", text: "#b0101a" },
+  "Status Update": { bg: "#ede9ff", text: "#43089f" },
+  General: { bg: "#eee9df", text: "#55534e" },
 };
 
 const SERVICE_COLORS: Record<string, { bg: string; text: string }> = {
-  AWS:      { bg: "#fef9c3", text: "#9d6a09" },
-  Azure:    { bg: "#ddf4fd", text: "#0089ad" },
-  GCP:      { bg: "#d1f4e0", text: "#02492a" },
-  Alibaba:  { bg: "#fde8e8", text: "#b0101a" },
-  Huawei:   { bg: "#ede9ff", text: "#43089f" },
-  Tencent:  { bg: "#ddf4fd", text: "#01418d" },
-  General:  { bg: "#eee9df", text: "#55534e" },
+  AWS: { bg: "#fef9c3", text: "#9d6a09" },
+  Azure: { bg: "#ddf4fd", text: "#0089ad" },
+  GCP: { bg: "#d1f4e0", text: "#02492a" },
+  Alibaba: { bg: "#fde8e8", text: "#b0101a" },
+  Huawei: { bg: "#ede9ff", text: "#43089f" },
+  Tencent: { bg: "#ddf4fd", text: "#01418d" },
+  General: { bg: "#eee9df", text: "#55534e" },
 };
 
 const FILTER_TABS = ["All", ...SERVICE_TYPE_OPTIONS] as const;
@@ -35,7 +36,11 @@ const formatModified = (iso?: string): string => {
   if (!iso) return "—";
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   } catch {
     return iso;
   }
@@ -50,11 +55,16 @@ const EmailTemplates: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterTab>("All");
-  const [editTarget, setEditTarget] = useState<EmailTemplate | null | undefined>(undefined);
+  const [editTarget, setEditTarget] = useState<
+    EmailTemplate | null | undefined
+  >(undefined);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [confirmDeactivate, setConfirmDeactivate] = useState<EmailTemplate | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] =
+    useState<EmailTemplate | null>(null);
   const [deactivating, setDeactivating] = useState(false);
-  const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(
+    null,
+  );
 
   const load = () => {
     setLoading(true);
@@ -97,7 +107,10 @@ const EmailTemplates: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6" style={{ background: "#faf9f7", minHeight: "100%" }}>
+    <div
+      className="p-6 space-y-6"
+      style={{ background: "#faf9f7", minHeight: "100%" }}
+    >
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -108,7 +121,10 @@ const EmailTemplates: React.FC = () => {
             >
               <Mail className="w-4 h-4" style={{ color: "#0089ad" }} />
             </div>
-            <h1 className="text-2xl font-semibold" style={{ color: "#000", letterSpacing: "-0.48px" }}>
+            <h1
+              className="text-2xl font-semibold"
+              style={{ color: "#000", letterSpacing: "-0.48px" }}
+            >
               Email Templates
             </h1>
           </div>
@@ -117,48 +133,60 @@ const EmailTemplates: React.FC = () => {
           </p>
         </div>
         {canManage && (
-          <button
-            onClick={handleNew}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-            style={{ background: "#000", color: "#fff" }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget;
-              el.style.transform = "rotateZ(-5deg) translateY(-3px)";
-              el.style.boxShadow = "rgb(0,0,0) -5px 5px";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget;
-              el.style.transform = "";
-              el.style.boxShadow = "";
-            }}
+          <TutorTooltip
+            text="Create a new email template. Admins can configure the service, category, subject, body and default recipients."
+            position="left"
+            wrapperClass="shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            New Template
-          </button>
+            <button
+              onClick={handleNew}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+              style={{ background: "#000", color: "#fff" }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget;
+                el.style.transform = "rotateZ(-5deg) translateY(-3px)";
+                el.style.boxShadow = "rgb(0,0,0) -5px 5px";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget;
+                el.style.transform = "";
+                el.style.boxShadow = "";
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              New Template
+            </button>
+          </TutorTooltip>
         )}
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {FILTER_TABS.map((tab) => {
-          const active = filter === tab;
-          return (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className="px-4 py-1.5 text-sm font-medium transition-all"
-              style={{
-                borderRadius: 1584,
-                background: active ? "#ede9ff" : "#eee9df",
-                color: active ? "#43089f" : "#55534e",
-                border: active ? "1px solid #c1b0ff" : "1px solid #dad4c8",
-              }}
-            >
-              {tab}
-            </button>
-          );
-        })}
-      </div>
+      <TutorTooltip
+        text="Filter templates by cloud service. Pick 'All' to see every template, or click a service to narrow down."
+        position="bottom"
+        wrapperClass="w-fit"
+      >
+        <div className="flex items-center gap-2 flex-wrap">
+          {FILTER_TABS.map((tab) => {
+            const active = filter === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className="px-4 py-1.5 text-sm font-medium transition-all"
+                style={{
+                  borderRadius: 1584,
+                  background: active ? "#ede9ff" : "#eee9df",
+                  color: active ? "#43089f" : "#55534e",
+                  border: active ? "1px solid #c1b0ff" : "1px solid #dad4c8",
+                }}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+      </TutorTooltip>
 
       {/* Error */}
       {error && (
@@ -204,8 +232,11 @@ const EmailTemplates: React.FC = () => {
       {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map((tmpl) => {
-            const cs = CATEGORY_COLORS[tmpl.TemplateCategory] ?? CATEGORY_COLORS["General"];
-            const ss = SERVICE_COLORS[tmpl.ServiceType] ?? SERVICE_COLORS["General"];
+            const cs =
+              CATEGORY_COLORS[tmpl.TemplateCategory] ??
+              CATEGORY_COLORS["General"];
+            const ss =
+              SERVICE_COLORS[tmpl.ServiceType] ?? SERVICE_COLORS["General"];
             return (
               <div
                 key={tmpl.id}
@@ -241,40 +272,65 @@ const EmailTemplates: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-semibold leading-tight" style={{ color: "#000" }}>
+                    <p
+                      className="text-sm font-semibold leading-tight"
+                      style={{ color: "#000" }}
+                    >
                       {tmpl.Title}
                     </p>
-                    <p className="text-xs mt-0.5 truncate" style={{ color: "#9f9b93" }}>
+                    <p
+                      className="text-xs mt-0.5 truncate"
+                      style={{ color: "#9f9b93" }}
+                    >
                       {tmpl.Subject}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      title="Preview"
-                      onClick={() => setPreviewTemplate(previewTemplate?.id === tmpl.id ? null : tmpl)}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-[#faf9f7]"
-                    >
-                      <Eye className="w-3.5 h-3.5" style={{ color: "#9f9b93" }} />
-                    </button>
-                    {canManage && (
+                  <TutorTooltip
+                    text="Actions on this template: 👁 Preview opens an inline read-only view. ✏ Edit (admin) changes the template. 🚫 Deactivate (global admin) hides it from the compose panel without deleting."
+                    position="left"
+                    wrapperClass="shrink-0"
+                  >
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
-                        title="Edit"
-                        onClick={() => handleEdit(tmpl)}
+                        title="Preview"
+                        onClick={() =>
+                          setPreviewTemplate(
+                            previewTemplate?.id === tmpl.id ? null : tmpl,
+                          )
+                        }
                         className="p-1.5 rounded-lg transition-colors hover:bg-[#faf9f7]"
                       >
-                        <Edit2 className="w-3.5 h-3.5" style={{ color: "#9f9b93" }} />
+                        <Eye
+                          className="w-3.5 h-3.5"
+                          style={{ color: "#9f9b93" }}
+                        />
                       </button>
-                    )}
-                    {canDelete && tmpl.IsActive && (
-                      <button
-                        title="Deactivate"
-                        onClick={() => setConfirmDeactivate(tmpl)}
-                        className="p-1.5 rounded-lg transition-colors hover:bg-[#fde8e8]"
-                      >
-                        <EyeOff className="w-3.5 h-3.5" style={{ color: "#9f9b93" }} />
-                      </button>
-                    )}
-                  </div>
+                      {canManage && (
+                        <button
+                          title="Edit"
+                          onClick={() => handleEdit(tmpl)}
+                          className="p-1.5 rounded-lg transition-colors hover:bg-[#faf9f7]"
+                        >
+                          <Edit2
+                            className="w-3.5 h-3.5"
+                            style={{ color: "#9f9b93" }}
+                          />
+                        </button>
+                      )}
+                      {canDelete && tmpl.IsActive && (
+                        <button
+                          title="Deactivate"
+                          onClick={() => setConfirmDeactivate(tmpl)}
+                          className="p-1.5 rounded-lg transition-colors hover:bg-[#fde8e8]"
+                        >
+                          <EyeOff
+                            className="w-3.5 h-3.5"
+                            style={{ color: "#9f9b93" }}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </TutorTooltip>
                 </div>
 
                 {tmpl.Description && (
@@ -287,9 +343,15 @@ const EmailTemplates: React.FC = () => {
                 {previewTemplate?.id === tmpl.id && (
                   <div
                     className="rounded-xl p-3 text-xs"
-                    style={{ border: "1px dashed #dad4c8", background: "#faf9f7" }}
+                    style={{
+                      border: "1px dashed #dad4c8",
+                      background: "#faf9f7",
+                    }}
                   >
-                    <p className="font-medium mb-2" style={{ color: "#9f9b93" }}>
+                    <p
+                      className="font-medium mb-2"
+                      style={{ color: "#9f9b93" }}
+                    >
                       Subject: {tmpl.Subject}
                     </p>
                     <div
@@ -301,7 +363,10 @@ const EmailTemplates: React.FC = () => {
                 )}
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-1" style={{ borderTop: "1px solid #eee9df" }}>
+                <div
+                  className="flex items-center justify-between pt-1"
+                  style={{ borderTop: "1px solid #eee9df" }}
+                >
                   <span className="text-[11px]" style={{ color: "#9f9b93" }}>
                     {tmpl.VariableList
                       ? `Variables: ${tmpl.VariableList}`
@@ -336,13 +401,18 @@ const EmailTemplates: React.FC = () => {
               </p>
             </div>
             <p className="text-sm mb-5" style={{ color: "#55534e" }}>
-              <strong>{confirmDeactivate.Title}</strong> will be hidden from the compose panel. It remains in SharePoint and can be reactivated.
+              <strong>{confirmDeactivate.Title}</strong> will be hidden from the
+              compose panel. It remains in SharePoint and can be reactivated.
             </p>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setConfirmDeactivate(null)}
                 className="px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: "#faf9f7", border: "1px solid #dad4c8", color: "#55534e" }}
+                style={{
+                  background: "#faf9f7",
+                  border: "1px solid #dad4c8",
+                  color: "#55534e",
+                }}
               >
                 Cancel
               </button>
