@@ -72,6 +72,7 @@ const TOKEN_MAP = {
   "Service Desk no.": "ServiceDeskNo",
   "Service Desk No": "ServiceDeskNo",
   SD: "ServiceDeskNo",
+  SDNo: "ServiceDeskNo",
   ServiceDeskNo: "ServiceDeskNo",
 
   "Invitation URL": "InvitationURL",
@@ -169,9 +170,9 @@ function get(row, hm, ...candidates) {
 function normalizeTokens(text, warnings) {
   if (!text) return text;
 
-  // Replace [Token Name] patterns
+  // Replace [Token Name] and [#Token Name] patterns
   let result = text.replace(/\[([^\]]+)\]/g, (match, inner) => {
-    const key = inner.trim();
+    const key = inner.trim().replace(/^#/, "");
     if (TOKEN_MAP[key]) return `{{${TOKEN_MAP[key]}}}`;
     // Try case-insensitive lookup
     const lower = key.toLowerCase();
@@ -211,7 +212,8 @@ function normalizeCategory(raw) {
 /** Parse semicolon/comma-separated variable list from "Necessary Input Data" */
 function parseVariableList(raw, warnings) {
   if (!raw) return "";
-  const parts = raw.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+  // Strip leading # (Excel uses "#Token Name" as required-field markers)
+  const parts = raw.split(/[;,]/).map((s) => s.trim().replace(/^#/, "")).filter(Boolean);
   const canonical = parts.map((part) => {
     if (TOKEN_MAP[part]) return TOKEN_MAP[part];
     const lower = part.toLowerCase();
