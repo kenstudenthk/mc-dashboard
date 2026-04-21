@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink, Mail, X } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink, Mail, X, MessageSquare } from 'lucide-react';
 import { usePermission } from '../contexts/PermissionContext';
 import { TutorTooltip } from './TutorTooltip';
 
@@ -24,6 +24,10 @@ const Sidebar = ({ isDrawerOpen = false, onClose }: SidebarProps) => {
   if (hasPermission('Admin')) {
     navItems.push({ icon: ClipboardList, label: 'Audit Log', path: '/audit-log' });
     navItems.push({ icon: Mail, label: 'Email Templates', path: '/email-templates' });
+  }
+
+  if (hasPermission('Developer')) {
+    navItems.push({ icon: MessageSquare, label: 'Feedback', path: '/feedback' });
   }
 
   const bottomNavItems = [
@@ -83,7 +87,7 @@ const Sidebar = ({ isDrawerOpen = false, onClose }: SidebarProps) => {
         {showLabels && <div className="label-text text-white/30 mb-3 px-2 whitespace-nowrap">Main Menu</div>}
         <nav className="flex flex-col gap-0.5">
           {navItems.map((item) => (
-            <TutorTooltip key={item.path} text={`Navigate to the ${item.label} page.`} position="right" wrapperClass="w-full block">
+            <TutorTooltip key={item.path} text={`Navigate to the ${item.label} page.`} position="right" wrapperClass="w-full block" componentName="Sidebar.Navigation">
               <NavLink
                 to={item.path}
                 title={!showLabels ? item.label : undefined}
@@ -109,7 +113,7 @@ const Sidebar = ({ isDrawerOpen = false, onClose }: SidebarProps) => {
         {showLabels && <div className="label-text text-white/30 mb-3 px-2 whitespace-nowrap">Preferences</div>}
         <nav className="flex flex-col gap-0.5 mb-4">
           {bottomNavItems.map((item) => (
-            <TutorTooltip key={item.path} text={`Navigate to ${item.label}.`} position="right" wrapperClass="w-full block">
+            <TutorTooltip key={item.path} text={`Navigate to ${item.label}.`} position="right" wrapperClass="w-full block" componentName="Sidebar.Navigation">
               <NavLink
                 to={item.path}
                 title={!showLabels ? item.label : undefined}
