@@ -5,7 +5,7 @@ import { Order } from "../services/orderService";
 import { ServiceAccount } from "../services/serviceAccountService";
 import { EmailTemplate, emailTemplateService } from "../services/emailTemplateService";
 import { emailService } from "../services/emailService";
-import { resolveTemplate, getUnresolvedVars } from "../utils/templateVars";
+import { resolveTemplate, getUnresolvedVars, getAccountIDLabel, SERVICE_EXTRA_ID_LABELS, TENANT_ID_LABEL } from "../utils/templateVars";
 import { RichTextEditor } from "./RichTextEditor";
 import { usePermission } from "../contexts/PermissionContext";
 
@@ -25,6 +25,43 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   "Status Update":       { bg: "#ede9ff", text: "#43089f" },
   "General":             { bg: "#eee9df", text: "#55534e" },
 };
+
+const REMEMBERED_VARS = ["AMEmail", "ASMEmail", "AdminEmail"];
+const REMEM_KEY = (email: string) => `mc_email_remem_${email}`;
+
+const loadRemembered = (email: string): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem(REMEM_KEY(email));
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveRemembered = (email: string, vars: Record<string, string>) => {
+  try {
+    const stored = loadRemembered(email);
+    REMEMBERED_VARS.forEach((k) => {
+      if (vars[k]) stored[k] = vars[k];
+    });
+    localStorage.setItem(REMEM_KEY(email), JSON.stringify(stored));
+  } catch {}
+};
+
+function getVarLabel(varName: string, cloudProvider: string): string {
+  if (varName === "AccountID") return getAccountIDLabel(cloudProvider);
+  if (varName === "TenantID") return TENANT_ID_LABEL;
+  const extras = SERVICE_EXTRA_ID_LABELS[cloudProvider] ?? [];
+  const extra = extras.find((e) => e.key === varName);
+  if (extra) return extra.label;
+  return varName.replace(/([A-Z])/g, " $1").trim();
+}
+
+function getVarInputType(varName: string): string {
+  if (varName.toLowerCase().includes("email")) return "email";
+  if (varName.toLowerCase().includes("url")) return "url";
+  return "text";
+}
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -75,11 +112,14 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
   const [selected, setSelected] = useState<EmailTemplate | null>(null);
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
+  const [bcc, setBcc] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [manualVars, setManualVars] = useState<Record<string, string>>({});
+  const [missingVars, setMissingVars] = useState<string[]>([]);
 
   useEffect(() => {
     return () => {
@@ -102,13 +142,58 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
   }, [isOpen, order.CloudProvider]);
 
   const handleSelectTemplate = (tmpl: EmailTemplate) => {
+    const requiredVars = (tmpl.VariableList ?? "")
+      .split(/[;,]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const missing = requiredVars.filter((v) => {
+      const test = resolveTemplate(`{{${v}}}`, order, serviceAccount);
+      return test === `{{${v}}}` || test === "";
+    });
+    const remembered = loadRemembered(userEmail ?? "");
+    const initManual: Record<string, string> = {};
+    missing.forEach((v) => {
+      if (remembered[v]) initManual[v] = remembered[v];
+    });
+    setMissingVars(missing);
+    setManualVars(initManual);
     setSelected(tmpl);
-    setTo(order.ContactEmail ?? "");
-    setCc("");
-    setSubject(resolveTemplate(tmpl.Subject, order, serviceAccount));
-    setBody(resolveTemplate(tmpl.BodyHTML, order, serviceAccount));
+    setTo(
+      tmpl.ToRecipients
+        ? resolveTemplate(tmpl.ToRecipients, order, serviceAccount, initManual)
+        : order.ContactEmail ?? ""
+    );
+    setCc(
+      tmpl.CcRecipients
+        ? resolveTemplate(tmpl.CcRecipients, order, serviceAccount, initManual)
+        : ""
+    );
+    setBcc(
+      tmpl.BccRecipients
+        ? resolveTemplate(tmpl.BccRecipients, order, serviceAccount, initManual)
+        : ""
+    );
+    setSubject(resolveTemplate(tmpl.Subject, order, serviceAccount, initManual));
+    setBody(resolveTemplate(tmpl.BodyHTML, order, serviceAccount, initManual));
     setStep(2);
   };
+
+  const handleManualVarChange = (key: string, value: string) => {
+    const updated = { ...manualVars, [key]: value };
+    setManualVars(updated);
+    if (REMEMBERED_VARS.includes(key) && value) {
+      saveRemembered(userEmail ?? "", updated);
+    }
+  };
+
+  // Re-resolve subject/body from template when manual vars change
+  useEffect(() => {
+    if (!selected) return;
+    setSubject(resolveTemplate(selected.Subject, order, serviceAccount, manualVars));
+    setBody(resolveTemplate(selected.BodyHTML, order, serviceAccount, manualVars));
+  // selected and order don't change while user is filling vars in step 2
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manualVars]);
 
   const handleSend = async () => {
     if (!selected) return;
@@ -123,6 +208,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
       await emailService.send({
         to: trimmedTo,
         cc: cc.trim() || undefined,
+        bcc: bcc.trim() || undefined,
         subject,
         body,
         orderId: order.id,
@@ -315,6 +401,39 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                 </span>
               </div>
 
+              {missingVars.length > 0 && (
+                <div
+                  className="rounded-xl p-3.5 space-y-3"
+                  style={{ border: "1px solid #dad4c8", background: "#faf9f7" }}
+                >
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-widest"
+                    style={{ color: "#9f9b93" }}
+                  >
+                    Fill Missing Variables
+                  </p>
+                  <div className="space-y-2">
+                    {missingVars.map((varName) => (
+                      <div key={varName}>
+                        <label
+                          className="text-xs font-medium block mb-1"
+                          style={{ color: "#55534e" }}
+                        >
+                          {getVarLabel(varName, order.CloudProvider)}
+                        </label>
+                        <input
+                          style={inputStyle}
+                          type={getVarInputType(varName)}
+                          value={manualVars[varName] ?? ""}
+                          onChange={(e) => handleManualVarChange(varName, e.target.value)}
+                          placeholder={`Enter ${getVarLabel(varName, order.CloudProvider)}…`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
@@ -340,6 +459,17 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                 </div>
                 <div>
                   <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
+                    BCC
+                  </label>
+                  <input
+                    style={inputStyle}
+                    value={bcc}
+                    onChange={(e) => setBcc(e.target.value)}
+                    placeholder="bcc@example.com (optional)"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
                     Subject <span style={{ color: "#cc0000" }}>*</span>
                   </label>
                   <input
@@ -361,7 +491,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   />
                   {(() => {
                     const unresolved = selected
-                      ? getUnresolvedVars(body, order, serviceAccount)
+                      ? getUnresolvedVars(body, order, serviceAccount, manualVars)
                       : [];
                     if (unresolved.length === 0) return null;
                     return (
@@ -424,6 +554,12 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                       <p style={{ color: "#9f9b93" }}>
                         <span className="font-medium" style={{ color: "#55534e" }}>CC: </span>
                         {cc}
+                      </p>
+                    )}
+                    {bcc && (
+                      <p style={{ color: "#9f9b93" }}>
+                        <span className="font-medium" style={{ color: "#55534e" }}>BCC: </span>
+                        {bcc}
                       </p>
                     )}
                     <p style={{ color: "#9f9b93" }}>

@@ -21,6 +21,9 @@ const KNOWN_VARS = [
   "CustomerName", "OrderTitle", "SubName", "CloudProvider", "ServiceType",
   "ContactPerson", "ContactEmail", "SRD", "Amount", "OasisNumber",
   "AccountName", "BillingAddress", "AccountID", "LoginEmail",
+  "TenantID", "MicrosoftID", "AzureSubscriptionID",
+  "AMEmail", "ASMEmail", "AdminEmail",
+  "ServiceNumber", "ServiceDeskNo", "InvitationURL",
 ];
 
 const inputClass =
@@ -50,6 +53,9 @@ const EMPTY_FORM: CreateEmailTemplateInput = {
   Description: "",
   SortOrder: 1,
   IsActive: true,
+  ToRecipients: "",
+  CcRecipients: "",
+  BccRecipients: "",
 };
 
 export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
@@ -78,6 +84,9 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
         Description: template.Description ?? "",
         SortOrder: template.SortOrder ?? 1,
         IsActive: template.IsActive ?? true,
+        ToRecipients: template.ToRecipients ?? "",
+        CcRecipients: template.CcRecipients ?? "",
+        BccRecipients: template.BccRecipients ?? "",
       });
     } else {
       setForm(EMPTY_FORM);
@@ -263,6 +272,36 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
             </p>
           </div>
 
+          <div className="grid grid-cols-3 gap-3">
+            <LabelRow label="Default To">
+              <input
+                className={inputClass}
+                style={inputStyle}
+                value={form.ToRecipients ?? ""}
+                onChange={(e) => set("ToRecipients", e.target.value)}
+                placeholder="{{ContactEmail}}"
+              />
+            </LabelRow>
+            <LabelRow label="Default CC">
+              <input
+                className={inputClass}
+                style={inputStyle}
+                value={form.CcRecipients ?? ""}
+                onChange={(e) => set("CcRecipients", e.target.value)}
+                placeholder="{{AMEmail}}; {{ASMEmail}}"
+              />
+            </LabelRow>
+            <LabelRow label="Default BCC">
+              <input
+                className={inputClass}
+                style={inputStyle}
+                value={form.BccRecipients ?? ""}
+                onChange={(e) => set("BccRecipients", e.target.value)}
+                placeholder="bcc@example.com"
+              />
+            </LabelRow>
+          </div>
+
           <LabelRow label="Subject *">
             <input
               className={inputClass}
@@ -294,6 +333,21 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
               Active (visible to users when composing emails)
             </label>
           </div>
+
+          {isEdit && template?.LastUpdatedBy && (
+            <p className="text-xs" style={{ color: "#9f9b93" }}>
+              Last updated by{" "}
+              <span style={{ color: "#55534e" }}>{template.LastUpdatedBy}</span>
+              {template.LastUpdatedDate && (
+                <>
+                  {" "}at{" "}
+                  <span style={{ color: "#55534e" }}>
+                    {new Date(template.LastUpdatedDate).toLocaleString("en-GB")}
+                  </span>
+                </>
+              )}
+            </p>
+          )}
         </div>
 
         {/* Footer */}

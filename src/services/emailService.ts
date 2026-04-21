@@ -9,6 +9,7 @@ export interface EmailLog {
   SentBy: string;
   SentTo: string;
   CC?: string;
+  BCC?: string;
   Subject: string;
   BodySnapshot: string;
   SentAt: string;
@@ -19,6 +20,7 @@ export interface EmailLog {
 export interface SendEmailInput {
   to: string;
   cc?: string;
+  bcc?: string;
   subject: string;
   body: string;
   orderId: number;

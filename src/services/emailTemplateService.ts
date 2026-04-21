@@ -11,6 +11,11 @@ export interface EmailTemplate {
   Description?: string;
   SortOrder?: number;
   IsActive?: boolean;
+  ToRecipients?: string;
+  CcRecipients?: string;
+  BccRecipients?: string;
+  LastUpdatedBy?: string;
+  LastUpdatedDate?: string;
 }
 
 export interface CreateEmailTemplateInput {
@@ -23,6 +28,9 @@ export interface CreateEmailTemplateInput {
   Description?: string;
   SortOrder?: number;
   IsActive?: boolean;
+  ToRecipients?: string;
+  CcRecipients?: string;
+  BccRecipients?: string;
 }
 
 export const SERVICE_TYPE_OPTIONS = [
