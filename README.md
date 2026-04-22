@@ -1,4 +1,4 @@
-# MC Dashboard
+# Multi Cloud Order Dashboard
 
 > Multi-Cloud Order Management Dashboard
 
