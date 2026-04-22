@@ -1,5 +1,6 @@
 import { Order } from "../services/orderService";
 import { ServiceAccount } from "../services/serviceAccountService";
+import { normalizeCloudProvider } from "../services/emailTemplateService";
 
 export const SERVICE_ACCOUNT_ID_LABELS: Record<string, string> = {
   AWS: "AWS ID",
@@ -46,8 +47,8 @@ export function resolveTemplate(
     CustomerName: order.CustomerName ?? "",
     OrderTitle: order.Title ?? "",
     SubName: order.SubName ?? "",
-    ServiceType: order.ServiceType ?? "",
-    CloudProvider: order.CloudProvider ?? "",
+    ServiceType: normalizeCloudProvider(order.ServiceType ?? order.CloudProvider ?? ""),
+    CloudProvider: normalizeCloudProvider(order.CloudProvider ?? ""),
     ContactPerson: order.ContactPerson ?? "",
     ContactEmail: order.ContactEmail ?? "",
     SRD: order.SRD ? formatDate(order.SRD) : "",

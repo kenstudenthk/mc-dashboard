@@ -123,7 +123,7 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
   };
 
   const handleSave = async () => {
-    if (!form.Title || !form.Subject) {
+    if (!form.Title.trim() || !form.Subject.trim()) {
       setError("Template name and subject are required.");
       return;
     }
@@ -153,9 +153,16 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
         onClick={onClose}
       />
       <div
-        className={`fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
+        onClick={onClose}
+      >
+      <div
+        className={`bg-white shadow-2xl rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transition-all duration-300 ease-out ${
+          isOpen ? "scale-100" : "scale-95"
+        }`}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
@@ -410,6 +417,7 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
             </button>
           </TutorTooltip>
         </div>
+      </div>
       </div>
     </>
   );
