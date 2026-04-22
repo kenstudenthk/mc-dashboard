@@ -6,6 +6,7 @@ import {
   Shield,
   GraduationCap,
   Menu,
+  Flag,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { usePermission, Role } from "../contexts/PermissionContext";
@@ -18,7 +19,7 @@ interface TopNavProps {
 const TopNav = ({ onMenuOpen }: TopNavProps) => {
   const location = useLocation();
   const { currentRole, setCurrentRole, userEmail } = usePermission();
-  const { isTutorMode, toggleTutorMode } = useTutor();
+  const { isTutorMode, toggleTutorMode, isFeedbackMode, toggleFeedbackMode } = useTutor();
 
   const getBreadcrumbs = () => {
     const paths = location.pathname.split("/").filter(Boolean);
@@ -85,6 +86,18 @@ const TopNav = ({ onMenuOpen }: TopNavProps) => {
         >
           <GraduationCap className="w-3.5 h-3.5" />
           {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
+        </button>
+
+        <button
+          onClick={toggleFeedbackMode}
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+            isFeedbackMode
+              ? "bg-orange-100 text-orange-700 border-orange-200"
+              : "bg-[#f5f5f7] text-[#1d1d1f]/60 border-[#1d1d1f]/10 hover:bg-[#ededf2]"
+          }`}
+        >
+          <Flag className="w-3.5 h-3.5" />
+          {isFeedbackMode ? "Report: ON" : "Report: OFF"}
         </button>
 
         {currentRole === "Developer" && (

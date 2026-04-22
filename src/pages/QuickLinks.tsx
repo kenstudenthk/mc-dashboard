@@ -110,6 +110,7 @@ const QuickLinks = () => {
           <TutorTooltip
             text="Global Admins and Developers can add new quick links here."
             position="bottom"
+            componentName="QuickLinks.AddButton"
           >
             <button
               onClick={() => handleOpenModal()}
@@ -173,6 +174,7 @@ const QuickLinks = () => {
               <TutorTooltip
                 text={`Click here to open the ${link.Title} in a new tab.`}
                 position="top"
+                componentName="QuickLinks.LinkItem"
               >
                 <a
                   href={link.URL}

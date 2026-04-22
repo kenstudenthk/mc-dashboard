@@ -18,6 +18,8 @@ import Help from './pages/Help';
 import AuditLog from './pages/AuditLog';
 import QuickLinks from './pages/QuickLinks';
 import EmailTemplates from './pages/EmailTemplates';
+import Feedback from './pages/Feedback';
+import FeedbackNew from './pages/FeedbackNew';
 import { PermissionProvider, usePermission } from './contexts/PermissionContext';
 import { TutorProvider } from './contexts/TutorContext';
 
@@ -74,6 +76,8 @@ function AppContent() {
             <Route path="/email-templates" element={<EmailTemplates />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/feedback/new" element={<FeedbackNew />} />
           </Routes>
         </Layout>
       </Router>

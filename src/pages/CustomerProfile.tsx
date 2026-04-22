@@ -165,6 +165,7 @@ const CustomerProfile = () => {
             <TutorTooltip
               text="Click here to edit the customer's contact information."
               position="bottom"
+              componentName="CustomerProfile.EditButton"
             >
               <button
                 onClick={() => setIsEditing(true)}
@@ -178,6 +179,7 @@ const CustomerProfile = () => {
           <TutorTooltip
             text="Quickly start a new order specifically for this customer."
             position="bottom"
+            componentName="CustomerProfile.NewOrderButton"
           >
             <Link
               to="/orders/new"
@@ -304,6 +306,7 @@ const CustomerProfile = () => {
             <TutorTooltip
               text="Total number of orders placed by this customer."
               position="bottom"
+              componentName="CustomerProfile.TotalOrders"
             >
               <div className="p-4 bg-[#f5f5f7] rounded-lg">
                 <div className="flex items-center gap-1.5 text-[#1d1d1f]/45 mb-2">
@@ -320,6 +323,7 @@ const CustomerProfile = () => {
             <TutorTooltip
               text="Total amount spent by this customer across all orders."
               position="bottom"
+              componentName="CustomerProfile.TotalSpent"
             >
               <div className="p-4 bg-[#f5f5f7] rounded-lg">
                 <div className="flex items-center gap-1.5 text-[#1d1d1f]/45 mb-2">
@@ -344,6 +348,7 @@ const CustomerProfile = () => {
           <TutorTooltip
             text="Use this section to store important, customer-specific information, such as special billing instructions or SLA requirements."
             position="left"
+            componentName="CustomerProfile.SpecialNotes"
           >
             <div className="card p-6 border-l-4 border-l-amber-400">
               <div className="flex items-center justify-between mb-4">
@@ -416,6 +421,7 @@ const CustomerProfile = () => {
           <TutorTooltip
             text="Orders are grouped by project name. Click a project to expand and see its orders."
             position="left"
+            componentName="CustomerProfile.OrdersTable"
           >
             <div className="card p-6">
               <div className="flex items-center justify-between mb-5">
