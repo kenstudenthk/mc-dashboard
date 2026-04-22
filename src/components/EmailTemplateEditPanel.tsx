@@ -9,6 +9,7 @@ import {
 } from "../services/emailTemplateService";
 import { RichTextEditor, RichTextEditorHandle } from "./RichTextEditor";
 import { usePermission } from "../contexts/PermissionContext";
+import { TutorTooltip } from "./TutorTooltip";
 
 interface EmailTemplateEditPanelProps {
   isOpen: boolean;
@@ -244,47 +245,52 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
           </LabelRow>
 
           {/* Variable hint bar */}
-          <div
-            className="rounded-xl p-3"
-            style={{ border: "1px dashed #dad4c8", background: "#faf9f7" }}
+          <TutorTooltip
+            text="Click S to drop a {{Variable}} token into the Subject at the cursor, or B to drop it into the Body. Tokens get replaced with real order data when the email is composed."
+            position="top"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9f9b93" }}>
-              Insert variable
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {KNOWN_VARS.map((v) => (
-                <div key={v} className="flex gap-0.5">
-                  <button
-                    type="button"
-                    onClick={() => insertVar("Subject", v)}
-                    className="px-2 py-0.5 rounded text-[11px] font-mono transition-colors hover:bg-black hover:text-white"
-                    style={{ background: "#eee9df", color: "#55534e" }}
-                    title={`Insert {{${v}}} into Subject`}
-                  >
-                    S
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertVar("Body", v)}
-                    className="px-2 py-0.5 rounded text-[11px] font-mono transition-colors hover:bg-black hover:text-white"
-                    style={{ background: "#eee9df", color: "#55534e" }}
-                    title={`Insert {{${v}}} into Body`}
-                  >
-                    B
-                  </button>
-                  <span
-                    className="px-2 py-0.5 rounded text-[11px] font-mono"
-                    style={{ background: "#eee9df", color: "#000" }}
-                  >
-                    {`{{${v}}}`}
-                  </span>
-                </div>
-              ))}
+            <div
+              className="rounded-xl p-3"
+              style={{ border: "1px dashed #dad4c8", background: "#faf9f7" }}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9f9b93" }}>
+                Insert variable
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {KNOWN_VARS.map((v) => (
+                  <div key={v} className="flex gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => insertVar("Subject", v)}
+                      className="px-2 py-0.5 rounded text-[11px] font-mono transition-colors hover:bg-black hover:text-white"
+                      style={{ background: "#eee9df", color: "#55534e" }}
+                      title={`Insert {{${v}}} into Subject`}
+                    >
+                      S
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertVar("Body", v)}
+                      className="px-2 py-0.5 rounded text-[11px] font-mono transition-colors hover:bg-black hover:text-white"
+                      style={{ background: "#eee9df", color: "#55534e" }}
+                      title={`Insert {{${v}}} into Body`}
+                    >
+                      B
+                    </button>
+                    <span
+                      className="px-2 py-0.5 rounded text-[11px] font-mono"
+                      style={{ background: "#eee9df", color: "#000" }}
+                    >
+                      {`{{${v}}}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] mt-2" style={{ color: "#9f9b93" }}>
+                Click S to insert into Subject · B to insert into Body
+              </p>
             </div>
-            <p className="text-[10px] mt-2" style={{ color: "#9f9b93" }}>
-              Click S to insert into Subject · B to insert into Body
-            </p>
-          </div>
+          </TutorTooltip>
 
           <div className="grid grid-cols-3 gap-3">
             <LabelRow label="Default To">
@@ -378,26 +384,31 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
           >
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-all"
-            style={{ background: "#000", color: "#fff" }}
-            onMouseEnter={(e) => {
-              if (saving) return;
-              const el = e.currentTarget;
-              el.style.transform = "rotateZ(-3deg) translateY(-2px)";
-              el.style.boxShadow = "rgb(0,0,0) -5px 5px";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget;
-              el.style.transform = "";
-              el.style.boxShadow = "";
-            }}
+          <TutorTooltip
+            text={isEdit ? "Save your changes. Last updated by / at is shown above and will refresh after save." : "Create this template. It will immediately show up in the Email Templates list and in the compose picker (if Active)."}
+            position="top"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Template"}
-          </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-all"
+              style={{ background: "#000", color: "#fff" }}
+              onMouseEnter={(e) => {
+                if (saving) return;
+                const el = e.currentTarget;
+                el.style.transform = "rotateZ(-3deg) translateY(-2px)";
+                el.style.boxShadow = "rgb(0,0,0) -5px 5px";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget;
+                el.style.transform = "";
+                el.style.boxShadow = "";
+              }}
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Template"}
+            </button>
+          </TutorTooltip>
         </div>
       </div>
     </>
