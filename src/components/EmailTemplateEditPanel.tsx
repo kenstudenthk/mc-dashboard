@@ -159,7 +159,7 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
         onClick={onClose}
       >
       <div
-        className={`bg-white shadow-2xl rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transition-all duration-300 ease-out ${
+        className={`bg-white shadow-2xl rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transition-all duration-300 ease-out ${
           isOpen ? "scale-100" : "scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
