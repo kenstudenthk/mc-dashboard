@@ -3,11 +3,21 @@ import DOMPurify from "dompurify";
 import { X, Mail, ChevronLeft, Send, Loader2 } from "lucide-react";
 import { Order } from "../services/orderService";
 import { ServiceAccount } from "../services/serviceAccountService";
-import { EmailTemplate, emailTemplateService } from "../services/emailTemplateService";
+import {
+  EmailTemplate,
+  emailTemplateService,
+} from "../services/emailTemplateService";
 import { emailService } from "../services/emailService";
-import { resolveTemplate, getUnresolvedVars, getAccountIDLabel, SERVICE_EXTRA_ID_LABELS, TENANT_ID_LABEL } from "../utils/templateVars";
+import {
+  resolveTemplate,
+  getUnresolvedVars,
+  getAccountIDLabel,
+  SERVICE_EXTRA_ID_LABELS,
+  TENANT_ID_LABEL,
+} from "../utils/templateVars";
 import { RichTextEditor } from "./RichTextEditor";
 import { usePermission } from "../contexts/PermissionContext";
+import { TutorTooltip } from "./TutorTooltip";
 
 interface EmailComposePanelProps {
   isOpen: boolean;
@@ -18,12 +28,12 @@ interface EmailComposePanelProps {
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  "Welcome Letter":      { bg: "#d1f4e0", text: "#02492a" },
-  "Order Confirmation":  { bg: "#ddf4fd", text: "#0089ad" },
-  "Account Created":     { bg: "#fef9c3", text: "#9d6a09" },
-  "Closure Notice":      { bg: "#fde8e8", text: "#b0101a" },
-  "Status Update":       { bg: "#ede9ff", text: "#43089f" },
-  "General":             { bg: "#eee9df", text: "#55534e" },
+  "Welcome Letter": { bg: "#d1f4e0", text: "#02492a" },
+  "Order Confirmation": { bg: "#ddf4fd", text: "#0089ad" },
+  "Account Created": { bg: "#fef9c3", text: "#9d6a09" },
+  "Closure Notice": { bg: "#fde8e8", text: "#b0101a" },
+  "Status Update": { bg: "#ede9ff", text: "#43089f" },
+  General: { bg: "#eee9df", text: "#55534e" },
 };
 
 const REMEMBERED_VARS = ["AMEmail", "ASMEmail", "AdminEmail"];
@@ -74,7 +84,15 @@ const inputStyle: React.CSSProperties = {
   outline: "none",
 };
 
-const StepDot = ({ n, active, done }: { n: number; active: boolean; done: boolean }) => (
+const StepDot = ({
+  n,
+  active,
+  done,
+}: {
+  n: number;
+  active: boolean;
+  done: boolean;
+}) => (
   <div className="flex items-center gap-1.5">
     <div
       className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
@@ -82,8 +100,8 @@ const StepDot = ({ n, active, done }: { n: number; active: boolean; done: boolea
         done
           ? { background: "#078a52", color: "#fff" }
           : active
-          ? { background: "#fbbd41", color: "#000" }
-          : { background: "#eee9df", color: "#9f9b93" }
+            ? { background: "#fbbd41", color: "#000" }
+            : { background: "#eee9df", color: "#9f9b93" }
       }
     >
       {done ? "✓" : n}
@@ -161,19 +179,21 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
     setTo(
       tmpl.ToRecipients
         ? resolveTemplate(tmpl.ToRecipients, order, serviceAccount, initManual)
-        : order.ContactEmail ?? ""
+        : (order.ContactEmail ?? ""),
     );
     setCc(
       tmpl.CcRecipients
         ? resolveTemplate(tmpl.CcRecipients, order, serviceAccount, initManual)
-        : ""
+        : "",
     );
     setBcc(
       tmpl.BccRecipients
         ? resolveTemplate(tmpl.BccRecipients, order, serviceAccount, initManual)
-        : ""
+        : "",
     );
-    setSubject(resolveTemplate(tmpl.Subject, order, serviceAccount, initManual));
+    setSubject(
+      resolveTemplate(tmpl.Subject, order, serviceAccount, initManual),
+    );
     setBody(resolveTemplate(tmpl.BodyHTML, order, serviceAccount, initManual));
     setStep(2);
   };
@@ -189,10 +209,14 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
   // Re-resolve subject/body from template when manual vars change
   useEffect(() => {
     if (!selected) return;
-    setSubject(resolveTemplate(selected.Subject, order, serviceAccount, manualVars));
-    setBody(resolveTemplate(selected.BodyHTML, order, serviceAccount, manualVars));
-  // selected and order don't change while user is filling vars in step 2
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSubject(
+      resolveTemplate(selected.Subject, order, serviceAccount, manualVars),
+    );
+    setBody(
+      resolveTemplate(selected.BodyHTML, order, serviceAccount, manualVars),
+    );
+    // selected and order don't change while user is filling vars in step 2
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manualVars]);
 
   const handleSend = async () => {
@@ -227,7 +251,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
   };
 
   const categoryStyle = selected
-    ? CATEGORY_COLORS[selected.TemplateCategory] ?? CATEGORY_COLORS["General"]
+    ? (CATEGORY_COLORS[selected.TemplateCategory] ?? CATEGORY_COLORS["General"])
     : CATEGORY_COLORS["General"];
 
   return (
@@ -235,7 +259,9 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
       />
@@ -269,13 +295,18 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
           </div>
 
           {/* Step indicator */}
-          <div className="flex items-center gap-3">
-            <StepDot n={1} active={step === 1} done={step > 1} />
-            <div className="w-6 h-px" style={{ background: "#dad4c8" }} />
-            <StepDot n={2} active={step === 2} done={step > 2} />
-            <div className="w-6 h-px" style={{ background: "#dad4c8" }} />
-            <StepDot n={3} active={step === 3} done={false} />
-          </div>
+          <TutorTooltip
+            text="3-step flow: 1) pick a template, 2) compose/fill variables, 3) preview & send. Use Back to return to an earlier step."
+            position="bottom"
+          >
+            <div className="flex items-center gap-3">
+              <StepDot n={1} active={step === 1} done={step > 1} />
+              <div className="w-6 h-px" style={{ background: "#dad4c8" }} />
+              <StepDot n={2} active={step === 2} done={step > 2} />
+              <div className="w-6 h-px" style={{ background: "#dad4c8" }} />
+              <StepDot n={3} active={step === 3} done={false} />
+            </div>
+          </TutorTooltip>
 
           <button
             onClick={onClose}
@@ -299,7 +330,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
               </p>
               {loadingTemplates ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#dad4c8" }} />
+                  <Loader2
+                    className="w-6 h-6 animate-spin"
+                    style={{ color: "#dad4c8" }}
+                  />
                 </div>
               ) : templates.length === 0 ? (
                 <div
@@ -307,7 +341,8 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   style={{ border: "1px dashed #dad4c8" }}
                 >
                   <p className="text-sm" style={{ color: "#9f9b93" }}>
-                    No templates found for {order.CloudProvider}. Ask an admin to create one.
+                    No templates found for {order.CloudProvider}. Ask an admin
+                    to create one.
                   </p>
                 </div>
               ) : (
@@ -327,12 +362,18 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                             "rgba(0,0,0,0.06) 0px 1px 1px, rgba(0,0,0,0.03) 0px -1px 1px inset",
                         }}
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.borderColor = "#3bd3fd";
-                          (e.currentTarget as HTMLDivElement).style.background = "#f0faff";
+                          (
+                            e.currentTarget as HTMLDivElement
+                          ).style.borderColor = "#3bd3fd";
+                          (e.currentTarget as HTMLDivElement).style.background =
+                            "#f0faff";
                         }}
                         onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.borderColor = "#dad4c8";
-                          (e.currentTarget as HTMLDivElement).style.background = "#fff";
+                          (
+                            e.currentTarget as HTMLDivElement
+                          ).style.borderColor = "#dad4c8";
+                          (e.currentTarget as HTMLDivElement).style.background =
+                            "#fff";
                         }}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -345,7 +386,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                                 {tmpl.TemplateCategory}
                               </span>
                             </div>
-                            <p className="text-sm font-semibold" style={{ color: "#000" }}>
+                            <p
+                              className="text-sm font-semibold"
+                              style={{ color: "#000" }}
+                            >
                               {tmpl.Title}
                             </p>
                             <p
@@ -355,7 +399,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                               {tmpl.Subject}
                             </p>
                             {tmpl.Description && (
-                              <p className="text-xs mt-1" style={{ color: "#55534e" }}>
+                              <p
+                                className="text-xs mt-1"
+                                style={{ color: "#55534e" }}
+                              >
                                 {tmpl.Description}
                               </p>
                             )}
@@ -369,7 +416,8 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                             }}
                             onMouseEnter={(e) => {
                               const el = e.currentTarget;
-                              el.style.transform = "rotateZ(-8deg) translateY(-4px)";
+                              el.style.transform =
+                                "rotateZ(-8deg) translateY(-4px)";
                               el.style.boxShadow = "rgb(0,0,0) -5px 5px";
                             }}
                             onMouseLeave={(e) => {
@@ -402,41 +450,54 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
               </div>
 
               {missingVars.length > 0 && (
-                <div
-                  className="rounded-xl p-3.5 space-y-3"
-                  style={{ border: "1px solid #dad4c8", background: "#faf9f7" }}
+                <TutorTooltip
+                  text="These variables couldn't be auto-filled from the order. Type values here — Subject and Body update live. AM/ASM/Admin emails are remembered for next time."
+                  position="top"
                 >
-                  <p
-                    className="text-[10px] font-semibold uppercase tracking-widest"
-                    style={{ color: "#9f9b93" }}
+                  <div
+                    className="rounded-xl p-3.5 space-y-3"
+                    style={{
+                      border: "1px solid #dad4c8",
+                      background: "#faf9f7",
+                    }}
                   >
-                    Fill Missing Variables
-                  </p>
-                  <div className="space-y-2">
-                    {missingVars.map((varName) => (
-                      <div key={varName}>
-                        <label
-                          className="text-xs font-medium block mb-1"
-                          style={{ color: "#55534e" }}
-                        >
-                          {getVarLabel(varName, order.CloudProvider)}
-                        </label>
-                        <input
-                          style={inputStyle}
-                          type={getVarInputType(varName)}
-                          value={manualVars[varName] ?? ""}
-                          onChange={(e) => handleManualVarChange(varName, e.target.value)}
-                          placeholder={`Enter ${getVarLabel(varName, order.CloudProvider)}…`}
-                        />
-                      </div>
-                    ))}
+                    <p
+                      className="text-[10px] font-semibold uppercase tracking-widest"
+                      style={{ color: "#9f9b93" }}
+                    >
+                      Fill Missing Variables
+                    </p>
+                    <div className="space-y-2">
+                      {missingVars.map((varName) => (
+                        <div key={varName}>
+                          <label
+                            className="text-xs font-medium block mb-1"
+                            style={{ color: "#55534e" }}
+                          >
+                            {getVarLabel(varName, order.CloudProvider)}
+                          </label>
+                          <input
+                            style={inputStyle}
+                            type={getVarInputType(varName)}
+                            value={manualVars[varName] ?? ""}
+                            onChange={(e) =>
+                              handleManualVarChange(varName, e.target.value)
+                            }
+                            placeholder={`Enter ${getVarLabel(varName, order.CloudProvider)}…`}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </TutorTooltip>
               )}
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: "#9f9b93" }}
+                  >
                     To <span style={{ color: "#cc0000" }}>*</span>
                   </label>
                   <input
@@ -447,7 +508,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: "#9f9b93" }}
+                  >
                     CC
                   </label>
                   <input
@@ -458,7 +522,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: "#9f9b93" }}
+                  >
                     BCC
                   </label>
                   <input
@@ -469,7 +536,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: "#9f9b93" }}
+                  >
                     Subject <span style={{ color: "#cc0000" }}>*</span>
                   </label>
                   <input
@@ -480,7 +550,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "#9f9b93" }}>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: "#9f9b93" }}
+                  >
                     Body
                   </label>
                   <RichTextEditor
@@ -491,15 +564,26 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   />
                   {(() => {
                     const unresolved = selected
-                      ? getUnresolvedVars(body, order, serviceAccount, manualVars)
+                      ? getUnresolvedVars(
+                          body,
+                          order,
+                          serviceAccount,
+                          manualVars,
+                        )
                       : [];
                     if (unresolved.length === 0) return null;
                     return (
                       <div
                         className="flex items-start gap-2 px-3 py-2 rounded-lg mt-1.5"
-                        style={{ background: "#fff3e0", border: "1px solid #fc7981" }}
+                        style={{
+                          background: "#fff3e0",
+                          border: "1px solid #fc7981",
+                        }}
                       >
-                        <span className="text-xs font-semibold shrink-0 mt-0.5" style={{ color: "#b0101a" }}>
+                        <span
+                          className="text-xs font-semibold shrink-0 mt-0.5"
+                          style={{ color: "#b0101a" }}
+                        >
                           Unfilled:
                         </span>
                         <div className="flex flex-wrap gap-1">
@@ -507,7 +591,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                             <span
                               key={v}
                               className="text-[11px] font-mono px-1.5 py-0.5 rounded"
-                              style={{ background: "#fc798133", color: "#b0101a" }}
+                              style={{
+                                background: "#fc798133",
+                                color: "#b0101a",
+                              }}
                             >
                               {`{{${v}}}`}
                             </span>
@@ -532,7 +619,10 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                   >
                     <span className="text-2xl">✓</span>
                   </div>
-                  <p className="text-base font-semibold" style={{ color: "#02492a" }}>
+                  <p
+                    className="text-base font-semibold"
+                    style={{ color: "#02492a" }}
+                  >
                     Email sent successfully!
                   </p>
                 </div>
@@ -540,30 +630,58 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                 <>
                   <div
                     className="rounded-2xl p-4 text-sm space-y-1"
-                    style={{ border: "1px dashed #dad4c8", background: "#faf9f7" }}
+                    style={{
+                      border: "1px dashed #dad4c8",
+                      background: "#faf9f7",
+                    }}
                   >
                     <p style={{ color: "#9f9b93" }}>
-                      <span className="font-medium" style={{ color: "#55534e" }}>From: </span>
+                      <span
+                        className="font-medium"
+                        style={{ color: "#55534e" }}
+                      >
+                        From:{" "}
+                      </span>
                       Shared Mailbox (via Power Automate)
                     </p>
                     <p style={{ color: "#9f9b93" }}>
-                      <span className="font-medium" style={{ color: "#55534e" }}>To: </span>
+                      <span
+                        className="font-medium"
+                        style={{ color: "#55534e" }}
+                      >
+                        To:{" "}
+                      </span>
                       {to}
                     </p>
                     {cc && (
                       <p style={{ color: "#9f9b93" }}>
-                        <span className="font-medium" style={{ color: "#55534e" }}>CC: </span>
+                        <span
+                          className="font-medium"
+                          style={{ color: "#55534e" }}
+                        >
+                          CC:{" "}
+                        </span>
                         {cc}
                       </p>
                     )}
                     {bcc && (
                       <p style={{ color: "#9f9b93" }}>
-                        <span className="font-medium" style={{ color: "#55534e" }}>BCC: </span>
+                        <span
+                          className="font-medium"
+                          style={{ color: "#55534e" }}
+                        >
+                          BCC:{" "}
+                        </span>
                         {bcc}
                       </p>
                     )}
                     <p style={{ color: "#9f9b93" }}>
-                      <span className="font-medium" style={{ color: "#55534e" }}>Subject: </span>
+                      <span
+                        className="font-medium"
+                        style={{ color: "#55534e" }}
+                      >
+                        Subject:{" "}
+                      </span>
                       {subject}
                     </p>
                     <div
@@ -573,7 +691,9 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                       <div
                         className="prose prose-sm max-w-none text-sm"
                         style={{ color: "#000" }}
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(body),
+                        }}
                       />
                     </div>
                   </div>
@@ -582,7 +702,8 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                     className="rounded-xl px-3.5 py-2.5 text-xs"
                     style={{ background: "#eee9df", color: "#55534e" }}
                   >
-                    Email will be sent from the shared mailbox configured in Power Automate.
+                    Email will be sent from the shared mailbox configured in
+                    Power Automate.
                   </div>
 
                   {error && (
@@ -606,9 +727,15 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
             style={{ borderTop: "1px solid #eee9df" }}
           >
             <button
-              onClick={() => (step === 2 ? setStep(1) : step === 3 ? setStep(2) : onClose())}
+              onClick={() =>
+                step === 2 ? setStep(1) : step === 3 ? setStep(2) : onClose()
+              }
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-              style={{ background: "#faf9f7", border: "1px solid #dad4c8", color: "#55534e" }}
+              style={{
+                background: "#faf9f7",
+                border: "1px solid #dad4c8",
+                color: "#55534e",
+              }}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               {step === 1 ? "Cancel" : "Back"}
@@ -628,7 +755,11 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                 style={
                   to && subject
                     ? { background: "#000", color: "#fff" }
-                    : { background: "#eee9df", color: "#9f9b93", cursor: "not-allowed" }
+                    : {
+                        background: "#eee9df",
+                        color: "#9f9b93",
+                        cursor: "not-allowed",
+                      }
                 }
               >
                 Preview →
@@ -636,30 +767,35 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
             )}
 
             {step === 3 && (
-              <button
-                onClick={handleSend}
-                disabled={sending}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-all"
-                style={{ background: "#078a52", color: "#fff" }}
-                onMouseEnter={(e) => {
-                  if (sending) return;
-                  const el = e.currentTarget;
-                  el.style.transform = "rotateZ(-3deg) translateY(-2px)";
-                  el.style.boxShadow = "rgb(0,0,0) -5px 5px";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget;
-                  el.style.transform = "";
-                  el.style.boxShadow = "";
-                }}
+              <TutorTooltip
+                text="Send this email via the shared mailbox (Power Automate). The order's email history will be updated once the send succeeds."
+                position="top"
               >
-                {sending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                {sending ? "Sending…" : "Send Email"}
-              </button>
+                <button
+                  onClick={handleSend}
+                  disabled={sending}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-all"
+                  style={{ background: "#078a52", color: "#fff" }}
+                  onMouseEnter={(e) => {
+                    if (sending) return;
+                    const el = e.currentTarget;
+                    el.style.transform = "rotateZ(-3deg) translateY(-2px)";
+                    el.style.boxShadow = "rgb(0,0,0) -5px 5px";
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget;
+                    el.style.transform = "";
+                    el.style.boxShadow = "";
+                  }}
+                >
+                  {sending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {sending ? "Sending…" : "Send Email"}
+                </button>
+              </TutorTooltip>
             )}
           </div>
         )}
