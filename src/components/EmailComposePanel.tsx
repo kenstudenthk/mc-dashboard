@@ -153,9 +153,17 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
     setError(null);
     setSuccess(false);
     setLoadingTemplates(true);
+    const normalized = normalizeCloudProvider(order.CloudProvider);
     emailTemplateService
-      .findByService(normalizeCloudProvider(order.CloudProvider))
-      .then(setTemplates)
+      .findAll()
+      .then((all) =>
+        setTemplates(
+          all.filter(
+            (t) =>
+              t.ServiceType === normalized || t.ServiceType === "General",
+          ),
+        ),
+      )
       .catch(() => setTemplates([]))
       .finally(() => setLoadingTemplates(false));
   }, [isOpen, order.CloudProvider]);
