@@ -43,6 +43,32 @@ export const SERVICE_TYPE_OPTIONS = [
   "General",
 ] as const;
 
+const CLOUD_PROVIDER_ALIASES: Record<string, string> = {
+  "aws (amazon web service)": "AWS",
+  "aws (amazon web services)": "AWS",
+  "amazon web services": "AWS",
+  "amazon web service": "AWS",
+  "aws": "AWS",
+  "microsoft azure": "Azure",
+  "azure": "Azure",
+  "google cloud platform (gcp)": "GCP",
+  "google cloud platform": "GCP",
+  "google cloud": "GCP",
+  "gcp": "GCP",
+  "alibaba cloud": "Alibaba",
+  "alicloud": "Alibaba",
+  "aliyun": "Alibaba",
+  "alibaba": "Alibaba",
+  "huawei cloud ha": "Huawei",
+  "huawei cloud": "Huawei",
+  "huawei": "Huawei",
+  "tencent cloud": "Tencent",
+  "tencent": "Tencent",
+};
+
+export const normalizeCloudProvider = (raw: string): string =>
+  CLOUD_PROVIDER_ALIASES[raw.toLowerCase().trim()] ?? raw;
+
 export const TEMPLATE_CATEGORY_OPTIONS = [
   "Welcome Letter",
   "Order Confirmation",

@@ -6,6 +6,7 @@ import { ServiceAccount } from "../services/serviceAccountService";
 import {
   EmailTemplate,
   emailTemplateService,
+  normalizeCloudProvider,
 } from "../services/emailTemplateService";
 import { emailService } from "../services/emailService";
 import {
@@ -153,7 +154,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
     setSuccess(false);
     setLoadingTemplates(true);
     emailTemplateService
-      .findByService(order.CloudProvider)
+      .findByService(normalizeCloudProvider(order.CloudProvider))
       .then(setTemplates)
       .catch(() => setTemplates([]))
       .finally(() => setLoadingTemplates(false));
@@ -474,7 +475,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                             className="text-xs font-medium block mb-1"
                             style={{ color: "#55534e" }}
                           >
-                            {getVarLabel(varName, order.CloudProvider)}
+                            {getVarLabel(varName, normalizeCloudProvider(order.CloudProvider))}
                           </label>
                           <input
                             style={inputStyle}
@@ -483,7 +484,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
                             onChange={(e) =>
                               handleManualVarChange(varName, e.target.value)
                             }
-                            placeholder={`Enter ${getVarLabel(varName, order.CloudProvider)}…`}
+                            placeholder={`Enter ${getVarLabel(varName, normalizeCloudProvider(order.CloudProvider))}…`}
                           />
                         </div>
                       ))}
