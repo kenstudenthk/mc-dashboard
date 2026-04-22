@@ -78,11 +78,11 @@ export const EmailTemplateEditPanel: React.FC<EmailTemplateEditPanelProps> = ({
     setError(null);
     if (template) {
       setForm({
-        Title: template.Title,
-        ServiceType: template.ServiceType,
-        TemplateCategory: template.TemplateCategory,
-        Subject: template.Subject,
-        BodyHTML: template.BodyHTML,
+        Title: template.Title ?? "",
+        ServiceType: template.ServiceType ?? "General",
+        TemplateCategory: template.TemplateCategory ?? "General",
+        Subject: template.Subject ?? "",
+        BodyHTML: template.BodyHTML ?? "<p></p>",
         VariableList: template.VariableList ?? "",
         Description: template.Description ?? "",
         SortOrder: template.SortOrder ?? 1,
