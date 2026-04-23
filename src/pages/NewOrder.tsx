@@ -65,7 +65,13 @@ const filledInput = "bg-white border-[#094cb2]/40";
 const emptyInput = `${OAT_BG} ${OAT_BORDER}`;
 
 // ─── Primitive Components ─────────────────────────────────────────────────────
-const FieldLabel = ({ text, required }: { text: string; required?: boolean }) => (
+const FieldLabel = ({
+  text,
+  required,
+}: {
+  text: string;
+  required?: boolean;
+}) => (
   <label className={`label-text ${SECONDARY_TEXT} flex items-center gap-1`}>
     {text}
     {required && <span className="text-[#094cb2] font-semibold">*</span>}
@@ -147,7 +153,9 @@ const ToggleGroup = ({
 }) => (
   <div className="space-y-1.5">
     <FieldLabel text={label} />
-    <div className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER} w-fit`}>
+    <div
+      className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER} w-fit`}
+    >
       {options.map((opt) => (
         <button
           key={opt}
@@ -179,7 +187,9 @@ const SegmentedControl = ({
 }) => (
   <div className="space-y-1.5">
     <FieldLabel text={label} />
-    <div className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER}`}>
+    <div
+      className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER}`}
+    >
       {options.map((opt) => (
         <button
           key={opt}
@@ -233,8 +243,8 @@ const NavItem = ({
         active
           ? "bg-[#094cb2] text-white"
           : complete
-          ? "bg-[#094cb2]/10 text-[#094cb2]"
-          : `bg-[#eee9df] ${TERTIARY_TEXT}`
+            ? "bg-[#094cb2]/10 text-[#094cb2]"
+            : `bg-[#eee9df] ${TERTIARY_TEXT}`
       }`}
     >
       {index + 1}
@@ -273,25 +283,41 @@ interface OrderInfoProps {
 }
 
 const OrderInfoSection = ({
-  isPreProvision, setIsPreProvision,
-  serviceNo, setServiceNo,
-  status, setStatus,
-  orderType, setOrderType,
-  serviceType, setServiceType,
-  oasisNumber, setOasisNumber,
-  subName, setSubName,
-  orderReceiveDate, setOrderReceiveDate,
-  srd, setSrd,
-  cxsCompleteDate, setCxsCompleteDate,
-  amount, setAmount,
+  isPreProvision,
+  setIsPreProvision,
+  serviceNo,
+  setServiceNo,
+  status,
+  setStatus,
+  orderType,
+  setOrderType,
+  serviceType,
+  setServiceType,
+  oasisNumber,
+  setOasisNumber,
+  subName,
+  setSubName,
+  orderReceiveDate,
+  setOrderReceiveDate,
+  srd,
+  setSrd,
+  cxsCompleteDate,
+  setCxsCompleteDate,
+  amount,
+  setAmount,
 }: OrderInfoProps) => (
   <div
     className={`bg-white border ${OAT_BORDER} rounded-2xl p-8`}
-    style={{ boxShadow: "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset" }}
+    style={{
+      boxShadow:
+        "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+    }}
   >
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <span className={`label-text ${SECONDARY_TEXT} shrink-0`}>ORDER INFORMATION</span>
+        <span className={`label-text ${SECONDARY_TEXT} shrink-0`}>
+          ORDER INFORMATION
+        </span>
         <div className="flex-1 h-px bg-[#eee9df]" />
       </div>
       <TutorTooltip
@@ -314,7 +340,9 @@ const OrderInfoSection = ({
               }`}
             />
           </div>
-          <span className={`text-sm font-medium ${TERTIARY_TEXT} whitespace-nowrap`}>
+          <span
+            className={`text-sm font-medium ${TERTIARY_TEXT} whitespace-nowrap`}
+          >
             Pre-Provision
           </span>
         </button>
@@ -402,10 +430,13 @@ const OrderInfoSection = ({
       <div className="mt-5 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
         <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
         <div>
-          <h3 className="text-sm font-semibold text-red-800">Termination Order</h3>
+          <h3 className="text-sm font-semibold text-red-800">
+            Termination Order
+          </h3>
           <p className="text-sm text-red-600 mt-1">
-            When this order is saved, any existing active orders matching this Account ID will be
-            automatically marked as Terminated (highlighted in red) in the registry.
+            When this order is saved, any existing active orders matching this
+            Account ID will be automatically marked as Terminated (highlighted
+            in red) in the registry.
           </p>
         </div>
       </div>
@@ -423,20 +454,37 @@ interface CustomerInfoProps {
   setContactNo: (v: string) => void;
   contactEmail: string;
   setContactEmail: (v: string) => void;
+  contactNo2: string;
+  setContactNo2: (v: string) => void;
+  contactEmail2: string;
+  setContactEmail2: (v: string) => void;
   billingAddress: string;
   setBillingAddress: (v: string) => void;
 }
 
 const CustomerInfoSection = ({
-  companyName, setCompanyName, setCustomerId,
-  contactPerson, setContactPerson,
-  contactNo, setContactNo,
-  contactEmail, setContactEmail,
-  billingAddress, setBillingAddress,
+  companyName,
+  setCompanyName,
+  setCustomerId,
+  contactPerson,
+  setContactPerson,
+  contactNo,
+  setContactNo,
+  contactEmail,
+  setContactEmail,
+  contactNo2,
+  setContactNo2,
+  contactEmail2,
+  setContactEmail2,
+  billingAddress,
+  setBillingAddress,
 }: CustomerInfoProps) => (
   <div
     className={`bg-white border ${OAT_BORDER} rounded-2xl p-8`}
-    style={{ boxShadow: "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset" }}
+    style={{
+      boxShadow:
+        "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+    }}
   >
     <SectionHeader title="CUSTOMER INFORMATION" />
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -468,6 +516,21 @@ const CustomerInfoSection = ({
           placeholder="email@example.com"
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
+        />
+      </div>
+      <InputGroup
+        label="2nd Contact No."
+        placeholder="e.g. 67594210"
+        value={contactNo2}
+        onChange={(e) => setContactNo2(e.target.value)}
+      />
+      <div className="md:col-span-2">
+        <InputGroup
+          label="2nd Contact Email"
+          type="email"
+          placeholder="email@example.com"
+          value={contactEmail2}
+          onChange={(e) => setContactEmail2(e.target.value)}
         />
       </div>
       <div className="md:col-span-3 space-y-1.5">
@@ -504,18 +567,30 @@ interface CloudServiceProps {
 }
 
 const CloudServiceSection = ({
-  productSubscribe, setProductSubscribe, resetCloudAccountFields,
-  billingAccount, setBillingAccount,
-  accountId, setAccountId,
-  accountName, setAccountName,
-  accountLoginEmail, setAccountLoginEmail,
-  azurePrimaryDomain, setAzurePrimaryDomain,
-  password, setPassword,
-  otherAccountInfo, setOtherAccountInfo,
+  productSubscribe,
+  setProductSubscribe,
+  resetCloudAccountFields,
+  billingAccount,
+  setBillingAccount,
+  accountId,
+  setAccountId,
+  accountName,
+  setAccountName,
+  accountLoginEmail,
+  setAccountLoginEmail,
+  azurePrimaryDomain,
+  setAzurePrimaryDomain,
+  password,
+  setPassword,
+  otherAccountInfo,
+  setOtherAccountInfo,
 }: CloudServiceProps) => (
   <div
     className={`bg-white border ${OAT_BORDER} rounded-2xl p-8`}
-    style={{ boxShadow: "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset" }}
+    style={{
+      boxShadow:
+        "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+    }}
   >
     <SectionHeader title="CLOUD SERVICE DETAILS" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -533,55 +608,149 @@ const CloudServiceSection = ({
       </div>
 
       {!productSubscribe && (
-        <div className={`md:col-span-2 py-8 text-center text-sm ${SECONDARY_TEXT}`}>
+        <div
+          className={`md:col-span-2 py-8 text-center text-sm ${SECONDARY_TEXT}`}
+        >
           Select a cloud provider above to reveal account fields.
         </div>
       )}
 
       {productSubscribe === "AWS (Amazon Web Service)" && (
         <>
-          <InputGroup label="Billing Account / Master Account" placeholder="e.g. 7.59168E+11" value={billingAccount} onChange={(e) => setBillingAccount(e.target.value)} />
-          <InputGroup label="Account ID / Root ID" placeholder="e.g. 74430167128" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
-          <InputGroup label="Account Name / Cloud Checker Name" placeholder="e.g. CL545725" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
-          <InputGroup label="Account Login Email" type="email" placeholder="admin@example.com" value={accountLoginEmail} onChange={(e) => setAccountLoginEmail(e.target.value)} />
+          <InputGroup
+            label="Billing Account / Master Account"
+            placeholder="e.g. 7.59168E+11"
+            value={billingAccount}
+            onChange={(e) => setBillingAccount(e.target.value)}
+          />
+          <InputGroup
+            label="Account ID / Root ID"
+            placeholder="e.g. 74430167128"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          />
+          <InputGroup
+            label="Account Name / Cloud Checker Name"
+            placeholder="e.g. CL545725"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+          />
+          <InputGroup
+            label="Account Login Email"
+            type="email"
+            placeholder="admin@example.com"
+            value={accountLoginEmail}
+            onChange={(e) => setAccountLoginEmail(e.target.value)}
+          />
         </>
       )}
       {productSubscribe === "AliCloud" && (
         <>
-          <InputGroup label="UID" placeholder="e.g. 5.04886E+15" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
-          <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" value={accountLoginEmail} onChange={(e) => setAccountLoginEmail(e.target.value)} />
+          <InputGroup
+            label="UID"
+            placeholder="e.g. 5.04886E+15"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          />
+          <InputGroup
+            label="Admin Email"
+            type="email"
+            placeholder="admin@example.com"
+            value={accountLoginEmail}
+            onChange={(e) => setAccountLoginEmail(e.target.value)}
+          />
         </>
       )}
       {productSubscribe === "Microsoft Azure" && (
         <>
-          <InputGroup label="Tenant ID" placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
-          <InputGroup label="Azure Subscription ID" placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128" value={billingAccount} onChange={(e) => setBillingAccount(e.target.value)} />
-          <InputGroup label="Primary Domain" placeholder="e.g. example.onmicrosoft.com" value={azurePrimaryDomain} onChange={(e) => setAzurePrimaryDomain(e.target.value)} />
-          <InputGroup label="Admin Email" type="email" placeholder="admin@example.onmicrosoft.com" value={accountLoginEmail} onChange={(e) => setAccountLoginEmail(e.target.value)} />
+          <InputGroup
+            label="Tenant ID"
+            placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          />
+          <InputGroup
+            label="Azure Subscription ID"
+            placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128"
+            value={billingAccount}
+            onChange={(e) => setBillingAccount(e.target.value)}
+          />
+          <InputGroup
+            label="Primary Domain"
+            placeholder="e.g. example.onmicrosoft.com"
+            value={azurePrimaryDomain}
+            onChange={(e) => setAzurePrimaryDomain(e.target.value)}
+          />
+          <InputGroup
+            label="Admin Email"
+            type="email"
+            placeholder="admin@example.onmicrosoft.com"
+            value={accountLoginEmail}
+            onChange={(e) => setAccountLoginEmail(e.target.value)}
+          />
         </>
       )}
       {productSubscribe === "Huawei Cloud" && (
         <>
-          <InputGroup label="Huawei ID" placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
-          <InputGroup label="Login Email" type="email" placeholder="admin@example.com" value={accountLoginEmail} onChange={(e) => setAccountLoginEmail(e.target.value)} />
+          <InputGroup
+            label="Huawei ID"
+            placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          />
+          <InputGroup
+            label="Login Email"
+            type="email"
+            placeholder="admin@example.com"
+            value={accountLoginEmail}
+            onChange={(e) => setAccountLoginEmail(e.target.value)}
+          />
         </>
       )}
       {productSubscribe === "Google Cloud Platform (GCP)" && (
         <>
-          <InputGroup label="Billing Account ID" placeholder="e.g. 013933-F2938A-CC207B" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
-          <InputGroup label="Admin Email" type="email" placeholder="admin@example.com" value={accountLoginEmail} onChange={(e) => setAccountLoginEmail(e.target.value)} />
+          <InputGroup
+            label="Billing Account ID"
+            placeholder="e.g. 013933-F2938A-CC207B"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          />
+          <InputGroup
+            label="Admin Email"
+            type="email"
+            placeholder="admin@example.com"
+            value={accountLoginEmail}
+            onChange={(e) => setAccountLoginEmail(e.target.value)}
+          />
         </>
       )}
       {productSubscribe === "Tencent" && (
         <>
-          <InputGroup label="Tenant ID" placeholder="e.g. 200019722598" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
-          <InputGroup label="Login Email" type="email" placeholder="admin@example.com" value={accountLoginEmail} onChange={(e) => setAccountLoginEmail(e.target.value)} />
+          <InputGroup
+            label="Tenant ID"
+            placeholder="e.g. 200019722598"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          />
+          <InputGroup
+            label="Login Email"
+            type="email"
+            placeholder="admin@example.com"
+            value={accountLoginEmail}
+            onChange={(e) => setAccountLoginEmail(e.target.value)}
+          />
         </>
       )}
 
       {productSubscribe && (
         <>
-          <InputGroup label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <InputGroup
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <div className="md:col-span-2 space-y-1.5">
             <FieldLabel text="Other Account Information" />
             <textarea
@@ -614,43 +783,117 @@ interface ProvisioningProps {
   setBy: (v: string) => void;
   orderFormUrl: string;
   setOrderFormUrl: (v: string) => void;
+  caseId: string;
+  setCaseId: (v: string) => void;
+  caseIdUrl: string;
+  setCaseIdUrl: (v: string) => void;
   remark: string;
   setRemark: (v: string) => void;
 }
 
 const ProvisioningSection = ({
-  cxsRequestNo, setCxsRequestNo,
-  tid, setTid,
-  sdNumber, setSdNumber,
-  psJob, setPsJob,
-  welcomeLetter, setWelcomeLetter,
-  t2t3, setT2t3,
-  by, setBy,
-  orderFormUrl, setOrderFormUrl,
-  remark, setRemark,
+  cxsRequestNo,
+  setCxsRequestNo,
+  tid,
+  setTid,
+  sdNumber,
+  setSdNumber,
+  psJob,
+  setPsJob,
+  welcomeLetter,
+  setWelcomeLetter,
+  t2t3,
+  setT2t3,
+  by,
+  setBy,
+  orderFormUrl,
+  setOrderFormUrl,
+  caseId,
+  setCaseId,
+  caseIdUrl,
+  setCaseIdUrl,
+  remark,
+  setRemark,
 }: ProvisioningProps) => (
   <div
     className={`bg-white border ${OAT_BORDER} rounded-2xl p-8`}
-    style={{ boxShadow: "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset" }}
+    style={{
+      boxShadow:
+        "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+    }}
   >
     <SectionHeader title="PROVISIONING & TRACKING" />
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-      <InputGroup label="CxS Request No." placeholder="e.g. RN822908/1-2" value={cxsRequestNo} onChange={(e) => setCxsRequestNo(e.target.value)} />
-      <InputGroup label="TID" placeholder="e.g. 103690" value={tid} onChange={(e) => setTid(e.target.value)} />
-      <InputGroup label="SD Number" placeholder="e.g. SD11652876" value={sdNumber} onChange={(e) => setSdNumber(e.target.value)} />
+      <InputGroup
+        label="CxS Request No."
+        placeholder="e.g. RN822908/1-2"
+        value={cxsRequestNo}
+        onChange={(e) => setCxsRequestNo(e.target.value)}
+      />
+      <InputGroup
+        label="TID"
+        placeholder="e.g. 103690"
+        value={tid}
+        onChange={(e) => setTid(e.target.value)}
+      />
+      <InputGroup
+        label="SD Number"
+        placeholder="e.g. SD11652876"
+        value={sdNumber}
+        onChange={(e) => setSdNumber(e.target.value)}
+      />
     </div>
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-5">
-      <ToggleGroup label="PS Job" options={["Y", "N"]} value={psJob} onChange={setPsJob} />
-      <ToggleGroup label="Welcome Letter" options={["Yes", "No"]} value={welcomeLetter} onChange={setWelcomeLetter} />
-      <SegmentedControl label="T2 / T3" options={["T1", "T2", "T3", "N/A"]} value={t2t3} onChange={setT2t3} />
+      <ToggleGroup
+        label="PS Job"
+        options={["Y", "N"]}
+        value={psJob}
+        onChange={setPsJob}
+      />
+      <ToggleGroup
+        label="Welcome Letter"
+        options={["Yes", "No"]}
+        value={welcomeLetter}
+        onChange={setWelcomeLetter}
+      />
+      <SegmentedControl
+        label="T2 / T3"
+        options={["T1", "T2", "T3", "N/A"]}
+        value={t2t3}
+        onChange={setT2t3}
+      />
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
-      <InputGroup label="Handled By" placeholder="e.g. Kilson, Helen, Hin" value={by} onChange={(e) => setBy(e.target.value)} />
+      <InputGroup
+        label="Handled By"
+        placeholder="e.g. Kilson, Helen, Hin"
+        value={by}
+        onChange={(e) => setBy(e.target.value)}
+      />
       <div className="md:col-span-2">
-        <InputGroup label="Order Form URL" placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..." value={orderFormUrl} onChange={(e) => setOrderFormUrl(e.target.value)} />
+        <InputGroup
+          label="Order Form URL"
+          placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..."
+          value={orderFormUrl}
+          onChange={(e) => setOrderFormUrl(e.target.value)}
+        />
+      </div>
+      <InputGroup
+        label="Case ID"
+        placeholder="e.g. CASE-123456"
+        value={caseId}
+        onChange={(e) => setCaseId(e.target.value)}
+      />
+      <div className="md:col-span-2">
+        <InputGroup
+          label="Case ID URL"
+          placeholder="https://…"
+          value={caseIdUrl}
+          onChange={(e) => setCaseIdUrl(e.target.value)}
+        />
       </div>
       <div className="md:col-span-3 space-y-1.5">
         <FieldLabel text="Remark" />
@@ -689,6 +932,8 @@ const NewOrder = () => {
   const [contactPerson, setContactPerson] = useState("");
   const [contactNo, setContactNo] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [contactNo2, setContactNo2] = useState("");
+  const [contactEmail2, setContactEmail2] = useState("");
   const [billingAddress, setBillingAddress] = useState("");
   const [billingAccount, setBillingAccount] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -704,6 +949,8 @@ const NewOrder = () => {
   const [welcomeLetter, setWelcomeLetter] = useState("");
   const [by, setBy] = useState("");
   const [orderFormUrl, setOrderFormUrl] = useState("");
+  const [caseId, setCaseId] = useState("");
+  const [caseIdUrl, setCaseIdUrl] = useState("");
   const [subName, setSubName] = useState("");
   const [remark, setRemark] = useState("");
 
@@ -712,24 +959,50 @@ const NewOrder = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const handleSave = async () => {
-    if (!companyName) { setSubmitError("Company Name is required."); return; }
-    if (!orderType) { setSubmitError("Order Type is required."); return; }
-    if (!status) { setSubmitError("Status is required."); return; }
-    if (!productSubscribe) { setSubmitError("Product Subscribe is required."); return; }
-    if (!isPreProvision && !serviceNo) { setSubmitError("Service No. is required."); return; }
-    if (!srd) { setSubmitError("SRD is required."); return; }
+    if (!companyName) {
+      setSubmitError("Company Name is required.");
+      return;
+    }
+    if (!orderType) {
+      setSubmitError("Order Type is required.");
+      return;
+    }
+    if (!status) {
+      setSubmitError("Status is required.");
+      return;
+    }
+    if (!productSubscribe) {
+      setSubmitError("Product Subscribe is required.");
+      return;
+    }
+    if (!isPreProvision && !serviceNo) {
+      setSubmitError("Service No. is required.");
+      return;
+    }
+    if (!srd) {
+      setSubmitError("SRD is required.");
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError(null);
 
     try {
-      const cloudProvider = CLOUD_PROVIDER_MAP[productSubscribe] || productSubscribe;
+      const cloudProvider =
+        CLOUD_PROVIDER_MAP[productSubscribe] || productSubscribe;
       const title = isPreProvision ? "TBC" : serviceNo;
 
       let resolvedCustomerId = customerId;
       if (!resolvedCustomerId) {
         const newCustomer = await customerService.create(
-          { Title: companyName, Company: companyName, Email: "", Phone: "", Status: "Active", Tier: "Standard" },
+          {
+            Title: companyName,
+            Company: companyName,
+            Email: "",
+            Phone: "",
+            Status: "Active",
+            Tier: "Standard",
+          },
           userEmail,
         );
         resolvedCustomerId = newCustomer.id;
@@ -753,6 +1026,8 @@ const NewOrder = () => {
           ContactPerson: contactPerson || undefined,
           ContactNo: contactNo || undefined,
           ContactEmail: contactEmail || undefined,
+          ContactNo2: contactNo2 || undefined,
+          ContactEmail2: contactEmail2 || undefined,
           BillingAddress: billingAddress || undefined,
           CxSRequestNo: cxsRequestNo || undefined,
           TID: tid || undefined,
@@ -762,6 +1037,8 @@ const NewOrder = () => {
           WelcomeLetter: welcomeLetter || undefined,
           By: by || undefined,
           OrderFormURL: orderFormUrl || undefined,
+          CaseID: caseId || undefined,
+          CaseIDURL: caseIdUrl || undefined,
           Remark: remark || undefined,
           SubName: subName || undefined,
         },
@@ -886,10 +1163,13 @@ const NewOrder = () => {
           style={{
             position: "sticky",
             top: "1.5rem",
-            boxShadow: "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+            boxShadow:
+              "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
           }}
         >
-          <p className={`label-text ${SECONDARY_TEXT} px-3 pt-1 pb-2`}>SECTIONS</p>
+          <p className={`label-text ${SECONDARY_TEXT} px-3 pt-1 pb-2`}>
+            SECTIONS
+          </p>
           <div className="space-y-0.5">
             {SECTION_LABELS.map((label, i) => (
               <NavItem
@@ -942,6 +1222,10 @@ const NewOrder = () => {
               setContactNo={setContactNo}
               contactEmail={contactEmail}
               setContactEmail={setContactEmail}
+              contactNo2={contactNo2}
+              setContactNo2={setContactNo2}
+              contactEmail2={contactEmail2}
+              setContactEmail2={setContactEmail2}
               billingAddress={billingAddress}
               setBillingAddress={setBillingAddress}
             />
@@ -985,6 +1269,10 @@ const NewOrder = () => {
               setBy={setBy}
               orderFormUrl={orderFormUrl}
               setOrderFormUrl={setOrderFormUrl}
+              caseId={caseId}
+              setCaseId={setCaseId}
+              caseIdUrl={caseIdUrl}
+              setCaseIdUrl={setCaseIdUrl}
               remark={remark}
               setRemark={setRemark}
             />

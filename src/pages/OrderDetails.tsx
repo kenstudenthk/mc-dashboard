@@ -293,11 +293,15 @@ const OrderDetails = () => {
       WelcomeLetter: order.WelcomeLetter ?? "",
       By: order.By ?? "",
       OrderFormURL: order.OrderFormURL ?? "",
+      CaseID: order.CaseID ?? "",
+      CaseIDURL: order.CaseIDURL ?? "",
       CustomerID: order.CustomerID,
       CustomerName: order.CustomerName,
       ContactPerson: order.ContactPerson ?? "",
       ContactNo: order.ContactNo ?? "",
       ContactEmail: order.ContactEmail ?? "",
+      ContactNo2: order.ContactNo2 ?? "",
+      ContactEmail2: order.ContactEmail2 ?? "",
       BillingAddress: order.BillingAddress ?? "",
       Remark: order.Remark ?? "",
     });
@@ -663,6 +667,11 @@ const OrderDetails = () => {
                   />
                   <InfoField label="Contact No." value={order.ContactNo} />
                   <InfoField label="Contact Email" value={order.ContactEmail} />
+                  <InfoField label="2nd Contact No." value={order.ContactNo2} />
+                  <InfoField
+                    label="2nd Contact Email"
+                    value={order.ContactEmail2}
+                  />
                   {order.BillingAddress && (
                     <div className="py-2.5">
                       <dt
@@ -813,6 +822,33 @@ const OrderDetails = () => {
                     value={order.WelcomeLetter}
                   />
                   <InfoField label="Handled By" value={order.By} />
+                  {order.CaseID &&
+                    (order.CaseIDURL ? (
+                      <div
+                        className="py-2.5 border-b last:border-0"
+                        style={{ borderColor: "#eee9df" }}
+                      >
+                        <dt
+                          className="label-text mb-1"
+                          style={{ color: "#9f9b93" }}
+                        >
+                          Case ID
+                        </dt>
+                        <dd className="text-sm font-medium">
+                          <a
+                            href={order.CaseIDURL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                            style={{ color: "#078a52" }}
+                          >
+                            {order.CaseID}
+                          </a>
+                        </dd>
+                      </div>
+                    ) : (
+                      <InfoField label="Case ID" value={order.CaseID} />
+                    ))}
                   {order.OrderFormURL && (
                     <div
                       className="py-2.5 border-b last:border-0"
@@ -1295,6 +1331,23 @@ const OrderDetails = () => {
                   placeholder="https://…"
                 />
               </PanelField>
+              <PanelField label="Case ID">
+                <input
+                  type="text"
+                  value={editForm.CaseID ?? ""}
+                  onChange={(e) => set("CaseID", e.target.value)}
+                  className={inputClass(editForm.CaseID ?? "")}
+                />
+              </PanelField>
+              <PanelField label="Case ID URL" span2>
+                <input
+                  type="url"
+                  value={editForm.CaseIDURL ?? ""}
+                  onChange={(e) => set("CaseIDURL", e.target.value)}
+                  className={inputClass(editForm.CaseIDURL ?? "")}
+                  placeholder="https://…"
+                />
+              </PanelField>
             </div>
           </section>
 
@@ -1332,6 +1385,22 @@ const OrderDetails = () => {
                   value={editForm.ContactEmail ?? ""}
                   onChange={(e) => set("ContactEmail", e.target.value)}
                   className={inputClass(editForm.ContactEmail ?? "")}
+                />
+              </PanelField>
+              <PanelField label="2nd Contact No.">
+                <input
+                  type="text"
+                  value={editForm.ContactNo2 ?? ""}
+                  onChange={(e) => set("ContactNo2", e.target.value)}
+                  className={inputClass(editForm.ContactNo2 ?? "")}
+                />
+              </PanelField>
+              <PanelField label="2nd Contact Email" span2>
+                <input
+                  type="email"
+                  value={editForm.ContactEmail2 ?? ""}
+                  onChange={(e) => set("ContactEmail2", e.target.value)}
+                  className={inputClass(editForm.ContactEmail2 ?? "")}
                 />
               </PanelField>
               <PanelField label="Billing Address" span2>
