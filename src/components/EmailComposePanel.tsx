@@ -74,6 +74,16 @@ function getVarInputType(varName: string): string {
   return "text";
 }
 
+const LOGO_URL = "https://mcdashboard.kkhome.uk/HKTemailLogo.png";
+const LOGO_MARKER = "data-hkt-logo";
+const LOGO_HTML = `<div ${LOGO_MARKER}="1" style="margin:0 0 16px 0;"><img src="${LOGO_URL}" alt="HKT Here To Serve" style="height:40px;display:block;border:0;outline:none;text-decoration:none;" /></div>`;
+
+function prependLogo(html: string): string {
+  if (!html) return LOGO_HTML;
+  if (html.includes(LOGO_MARKER)) return html;
+  return LOGO_HTML + html;
+}
+
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "8px 14px",
@@ -202,7 +212,11 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
     setSubject(
       resolveTemplate(tmpl.Subject, order, serviceAccount, initManual),
     );
-    setBody(resolveTemplate(tmpl.BodyHTML, order, serviceAccount, initManual));
+    setBody(
+      prependLogo(
+        resolveTemplate(tmpl.BodyHTML, order, serviceAccount, initManual),
+      ),
+    );
     setStep(2);
   };
 
@@ -221,7 +235,9 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
       resolveTemplate(selected.Subject, order, serviceAccount, manualVars),
     );
     setBody(
-      resolveTemplate(selected.BodyHTML, order, serviceAccount, manualVars),
+      prependLogo(
+        resolveTemplate(selected.BodyHTML, order, serviceAccount, manualVars),
+      ),
     );
     // selected and order don't change while user is filling vars in step 2
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -242,7 +258,7 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
         cc: cc.trim() || undefined,
         bcc: bcc.trim() || undefined,
         subject,
-        body,
+        body: prependLogo(body),
         orderId: order.id,
         orderTitle: order.Title,
         templateName: selected.Title,
