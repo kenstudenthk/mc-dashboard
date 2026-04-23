@@ -19,6 +19,8 @@ export interface Order {
   ContactPerson?: string;
   ContactNo?: string;
   ContactEmail?: string;
+  ContactNo2?: string;
+  ContactEmail2?: string;
   BillingAddress?: string;
   BillingAccount?: string;
   AccountName?: string;
@@ -33,6 +35,8 @@ export interface Order {
   WelcomeLetter?: string;
   By?: string;
   OrderFormURL?: string;
+  CaseID?: string;
+  CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
 }
@@ -54,6 +58,8 @@ export interface CreateOrderInput {
   ContactPerson?: string;
   ContactNo?: string;
   ContactEmail?: string;
+  ContactNo2?: string;
+  ContactEmail2?: string;
   BillingAddress?: string;
   BillingAccount?: string;
   AccountName?: string;
@@ -68,6 +74,8 @@ export interface CreateOrderInput {
   WelcomeLetter?: string;
   By?: string;
   OrderFormURL?: string;
+  CaseID?: string;
+  CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
 }
