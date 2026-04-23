@@ -11,7 +11,10 @@ export const SERVICE_ACCOUNT_ID_LABELS: Record<string, string> = {
   General: "Account ID",
 };
 
-export const SERVICE_EXTRA_ID_LABELS: Record<string, Array<{ key: string; label: string }>> = {
+export const SERVICE_EXTRA_ID_LABELS: Record<
+  string,
+  Array<{ key: string; label: string }>
+> = {
   Azure: [{ key: "AzureSubscriptionID", label: "Azure Subscription ID" }],
 };
 
@@ -47,7 +50,9 @@ export function resolveTemplate(
     CustomerName: order.CustomerName ?? "",
     OrderTitle: order.Title ?? "",
     SubName: order.SubName ?? "",
-    ServiceType: normalizeCloudProvider(order.ServiceType ?? order.CloudProvider ?? ""),
+    ServiceType: normalizeCloudProvider(
+      order.ServiceType ?? order.CloudProvider ?? "",
+    ),
     CloudProvider: normalizeCloudProvider(order.CloudProvider ?? ""),
     ContactPerson: order.ContactPerson ?? "",
     ContactEmail: order.ContactEmail ?? "",
@@ -75,9 +80,21 @@ export function resolveTemplate(
     ...manualVars,
   };
 
-  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+  // Rich-text editors may HTML-encode braces. Decode before matching.
+  const decoded = decodeBraceEntities(template);
+  return decoded.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     return key in vars ? vars[key] : match;
   });
+}
+
+function decodeBraceEntities(s: string): string {
+  return s
+    .replace(/&#123;/g, "{")
+    .replace(/&#125;/g, "}")
+    .replace(/&#x7[Bb];/g, "{")
+    .replace(/&#x7[Dd];/g, "}")
+    .replace(/&lbrace;/g, "{")
+    .replace(/&rbrace;/g, "}");
 }
 
 export function getUnresolvedVars(
