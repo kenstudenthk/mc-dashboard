@@ -18,7 +18,7 @@ const Sidebar = ({ isDrawerOpen = false, onClose }: SidebarProps) => {
     { icon: FileText, label: 'Order Registry', path: '/orders' },
     { icon: Users, label: 'Customers', path: '/customers' },
     { icon: BarChart3, label: 'Reports', path: '/reports' },
-    { icon: ExternalLink, label: 'Quick Links', path: '/quick-links' },
+    { icon: ExternalLink, label: 'Useful Links', path: '/quick-links' },
   ];
 
   if (hasPermission('Admin')) {
