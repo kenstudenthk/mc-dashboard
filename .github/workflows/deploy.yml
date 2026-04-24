@@ -19,6 +19,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # IMPORTANT: When adding a new VITE_* secret to GitHub repo settings,
+      # you MUST also add it here in BOTH the `run:` echo lines AND the `env:` map.
+      # Setting the secret in GitHub alone is not enough — this workflow builds the
+      # app in GitHub Actions (not Cloudflare Pages), so only secrets listed below
+      # get written to .env and bundled by Vite.
       - name: Write env vars
         run: |
           echo "VITE_API_ORDERS_URL=$VITE_API_ORDERS_URL" >> .env
@@ -28,6 +33,12 @@ jobs:
           echo "VITE_API_AUDIT_LOGS_URL=$VITE_API_AUDIT_LOGS_URL" >> .env
           echo "VITE_API_QUICK_LINKS_URL=$VITE_API_QUICK_LINKS_URL" >> .env
           echo "VITE_API_SERVICE_ACCOUNTS_URL=$VITE_API_SERVICE_ACCOUNTS_URL" >> .env
+          echo "VITE_API_ORDER_STEPS_URL=$VITE_API_ORDER_STEPS_URL" >> .env
+          echo "VITE_API_GET_PAGE_URL=$VITE_API_GET_PAGE_URL" >> .env
+          echo "VITE_API_EMAIL_TEMPLATES_URL=$VITE_API_EMAIL_TEMPLATES_URL" >> .env
+          echo "VITE_API_EMAIL_URL=$VITE_API_EMAIL_URL" >> .env
+          echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" >> .env
+          echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env
         env:
           VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
           VITE_API_CUSTOMERS_URL: ${{ secrets.VITE_API_CUSTOMERS_URL }}
@@ -36,6 +47,12 @@ jobs:
           VITE_API_AUDIT_LOGS_URL: ${{ secrets.VITE_API_AUDIT_LOGS_URL }}
           VITE_API_QUICK_LINKS_URL: ${{ secrets.VITE_API_QUICK_LINKS_URL }}
           VITE_API_SERVICE_ACCOUNTS_URL: ${{ secrets.VITE_API_SERVICE_ACCOUNTS_URL }}
+          VITE_API_ORDER_STEPS_URL: ${{ secrets.VITE_API_ORDER_STEPS_URL }}
+          VITE_API_GET_PAGE_URL: ${{ secrets.VITE_API_GET_PAGE_URL }}
+          VITE_API_EMAIL_TEMPLATES_URL: ${{ secrets.VITE_API_EMAIL_TEMPLATES_URL }}
+          VITE_API_EMAIL_URL: ${{ secrets.VITE_API_EMAIL_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Build
         run: npm run build
