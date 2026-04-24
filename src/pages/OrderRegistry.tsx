@@ -559,7 +559,9 @@ const OrderRegistry = () => {
                         className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row ${
                           isTerminated
                             ? "bg-red-50/30 hover:bg-red-50/50"
-                            : "hover:bg-[#f5f5f7]"
+                            : pinnedIds.has(order.id)
+                              ? "bg-blue-50/30 hover:bg-blue-50/50 border-l-2 border-l-[#094cb2]"
+                              : "hover:bg-[#f5f5f7]"
                         }`}
                       >
                         <td
@@ -665,80 +667,101 @@ const OrderRegistry = () => {
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link
-                              to={`/orders/${order.id}`}
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handlePinToggle(order.id)}
+                              title={
+                                pinnedIds.has(order.id)
+                                  ? "Unpin order"
+                                  : "Pin order"
+                              }
                               className={`p-1.5 rounded-lg transition-colors ${
-                                isTerminated
-                                  ? "text-red-400 hover:text-red-600 hover:bg-red-50"
-                                  : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
+                                pinnedIds.has(order.id)
+                                  ? "text-[#094cb2] hover:bg-blue-50"
+                                  : "opacity-0 group-hover:opacity-100 text-[#1d1d1f]/35 hover:text-[#094cb2] hover:bg-blue-50"
                               }`}
                             >
-                              <Eye className="w-4 h-4" />
-                            </Link>
-                            {/* Change Status */}
-                            <div
-                              className="relative"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                onClick={() =>
-                                  setStatusDropdownId(
-                                    statusDropdownId === order.id
-                                      ? null
-                                      : order.id,
-                                  )
-                                }
-                                disabled={updatingStatusId === order.id}
-                                title="Change Status"
-                                className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                              {pinnedIds.has(order.id) ? (
+                                <Pin className="w-4 h-4 fill-current" />
+                              ) : (
+                                <PinOff className="w-4 h-4" />
+                              )}
+                            </button>
+                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Link
+                                to={`/orders/${order.id}`}
+                                className={`p-1.5 rounded-lg transition-colors ${
                                   isTerminated
                                     ? "text-red-400 hover:text-red-600 hover:bg-red-50"
                                     : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
                                 }`}
                               >
-                                <ClipboardList className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
+                              </Link>
+                              {/* Change Status */}
+                              <div
+                                className="relative"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  onClick={() =>
+                                    setStatusDropdownId(
+                                      statusDropdownId === order.id
+                                        ? null
+                                        : order.id,
+                                    )
+                                  }
+                                  disabled={updatingStatusId === order.id}
+                                  title="Change Status"
+                                  className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                                    isTerminated
+                                      ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                      : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
+                                  }`}
+                                >
+                                  <ClipboardList className="w-4 h-4" />
+                                </button>
+                                {statusDropdownId === order.id && (
+                                  <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#1d1d1f]/10 rounded-xl shadow-lg py-1 min-w-[210px]">
+                                    <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">
+                                      Change Status
+                                    </p>
+                                    {STATUS_OPTIONS.map((s) => (
+                                      <button
+                                        key={s}
+                                        onClick={() =>
+                                          handleStatusChange(order.id, s)
+                                        }
+                                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between gap-2 hover:bg-[#f5f5f7] ${
+                                          order.Status === s
+                                            ? "text-[#0071e3] font-medium"
+                                            : "text-[#1d1d1f]/70"
+                                        }`}
+                                      >
+                                        <span
+                                          className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(s).split(" ")[0]}`}
+                                        />
+                                        {s}
+                                        {order.Status === s && (
+                                          <span className="ml-auto text-[#0071e3]">
+                                            ✓
+                                          </span>
+                                        )}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                className={`p-1.5 rounded-lg transition-colors ${
+                                  isTerminated
+                                    ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                    : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"
+                                }`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
                               </button>
-                              {statusDropdownId === order.id && (
-                                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#1d1d1f]/10 rounded-xl shadow-lg py-1 min-w-[210px]">
-                                  <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">
-                                    Change Status
-                                  </p>
-                                  {STATUS_OPTIONS.map((s) => (
-                                    <button
-                                      key={s}
-                                      onClick={() =>
-                                        handleStatusChange(order.id, s)
-                                      }
-                                      className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between gap-2 hover:bg-[#f5f5f7] ${
-                                        order.Status === s
-                                          ? "text-[#0071e3] font-medium"
-                                          : "text-[#1d1d1f]/70"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(s).split(" ")[0]}`}
-                                      />
-                                      {s}
-                                      {order.Status === s && (
-                                        <span className="ml-auto text-[#0071e3]">
-                                          ✓
-                                        </span>
-                                      )}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
                             </div>
-                            <button
-                              className={`p-1.5 rounded-lg transition-colors ${
-                                isTerminated
-                                  ? "text-red-400 hover:text-red-600 hover:bg-red-50"
-                                  : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"
-                              }`}
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
                           </div>
                         </td>
                       </tr>
