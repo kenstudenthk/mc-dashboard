@@ -224,6 +224,11 @@ const OrderRegistry = () => {
       }
 
       return true;
+    })
+    .sort((a, b) => {
+      const aPinned = pinnedIds.has(a.id) ? 1 : 0;
+      const bPinned = pinnedIds.has(b.id) ? 1 : 0;
+      return bPinned - aPinned;
     });
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
