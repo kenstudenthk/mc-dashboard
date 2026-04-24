@@ -29,6 +29,7 @@ function TableSkeleton() {
           <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-36" /></td>
           <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-20" /></td>
           <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-28" /></td>
+          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-24" /></td>
           <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-20" /></td>
           <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-16" /></td>
           <td className="px-6 py-3.5"><div className="h-5 bg-gray-200 rounded-full w-20" /></td>
@@ -313,6 +314,9 @@ const OrderRegistry = () => {
                   Account ID
                 </th>
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                  Case ID
+                </th>
+                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
                   Order Type
                 </th>
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
@@ -342,7 +346,7 @@ const OrderRegistry = () => {
                         key={`card-${order.id}`}
                         className="md:hidden border-b border-[#1d1d1f]/04"
                       >
-                        <td colSpan={8} className="px-4 py-3">
+                        <td colSpan={9} className="px-4 py-3">
                           <div
                             className={`rounded-xl border p-3 gap-2 flex flex-col ${
                               isTerminated
@@ -480,6 +484,30 @@ const OrderRegistry = () => {
                         >
                           {order.AccountID ?? "—"}
                         </td>
+                        <td className="px-6 py-3.5 text-xs max-w-[120px]">
+                          {order.CaseID ? (
+                            order.CaseIDURL ? (
+                              <a
+                                href={order.CaseIDURL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`block truncate hover:underline font-medium ${isTerminated ? "text-red-600" : "text-[#0071e3]"}`}
+                                title={order.CaseID}
+                              >
+                                {order.CaseID}
+                              </a>
+                            ) : (
+                              <span
+                                className={`block truncate ${isTerminated ? "text-red-600" : "text-[#1d1d1f]/60"}`}
+                                title={order.CaseID}
+                              >
+                                {order.CaseID}
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-[#1d1d1f]/25">—</span>
+                          )}
+                        </td>
                         <td
                           className={`px-6 py-3.5 text-sm ${
                             isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"
@@ -533,7 +561,7 @@ const OrderRegistry = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
                   >
                     No orders found matching your filters.
