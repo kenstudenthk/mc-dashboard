@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload } from "lucide-react";
+import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload, ClipboardList } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
-import { Order } from "../services/orderService";
+import { Order, orderService } from "../services/orderService";
 import { Customer } from "../services/customerService";
+import { usePermission } from "../contexts/PermissionContext";
 import { useCustomers, useInvalidateOrders, useInvalidateCustomers, useInitialOrders, useIsBackgroundLoading } from "../services/useOrdersQuery";
 import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
 
@@ -43,6 +44,15 @@ function TableSkeleton() {
 
 const PAGE_SIZE = 20;
 
+const STATUS_OPTIONS = [
+  "Processing",
+  "Pending for order issued",
+  "Pending for other parties",
+  "Account Created",
+  "Completed",
+  "Cancelled",
+];
+
 const buildCustomerMap = (customers: Customer[]): Map<string, number> => {
   const map = new Map<string, number>();
   customers.forEach((c) => {
@@ -59,7 +69,10 @@ const OrderRegistry = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [statusDropdownId, setStatusDropdownId] = useState<number | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
 
+  const { userEmail } = usePermission();
   const { data: initialData, isLoading: ordersLoading, isError: ordersError } = useInitialOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
   const isFetching = useIsBackgroundLoading();
@@ -80,6 +93,25 @@ const OrderRegistry = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, providerFilter, statusFilter, searchQuery]);
+
+  // Close status dropdown on outside click
+  useEffect(() => {
+    if (statusDropdownId === null) return;
+    const handler = () => setStatusDropdownId(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [statusDropdownId]);
+
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    setStatusDropdownId(null);
+    setUpdatingStatusId(orderId);
+    try {
+      await orderService.update(orderId, { Status: newStatus }, userEmail);
+      invalidateOrders();
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
 
   const uniqueStatuses = Array.from(
     new Set(allOrders.map((o) => o.Status).filter(Boolean))
@@ -549,6 +581,41 @@ const OrderRegistry = () => {
                             >
                               <Eye className="w-4 h-4" />
                             </Link>
+                            {/* Change Status */}
+                            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => setStatusDropdownId(statusDropdownId === order.id ? null : order.id)}
+                                disabled={updatingStatusId === order.id}
+                                title="Change Status"
+                                className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                                  isTerminated
+                                    ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                    : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
+                                }`}
+                              >
+                                <ClipboardList className="w-4 h-4" />
+                              </button>
+                              {statusDropdownId === order.id && (
+                                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#1d1d1f]/10 rounded-xl shadow-lg py-1 min-w-[210px]">
+                                  <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">Change Status</p>
+                                  {STATUS_OPTIONS.map((s) => (
+                                    <button
+                                      key={s}
+                                      onClick={() => handleStatusChange(order.id, s)}
+                                      className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between gap-2 hover:bg-[#f5f5f7] ${
+                                        order.Status === s
+                                          ? "text-[#0071e3] font-medium"
+                                          : "text-[#1d1d1f]/70"
+                                      }`}
+                                    >
+                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(s).split(" ")[0]}`} />
+                                      {s}
+                                      {order.Status === s && <span className="ml-auto text-[#0071e3]">✓</span>}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                             <button
                               className={`p-1.5 rounded-lg transition-colors ${
                                 isTerminated
