@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
+import { CloudProviderLogo } from "../components/CloudProviderLogo";
 import { Order } from "../services/orderService";
 import { Customer } from "../services/customerService";
 import { useCustomers, useInvalidateOrders, useInvalidateCustomers, useInitialOrders, useIsBackgroundLoading } from "../services/useOrdersQuery";
@@ -383,13 +384,16 @@ const OrderRegistry = () => {
                                 <span className="text-[10px] text-[#1d1d1f]/40 uppercase tracking-wider label-text">
                                   Product
                                 </span>
-                                <span
-                                  className={`text-xs font-medium ${
-                                    isTerminated ? "text-red-600" : "text-[#1d1d1f]"
-                                  }`}
-                                >
-                                  {order.CloudProvider}
-                                </span>
+                                <CloudProviderLogo
+                                  provider={order.CloudProvider ?? ""}
+                                  size={16}
+                                  nameClassName={`text-xs font-medium ${isTerminated ? "text-red-600" : "text-[#1d1d1f]"}`}
+                                />
+                                {isTerminated && (
+                                  <span className="mt-0.5 text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full uppercase tracking-wider w-fit">
+                                    Terminated
+                                  </span>
+                                )}
                               </div>
                               <div className="flex flex-col gap-0.5 text-right">
                                 <span className="text-[10px] text-[#1d1d1f]/40 uppercase tracking-wider label-text">
@@ -460,17 +464,19 @@ const OrderRegistry = () => {
                             </span>
                           )}
                         </td>
-                        <td
-                          className={`px-6 py-3.5 text-sm font-medium ${
-                            isTerminated ? "text-red-600" : "text-[#1d1d1f]"
-                          }`}
-                        >
-                          {order.CloudProvider}
-                          {isTerminated && (
-                            <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                              Terminated
-                            </span>
-                          )}
+                        <td className="px-6 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <CloudProviderLogo
+                              provider={order.CloudProvider ?? ""}
+                              size={20}
+                              nameClassName={`text-sm font-medium ${isTerminated ? "text-red-600" : "text-[#1d1d1f]"}`}
+                            />
+                            {isTerminated && (
+                              <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
+                                Terminated
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td
                           className={`px-6 py-3.5 font-mono text-xs truncate max-w-[120px] ${
