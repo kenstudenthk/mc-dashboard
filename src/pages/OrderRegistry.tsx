@@ -475,7 +475,9 @@ const OrderRegistry = () => {
                             className={`rounded-xl border p-3 gap-2 flex flex-col ${
                               isTerminated
                                 ? "bg-red-50/40 border-red-100"
-                                : "bg-white border-[#1d1d1f]/06"
+                                : pinnedIds.has(order.id)
+                                  ? "bg-blue-50/30 border-[#094cb2]/20 border-l-4 border-l-[#094cb2]"
+                                  : "bg-white border-[#1d1d1f]/06"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
@@ -500,13 +502,29 @@ const OrderRegistry = () => {
                                   {order.CustomerName}
                                 </span>
                               </div>
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${getStatusColor(
-                                  order.Status,
-                                )}`}
-                              >
-                                {order.Status}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <button
+                                  onClick={() => handlePinToggle(order.id)}
+                                  className={`p-1 rounded-lg transition-colors ${
+                                    pinnedIds.has(order.id)
+                                      ? "text-[#094cb2]"
+                                      : "text-[#1d1d1f]/25"
+                                  }`}
+                                >
+                                  {pinnedIds.has(order.id) ? (
+                                    <Pin className="w-3.5 h-3.5 fill-current" />
+                                  ) : (
+                                    <Pin className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${getStatusColor(
+                                    order.Status,
+                                  )}`}
+                                >
+                                  {order.Status}
+                                </span>
+                              </div>
                             </div>
                             <div className="flex items-center justify-between gap-2 mt-1">
                               <div className="flex flex-col gap-0.5">
