@@ -22,7 +22,7 @@ A modern order management dashboard built with React 19, TypeScript, and Vite. D
 - **🔐 Role-Based Access Control** — Permission hierarchy (User → Admin → Global Admin → Developer)
 - **🎓 Tutor Mode** — Interactive guided tooltips for new users
 
----
+-------
 
 ## 🛠 Tech Stack
 
