@@ -1,13 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Filter, MoreHorizontal, Eye, Search, RefreshCw, Upload, ClipboardList } from "lucide-react";
+import {
+  Plus,
+  Filter,
+  MoreHorizontal,
+  Eye,
+  Search,
+  RefreshCw,
+  Upload,
+  ClipboardList,
+  Pin,
+  PinOff,
+} from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
 import { Order, orderService } from "../services/orderService";
 import { Customer } from "../services/customerService";
 import { usePermission } from "../contexts/PermissionContext";
-import { useCustomers, useInvalidateOrders, useInvalidateCustomers, useInitialOrders, useIsBackgroundLoading } from "../services/useOrdersQuery";
+import {
+  useCustomers,
+  useInvalidateOrders,
+  useInvalidateCustomers,
+  useInitialOrders,
+  useIsBackgroundLoading,
+} from "../services/useOrdersQuery";
 import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
+import { pinnedOrderService } from "../services/pinnedOrderService";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -27,14 +45,30 @@ function TableSkeleton() {
     <>
       {[...Array(8)].map((_, i) => (
         <tr key={i} className="border-b border-[#1d1d1f]/04 animate-pulse">
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-200 rounded w-24" /></td>
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-36" /></td>
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-20" /></td>
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-28" /></td>
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-24" /></td>
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-20" /></td>
-          <td className="px-6 py-3.5"><div className="h-3.5 bg-gray-100 rounded w-16" /></td>
-          <td className="px-6 py-3.5"><div className="h-5 bg-gray-200 rounded-full w-20" /></td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-200 rounded w-24" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-100 rounded w-36" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-100 rounded w-20" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-100 rounded w-28" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-100 rounded w-24" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-100 rounded w-20" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-3.5 bg-gray-100 rounded w-16" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-5 bg-gray-200 rounded-full w-20" />
+          </td>
           <td className="px-6 py-3.5" />
         </tr>
       ))}
@@ -71,16 +105,23 @@ const OrderRegistry = () => {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [statusDropdownId, setStatusDropdownId] = useState<number | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
+  const [pinnedIds, setPinnedIds] = useState<Set<number>>(new Set());
 
   const { userEmail } = usePermission();
-  const { data: initialData, isLoading: ordersLoading, isError: ordersError } = useInitialOrders();
+  const {
+    data: initialData,
+    isLoading: ordersLoading,
+    isError: ordersError,
+  } = useInitialOrders();
   const { data: customersData, isLoading: customersLoading } = useCustomers();
   const isFetching = useIsBackgroundLoading();
   const invalidateOrders = useInvalidateOrders();
   const invalidateCustomers = useInvalidateCustomers();
 
   const allOrders: Order[] = Array.isArray(initialData) ? initialData : [];
-  const customerMap = buildCustomerMap(Array.isArray(customersData) ? customersData : []);
+  const customerMap = buildCustomerMap(
+    Array.isArray(customersData) ? customersData : [],
+  );
 
   const loading = ordersLoading || customersLoading;
 
@@ -102,6 +143,16 @@ const OrderRegistry = () => {
     return () => document.removeEventListener("click", handler);
   }, [statusDropdownId]);
 
+  useEffect(() => {
+    if (!userEmail) return;
+    pinnedOrderService
+      .getPinned(userEmail)
+      .then((ids) => setPinnedIds(new Set(ids)))
+      .catch(() => {
+        /* silently degrade — no pins shown */
+      });
+  }, [userEmail]);
+
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     setStatusDropdownId(null);
     setUpdatingStatusId(orderId);
@@ -113,52 +164,75 @@ const OrderRegistry = () => {
     }
   };
 
+  const handlePinToggle = async (orderId: number) => {
+    const isPinned = pinnedIds.has(orderId);
+    const prev = new Set(pinnedIds);
+    setPinnedIds((s) => {
+      const next = new Set(s);
+      if (isPinned) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+    try {
+      if (isPinned) {
+        await pinnedOrderService.unpin(userEmail, orderId);
+      } else {
+        await pinnedOrderService.pin(userEmail, orderId);
+      }
+    } catch {
+      setPinnedIds(prev);
+    }
+  };
+
   const uniqueStatuses = Array.from(
-    new Set(allOrders.map((o) => o.Status).filter(Boolean))
+    new Set(allOrders.map((o) => o.Status).filter(Boolean)),
   ).sort();
 
   const terminatedAccountIds = allOrders
     .filter((order) => order.OrderType === "Termination" && order.AccountID)
     .map((order) => order.AccountID);
 
-  const filteredOrders = [...allOrders].sort((a, b) => b.id - a.id).filter((order) => {
-    if (activeTab === "Pending") {
-      if (["Completed", "Cancelled"].includes(order.Status)) return false;
-    } else if (activeTab === "Completed") {
-      if (order.Status !== "Completed") return false;
-    }
+  const filteredOrders = [...allOrders]
+    .sort((a, b) => b.id - a.id)
+    .filter((order) => {
+      if (activeTab === "Pending") {
+        if (["Completed", "Cancelled"].includes(order.Status)) return false;
+      } else if (activeTab === "Completed") {
+        if (order.Status !== "Completed") return false;
+      }
 
-    if (
-      providerFilter !== "All" &&
-      !(order.CloudProvider ?? "").includes(providerFilter)
-    ) {
-      return false;
-    }
-
-    if (statusFilter !== "All" && order.Status !== statusFilter) {
-      return false;
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
       if (
-        !(order.Title ?? "").toLowerCase().includes(query) &&
-        !(order.CustomerName ?? "").toLowerCase().includes(query) &&
-        !(order.AccountID && order.AccountID.toLowerCase().includes(query))
+        providerFilter !== "All" &&
+        !(order.CloudProvider ?? "").includes(providerFilter)
       ) {
         return false;
       }
-    }
 
-    return true;
-  });
+      if (statusFilter !== "All" && order.Status !== statusFilter) {
+        return false;
+      }
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (
+          !(order.Title ?? "").toLowerCase().includes(query) &&
+          !(order.CustomerName ?? "").toLowerCase().includes(query) &&
+          !(order.AccountID && order.AccountID.toLowerCase().includes(query))
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const pagedOrders = filteredOrders.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
   );
-  const rangeStart = filteredOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeStart =
+    filteredOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredOrders.length);
 
   const getStatusColor = (status: string) => {
@@ -185,8 +259,16 @@ const OrderRegistry = () => {
       {ordersError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
           <span className="font-medium">Failed to load orders.</span>
-          <span className="text-red-500">Check that the API URL is configured and the Power Automate flow is running.</span>
-          <button onClick={handleRefresh} className="ml-auto underline hover:no-underline shrink-0">Retry</button>
+          <span className="text-red-500">
+            Check that the API URL is configured and the Power Automate flow is
+            running.
+          </span>
+          <button
+            onClick={handleRefresh}
+            className="ml-auto underline hover:no-underline shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
       <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
@@ -207,7 +289,9 @@ const OrderRegistry = () => {
             disabled={isFetching}
             className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 disabled:opacity-50 transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+            />
             {isFetching ? "Refreshing…" : "Refresh"}
           </button>
           <button
@@ -323,7 +407,9 @@ const OrderRegistry = () => {
               >
                 <option value="All">All Statuses</option>
                 {uniqueStatuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>
@@ -392,7 +478,9 @@ const OrderRegistry = () => {
                                 <Link
                                   to={`/orders/${order.id}`}
                                   className={`text-xs font-semibold truncate ${
-                                    isTerminated ? "text-red-600" : "text-[#0071e3]"
+                                    isTerminated
+                                      ? "text-red-600"
+                                      : "text-[#0071e3]"
                                   }`}
                                 >
                                   {order.Title}
@@ -493,7 +581,9 @@ const OrderRegistry = () => {
                           ) : (
                             <span
                               className={
-                                isTerminated ? "text-red-500" : "text-[#1d1d1f]/70"
+                                isTerminated
+                                  ? "text-red-500"
+                                  : "text-[#1d1d1f]/70"
                               }
                             >
                               {order.CustomerName}
@@ -582,9 +672,18 @@ const OrderRegistry = () => {
                               <Eye className="w-4 h-4" />
                             </Link>
                             {/* Change Status */}
-                            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                            <div
+                              className="relative"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button
-                                onClick={() => setStatusDropdownId(statusDropdownId === order.id ? null : order.id)}
+                                onClick={() =>
+                                  setStatusDropdownId(
+                                    statusDropdownId === order.id
+                                      ? null
+                                      : order.id,
+                                  )
+                                }
                                 disabled={updatingStatusId === order.id}
                                 title="Change Status"
                                 className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
@@ -597,20 +696,30 @@ const OrderRegistry = () => {
                               </button>
                               {statusDropdownId === order.id && (
                                 <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#1d1d1f]/10 rounded-xl shadow-lg py-1 min-w-[210px]">
-                                  <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">Change Status</p>
+                                  <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">
+                                    Change Status
+                                  </p>
                                   {STATUS_OPTIONS.map((s) => (
                                     <button
                                       key={s}
-                                      onClick={() => handleStatusChange(order.id, s)}
+                                      onClick={() =>
+                                        handleStatusChange(order.id, s)
+                                      }
                                       className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between gap-2 hover:bg-[#f5f5f7] ${
                                         order.Status === s
                                           ? "text-[#0071e3] font-medium"
                                           : "text-[#1d1d1f]/70"
                                       }`}
                                     >
-                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(s).split(" ")[0]}`} />
+                                      <span
+                                        className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(s).split(" ")[0]}`}
+                                      />
                                       {s}
-                                      {order.Status === s && <span className="ml-auto text-[#0071e3]">✓</span>}
+                                      {order.Status === s && (
+                                        <span className="ml-auto text-[#0071e3]">
+                                          ✓
+                                        </span>
+                                      )}
                                     </button>
                                   ))}
                                 </div>
@@ -661,15 +770,26 @@ const OrderRegistry = () => {
             </button>
             <span className="hidden sm:flex gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                .filter(
+                  (p) =>
+                    p === 1 ||
+                    p === totalPages ||
+                    Math.abs(p - currentPage) <= 2,
+                )
                 .reduce<(number | "…")[]>((acc, p, idx, arr) => {
-                  if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("…");
+                  if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1)
+                    acc.push("…");
                   acc.push(p);
                   return acc;
                 }, [])
                 .map((item, idx) =>
                   item === "…" ? (
-                    <span key={`ellipsis-${idx}`} className="px-2 py-1 text-[#1d1d1f]/30">…</span>
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="px-2 py-1 text-[#1d1d1f]/30"
+                    >
+                      …
+                    </span>
                   ) : (
                     <button
                       key={item}
@@ -682,7 +802,7 @@ const OrderRegistry = () => {
                     >
                       {item}
                     </button>
-                  )
+                  ),
                 )}
             </span>
             <span className="sm:hidden px-2 py-1 text-[#1d1d1f]/60">
@@ -701,7 +821,9 @@ const OrderRegistry = () => {
 
       {showBulkImport && (
         <BulkImportModal
-          customers={Array.isArray(customersData) ? (customersData as Customer[]) : []}
+          customers={
+            Array.isArray(customersData) ? (customersData as Customer[]) : []
+          }
           onClose={() => setShowBulkImport(false)}
           onImportComplete={() => {
             invalidateOrders();
