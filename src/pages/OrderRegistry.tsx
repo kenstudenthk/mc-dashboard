@@ -133,6 +133,7 @@ const OrderRegistry = () => {
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   const { userEmail } = usePermission();
   const {
@@ -383,7 +384,7 @@ const OrderRegistry = () => {
                   onClick={() => setActiveTab(key)}
                   className={`px-5 py-2.5 text-sm font-medium border-t border-l border-r rounded-t-lg transition-colors relative -mb-px ${
                     activeTab === key
-                      ? "bg-white border-[#1d1d1f]/10 text-[#1d1d1f] border-b-white z-10"
+                      ? "bg-white border-[#1d1d1f]/10 border-t-[#0071e3] border-t-2 text-[#1d1d1f] font-semibold border-b-white z-10"
                       : "bg-[#e8e8ea] border-transparent text-[#1d1d1f]/50 hover:text-[#1d1d1f] hover:bg-[#ebebed]"
                   }`}
                 >
@@ -471,23 +472,23 @@ const OrderRegistry = () => {
         <div className="overflow-x-auto flex-1 overflow-y-auto">
           <table className="w-full text-left">
             <thead className="hidden md:table-header-group">
-              <tr className="border-b border-[#1d1d1f]/08 bg-[#f5f5f7]">
+              <tr className="border-b-2 border-[#1d1d1f]/10 bg-[#e8e8eb]">
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("Title")}
                 >
                   Service No.
                   <SortIcon active={sortKey === "Title"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap min-w-[200px] cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap min-w-[260px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("CustomerName")}
                 >
                   Company Name
                   <SortIcon active={sortKey === "CustomerName"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("CloudProvider")}
                 >
                   Product Subscribe
@@ -497,41 +498,41 @@ const OrderRegistry = () => {
                   />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap w-[100px] cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[100px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("AccountID")}
                 >
                   Account ID
                   <SortIcon active={sortKey === "AccountID"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("CaseID")}
                 >
                   Case ID
                   <SortIcon active={sortKey === "CaseID"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("OrderType")}
                 >
                   Order Type
                   <SortIcon active={sortKey === "OrderType"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap w-[90px] cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[90px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("SRD")}
                 >
                   SRD
                   <SortIcon active={sortKey === "SRD"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("Status")}
                 >
                   Status
                   <SortIcon active={sortKey === "Status"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 text-right whitespace-nowrap">
+                <th className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -656,12 +657,15 @@ const OrderRegistry = () => {
                       {/* ── Desktop table row (hidden on mobile) ── */}
                       <tr
                         key={order.id}
-                        className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row ${
+                        onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}
+                        className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row cursor-pointer ${
                           isTerminated
                             ? "bg-red-50/30 hover:bg-red-50/60 border-l-2 border-l-red-300"
                             : pinnedIds.has(order.id)
                               ? "bg-blue-50/30 hover:bg-blue-50/60 border-l-2 border-l-[#094cb2]"
-                              : "hover:bg-[#f0f5ff] hover:border-l-2 hover:border-l-[#0071e3]"
+                              : selectedOrderId === order.id
+                                ? "bg-[#e8f0fe] border-l-2 border-l-[#0071e3]"
+                                : "hover:bg-[#f0f5ff] hover:border-l-2 hover:border-l-[#0071e3]"
                         }`}
                       >
                         <td
@@ -671,7 +675,7 @@ const OrderRegistry = () => {
                         >
                           <Link to={`/orders/${order.id}`}>{order.Title}</Link>
                         </td>
-                        <td className="px-6 py-3.5 text-sm min-w-[200px]">
+                        <td className="px-6 py-3.5 text-sm font-medium min-w-[260px]">
                           {customerMap.get(
                             (order.CustomerName ?? "").toLowerCase(),
                           ) ? (
