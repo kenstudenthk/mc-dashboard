@@ -28,7 +28,7 @@ export const pinnedOrderService = {
   async pin(userEmail: string, orderId: number): Promise<void> {
     await call<void>({
       action: "PIN",
-      data: { OrderId: String(orderId) },
+      data: { OrderId: String(orderId), PinnedAt: new Date().toISOString() },
       userEmail,
     });
   },
