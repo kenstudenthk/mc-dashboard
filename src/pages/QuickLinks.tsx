@@ -8,7 +8,6 @@ import {
   X,
   Link2,
   AlertCircle,
-  ArrowUpRight,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { quickLinkService, QuickLink } from "../services/quickLinkService";
@@ -59,75 +58,75 @@ interface LinkCardProps {
   onDelete: (id: number) => void;
 }
 
-const LinkCard = ({ link, index, canEdit, onEdit, onDelete }: LinkCardProps) => {
+const LinkCard = ({
+  link,
+  index,
+  canEdit,
+  onEdit,
+  onDelete,
+}: LinkCardProps) => {
   const accent = getAccent(index);
   const domain = getDomain(link.URL);
 
   return (
-    <div className="group bg-[var(--color-surface-elevated)] border border-[var(--color-border-light)] rounded-2xl overflow-hidden flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-      {/* Accent bar */}
-      <div className="h-1 shrink-0" style={{ backgroundColor: accent }} />
+    <div className="group relative overflow-hidden rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-light)]">
+      {/* Expanding circle from top-right (simulates ::before pseudo-element) */}
+      <div
+        className="absolute -top-4 -right-4 w-8 h-8 rounded-full scale-100 group-hover:scale-[21] transition-transform duration-300 ease-out z-0 pointer-events-none"
+        style={{ backgroundColor: accent }}
+      />
 
-      <div className="p-5 flex flex-col flex-1">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span
-              className="w-2 h-2 rounded-full shrink-0 mt-0.5"
-              style={{ backgroundColor: accent }}
-            />
-            <h3 className="text-sm font-semibold text-[var(--color-text-main)] leading-snug truncate">
-              {link.Title}
-            </h3>
-          </div>
-
-          {canEdit && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-              <button
-                onClick={() => onEdit(link)}
-                className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-border-light)] transition-colors"
-                title="Edit link"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => onDelete(link.id)}
-                className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[#fc7981] hover:bg-red-50 transition-colors"
-                title="Delete link"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Description */}
-        <p className="text-xs text-[var(--color-text-muted)] leading-relaxed flex-1 mb-4 line-clamp-3">
-          {link.Description}
-        </p>
-
-        {/* Footer: domain + visit button */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-[var(--color-text-muted)] truncate font-mono">
-            {domain}
-          </span>
-          <TutorTooltip
-            text={`Open ${link.Title} in a new tab.`}
-            position="top"
-            componentName="UsefulLinks.LinkCard"
-          >
-            <a
-              href={link.URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-black text-white hover:bg-black/80 transition-colors shrink-0"
-            >
-              Visit
-              <ArrowUpRight className="w-3 h-3" />
-            </a>
-          </TutorTooltip>
-        </div>
+      {/* Go-corner arrow */}
+      <div
+        className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center z-20 pointer-events-none"
+        style={{ backgroundColor: accent, borderRadius: "0 4px 0 32px" }}
+      >
+        <span className="-mt-1 -mr-1 text-white text-base leading-none">→</span>
       </div>
+
+      {/* Admin edit/delete buttons */}
+      {canEdit && (
+        <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+          <button
+            onClick={() => onEdit(link)}
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            title="Edit link"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(link.id)}
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            title="Delete link"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Card content */}
+      <TutorTooltip
+        text={`Open ${link.Title} in a new tab.`}
+        position="top"
+        componentName="UsefulLinks.LinkCard"
+      >
+        <a
+          href={link.URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block relative z-10 px-6 py-8 no-underline"
+        >
+          <p className="text-base font-semibold text-[var(--color-text-main)] group-hover:text-white transition-colors duration-300 leading-snug mb-2">
+            {link.Title}
+          </p>
+          <p className="text-sm text-[var(--color-text-muted)] group-hover:text-white/80 transition-colors duration-300 leading-relaxed line-clamp-3 mb-4">
+            {link.Description}
+          </p>
+          <p className="text-[10px] font-mono text-[var(--color-text-muted)] group-hover:text-white/60 transition-colors duration-300 truncate">
+            {domain}
+          </p>
+        </a>
+      </TutorTooltip>
     </div>
   );
 };
@@ -147,14 +146,19 @@ const QuickLinks = () => {
   const [editingLink, setEditingLink] = useState<QuickLink | null>(null);
   const [saving, setSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ Title: "", URL: "", Description: "" });
+  const [formData, setFormData] = useState({
+    Title: "",
+    URL: "",
+    Description: "",
+  });
 
   useEffect(() => {
     quickLinkService
       .findAll()
       .then((result) => setLinks(Array.isArray(result) ? result : []))
       .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : "Failed to load links.";
+        const msg =
+          err instanceof Error ? err.message : "Failed to load links.";
         if (msg.toLowerCase().includes("not configured")) {
           setIsUnconfigured(true);
         } else {
@@ -167,7 +171,11 @@ const QuickLinks = () => {
   const handleOpenModal = (link?: QuickLink) => {
     if (link) {
       setEditingLink(link);
-      setFormData({ Title: link.Title, URL: link.URL, Description: link.Description });
+      setFormData({
+        Title: link.Title,
+        URL: link.URL,
+        Description: link.Description,
+      });
     } else {
       setEditingLink(null);
       setFormData({ Title: "", URL: "", Description: "" });
@@ -188,15 +196,23 @@ const QuickLinks = () => {
     setModalError(null);
     try {
       if (editingLink) {
-        const updated = await quickLinkService.update(editingLink.id, formData, userEmail);
-        setLinks((prev) => prev.map((l) => (l.id === editingLink.id ? updated : l)));
+        const updated = await quickLinkService.update(
+          editingLink.id,
+          formData,
+          userEmail,
+        );
+        setLinks((prev) =>
+          prev.map((l) => (l.id === editingLink.id ? updated : l)),
+        );
       } else {
         const created = await quickLinkService.create(formData, userEmail);
         setLinks((prev) => [...prev, created]);
       }
       handleCloseModal();
     } catch {
-      setModalError("Failed to save. Please check the Power Automate flow and try again.");
+      setModalError(
+        "Failed to save. Please check the Power Automate flow and try again.",
+      );
     } finally {
       setSaving(false);
     }
@@ -217,7 +233,9 @@ const QuickLinks = () => {
       {/* ── Page header ── */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <p className="label-text text-[var(--color-text-muted)] mb-2">Resources</p>
+          <p className="label-text text-[var(--color-text-muted)] mb-2">
+            Resources
+          </p>
           <h1 className="text-[32px] font-semibold text-[var(--color-text-main)] tracking-tight leading-none">
             Useful Links
           </h1>
@@ -303,7 +321,8 @@ const QuickLinks = () => {
                 </p>
                 {canEdit ? (
                   <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                    Click <strong>Add Link</strong> to add your first useful link.
+                    Click <strong>Add Link</strong> to add your first useful
+                    link.
                   </p>
                 ) : (
                   <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -354,36 +373,48 @@ const QuickLinks = () => {
               )}
 
               <div className="space-y-1.5">
-                <label className="label-text text-[var(--color-text-muted)]">Name</label>
+                <label className="label-text text-[var(--color-text-muted)]">
+                  Name
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.Title}
-                  onChange={(e) => setFormData({ ...formData, Title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Title: e.target.value })
+                  }
                   placeholder="e.g. AWS Management Console"
                   className={INPUT_CLASS}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="label-text text-[var(--color-text-muted)]">URL</label>
+                <label className="label-text text-[var(--color-text-muted)]">
+                  URL
+                </label>
                 <input
                   type="url"
                   required
                   value={formData.URL}
-                  onChange={(e) => setFormData({ ...formData, URL: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, URL: e.target.value })
+                  }
                   placeholder="https://…"
                   className={INPUT_CLASS}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="label-text text-[var(--color-text-muted)]">Description</label>
+                <label className="label-text text-[var(--color-text-muted)]">
+                  Description
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={formData.Description}
-                  onChange={(e) => setFormData({ ...formData, Description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Description: e.target.value })
+                  }
                   placeholder="Brief description of what this link is used for…"
                   className={`${INPUT_CLASS} resize-none`}
                 />
@@ -402,7 +433,11 @@ const QuickLinks = () => {
                   disabled={saving}
                   className="flex-1 px-4 py-2.5 bg-black text-white font-semibold rounded-xl hover:bg-black/80 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {saving ? "Saving…" : editingLink ? "Save Changes" : "Add Link"}
+                  {saving
+                    ? "Saving…"
+                    : editingLink
+                      ? "Save Changes"
+                      : "Add Link"}
                 </button>
               </div>
             </form>
