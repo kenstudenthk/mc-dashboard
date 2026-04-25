@@ -320,18 +320,7 @@ const OrderRegistry = () => {
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
-        <div>
-          <h1
-            className="text-[28px] font-semibold text-[#1d1d1f]"
-            style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
-          >
-            Order Registry
-          </h1>
-          <p className="text-sm text-[#1d1d1f]/50 mt-1">
-            Manage and track all cloud provisioning orders.
-          </p>
-        </div>
+      <div className="flex items-center justify-end flex-col sm:flex-row gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleRefresh}
@@ -473,6 +462,7 @@ const OrderRegistry = () => {
           <table className="w-full text-left">
             <thead className="hidden md:table-header-group">
               <tr className="border-b-2 border-[#1d1d1f]/10 bg-[#e8e8eb]">
+                <th className="w-6 p-0" />
                 <th
                   className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("Title")}
@@ -553,7 +543,7 @@ const OrderRegistry = () => {
                         key={`card-${order.id}`}
                         className="md:hidden border-b border-[#1d1d1f]/04"
                       >
-                        <td colSpan={9} className="px-4 py-3">
+                        <td colSpan={10} className="px-4 py-3">
                           <div
                             className={`rounded-xl border p-3 gap-2 flex flex-col ${
                               isTerminated
@@ -657,17 +647,35 @@ const OrderRegistry = () => {
                       {/* ── Desktop table row (hidden on mobile) ── */}
                       <tr
                         key={order.id}
-                        onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}
+                        onClick={() =>
+                          setSelectedOrderId(
+                            selectedOrderId === order.id ? null : order.id,
+                          )
+                        }
                         className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row cursor-pointer ${
                           isTerminated
                             ? "bg-red-50/30 hover:bg-red-50/60 border-l-2 border-l-red-300"
                             : pinnedIds.has(order.id)
-                              ? "bg-blue-50/30 hover:bg-blue-50/60 border-l-2 border-l-[#094cb2]"
+                              ? "bg-blue-50/30 hover:bg-blue-50/60"
                               : selectedOrderId === order.id
                                 ? "bg-[#e8f0fe] border-l-2 border-l-[#0071e3]"
                                 : "hover:bg-[#f0f5ff] hover:border-l-2 hover:border-l-[#0071e3]"
                         }`}
                       >
+                        {/* Pin column — outside data area */}
+                        <td
+                          className="w-6 p-0 text-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePinToggle(order.id);
+                          }}
+                        >
+                          {pinnedIds.has(order.id) ? (
+                            <Pin className="w-3.5 h-3.5 fill-current text-red-500 rotate-90 mx-auto" />
+                          ) : (
+                            <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/20 rotate-90 mx-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </td>
                         <td
                           className={`px-3 py-3 text-xs font-semibold hover:underline ${
                             isTerminated ? "text-red-600" : "text-[#0071e3]"
@@ -772,25 +780,6 @@ const OrderRegistry = () => {
                         </td>
                         <td className="px-3 py-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handlePinToggle(order.id)}
-                              title={
-                                pinnedIds.has(order.id)
-                                  ? "Unpin order"
-                                  : "Pin order"
-                              }
-                              className={`p-1.5 rounded-lg transition-colors ${
-                                pinnedIds.has(order.id)
-                                  ? "text-[#094cb2] hover:bg-blue-50"
-                                  : "opacity-0 group-hover:opacity-100 text-[#1d1d1f]/35 hover:text-[#094cb2] hover:bg-blue-50"
-                              }`}
-                            >
-                              {pinnedIds.has(order.id) ? (
-                                <Pin className="w-4 h-4 fill-current" />
-                              ) : (
-                                <PinOff className="w-4 h-4" />
-                              )}
-                            </button>
                             <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
                                 to={`/orders/${order.id}`}

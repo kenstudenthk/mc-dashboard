@@ -19,7 +19,8 @@ interface TopNavProps {
 const TopNav = ({ onMenuOpen }: TopNavProps) => {
   const location = useLocation();
   const { currentRole, setCurrentRole, userEmail } = usePermission();
-  const { isTutorMode, toggleTutorMode, isFeedbackMode, toggleFeedbackMode } = useTutor();
+  const { isTutorMode, toggleTutorMode, isFeedbackMode, toggleFeedbackMode } =
+    useTutor();
 
   const getBreadcrumbs = () => {
     const paths = location.pathname.split("/").filter(Boolean);
@@ -54,14 +55,22 @@ const TopNav = ({ onMenuOpen }: TopNavProps) => {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center text-sm text-[#1d1d1f]/50" style={{ letterSpacing: '-0.224px' }}>
+        <div
+          className="flex items-center text-sm text-[#1d1d1f]/50"
+          style={{ letterSpacing: "-0.224px" }}
+        >
           {breadcrumbs.map((crumb, index) => (
             <React.Fragment key={crumb.path}>
               {index > 0 && (
                 <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-[#1d1d1f]/25" />
               )}
               {index === breadcrumbs.length - 1 ? (
-                <span className="text-[#1d1d1f] font-medium">{crumb.label}</span>
+                <span
+                  className="text-[#1d1d1f] font-semibold text-base"
+                  style={{ letterSpacing: "-0.28px" }}
+                >
+                  {crumb.label}
+                </span>
               ) : (
                 <Link
                   to={crumb.path}
@@ -132,7 +141,10 @@ const TopNav = ({ onMenuOpen }: TopNavProps) => {
 
         <div className="flex items-center gap-2.5 pl-3 md:pl-4 border-l border-[#1d1d1f]/08">
           <div className="text-right hidden md:block">
-            <div className="text-xs font-semibold text-[#1d1d1f]" style={{ letterSpacing: '-0.224px' }}>
+            <div
+              className="text-xs font-semibold text-[#1d1d1f]"
+              style={{ letterSpacing: "-0.224px" }}
+            >
               {userEmail || "Not signed in"}
             </div>
             <div className="text-[10px] text-[#1d1d1f]/45">{currentRole}</div>
