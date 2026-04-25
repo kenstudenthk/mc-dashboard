@@ -39,6 +39,7 @@ jobs:
           echo "VITE_API_EMAIL_URL=$VITE_API_EMAIL_URL" >> .env
           echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" >> .env
           echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env
+          echo "VITE_API_PINNED_ORDER_URL=$VITE_API_PINNED_ORDER_URL" >> .env
         env:
           VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
           VITE_API_CUSTOMERS_URL: ${{ secrets.VITE_API_CUSTOMERS_URL }}
@@ -53,6 +54,7 @@ jobs:
           VITE_API_EMAIL_URL: ${{ secrets.VITE_API_EMAIL_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_PINNED_ORDER_URL: ${{ secrets.VITE_API_PINNED_ORDER_URL }}
 
       - name: Build
         run: npm run build
