@@ -2,7 +2,7 @@
 const FLOW_URL = import.meta.env.VITE_API_PINNED_ORDER_URL as string;
 
 interface PinRecord {
-  OrderId: number;
+  OrderId: string;
 }
 
 async function call<T>(body: object): Promise<T> {
@@ -19,7 +19,7 @@ export const pinnedOrderService = {
   async getPinned(userEmail: string): Promise<number[]> {
     const data = await call<{ value: PinRecord[] }>({
       action: "GET_BY_USER",
-      data: { UserEmail: userEmail },
+      data: {},
       userEmail,
     });
     return (data.value ?? []).map((r) => Number(r.OrderId));
@@ -28,7 +28,7 @@ export const pinnedOrderService = {
   async pin(userEmail: string, orderId: number): Promise<void> {
     await call<void>({
       action: "PIN",
-      data: { UserEmail: userEmail, OrderId: orderId },
+      data: { OrderId: String(orderId) },
       userEmail,
     });
   },
@@ -36,7 +36,7 @@ export const pinnedOrderService = {
   async unpin(userEmail: string, orderId: number): Promise<void> {
     await call<void>({
       action: "UNPIN",
-      data: { UserEmail: userEmail, OrderId: orderId },
+      data: { OrderId: String(orderId) },
       userEmail,
     });
   },
