@@ -76,6 +76,20 @@ function TableSkeleton() {
   );
 }
 
+function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
+  if (!active)
+    return (
+      <span className="ml-1 opacity-0 group-hover:opacity-40 text-[10px]">
+        ↕
+      </span>
+    );
+  return (
+    <span className="ml-1 text-[#0071e3] text-[10px]">
+      {dir === "asc" ? "↑" : "↓"}
+    </span>
+  );
+}
+
 const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
@@ -95,6 +109,17 @@ const buildCustomerMap = (customers: Customer[]): Map<string, number> => {
   return map;
 };
 
+type SortKey =
+  | "Title"
+  | "CustomerName"
+  | "CloudProvider"
+  | "AccountID"
+  | "CaseID"
+  | "OrderType"
+  | "SRD"
+  | "Status";
+type SortDir = "asc" | "desc";
+
 const OrderRegistry = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
@@ -106,6 +131,8 @@ const OrderRegistry = () => {
   const [statusDropdownId, setStatusDropdownId] = useState<number | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(new Set());
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const { userEmail } = usePermission();
   const {
@@ -184,6 +211,15 @@ const OrderRegistry = () => {
     }
   };
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
   const uniqueStatuses = Array.from(
     new Set(allOrders.map((o) => o.Status).filter(Boolean)),
   ).sort();
@@ -226,6 +262,13 @@ const OrderRegistry = () => {
       return true;
     })
     .sort((a, b) => {
+      if (!sortKey) return 0;
+      const aVal = (a[sortKey] ?? "") as string;
+      const bVal = (b[sortKey] ?? "") as string;
+      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    })
+    .sort((a, b) => {
       const aPinned = pinnedIds.has(a.id) ? 1 : 0;
       const bPinned = pinnedIds.has(b.id) ? 1 : 0;
       return bPinned - aPinned;
@@ -260,7 +303,7 @@ const OrderRegistry = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-[calc(100vh-4rem)] gap-4">
       {ordersError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
           <span className="font-medium">Failed to load orders.</span>
@@ -322,31 +365,35 @@ const OrderRegistry = () => {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="p-4 border-b border-[#1d1d1f]/06 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f5f5f7]/60">
+      <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="px-4 pt-0 border-b border-[#1d1d1f]/08 flex flex-col sm:flex-row justify-between items-end gap-4 bg-[#f0f0f2]">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
             position="bottom"
             wrapperClass="flex-1 sm:flex-none"
           >
-            <div className="flex gap-1">
-              {["All", "Pending", "Completed"].map((tab) => (
+            <div className="flex items-end gap-0 -mb-px">
+              {[
+                { key: "All", label: "All Orders" },
+                { key: "Pending", label: "Pending" },
+                { key: "Completed", label: "Completed" },
+              ].map(({ key, label }) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    activeTab === tab
-                      ? "bg-white border border-[#1d1d1f]/08 text-[#1d1d1f] shadow-sm"
-                      : "text-[#1d1d1f]/50 hover:text-[#1d1d1f] hover:bg-white/60"
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`px-5 py-2.5 text-sm font-medium border-t border-l border-r rounded-t-lg transition-colors relative -mb-px ${
+                    activeTab === key
+                      ? "bg-white border-[#1d1d1f]/10 text-[#1d1d1f] border-b-white z-10"
+                      : "bg-[#e8e8ea] border-transparent text-[#1d1d1f]/50 hover:text-[#1d1d1f] hover:bg-[#ebebed]"
                   }`}
                 >
-                  {tab === "All" ? "All Orders" : tab}
+                  {label}
                 </button>
               ))}
             </div>
           </TutorTooltip>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto pb-2">
             <TutorTooltip
               text="Search for a specific order by typing the Service No, Customer Name, or Account ID."
               position="bottom"
@@ -421,35 +468,70 @@ const OrderRegistry = () => {
           </div>
         )}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto flex-1 overflow-y-auto">
           <table className="w-full text-left">
             <thead className="hidden md:table-header-group">
-              <tr className="border-b border-[#1d1d1f]/06">
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+              <tr className="border-b border-[#1d1d1f]/08 bg-[#f5f5f7]">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("Title")}
+                >
                   Service No.
+                  <SortIcon active={sortKey === "Title"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap min-w-[200px] cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("CustomerName")}
+                >
                   Company Name
+                  <SortIcon active={sortKey === "CustomerName"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("CloudProvider")}
+                >
                   Product Subscribe
+                  <SortIcon
+                    active={sortKey === "CloudProvider"}
+                    dir={sortDir}
+                  />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap w-[100px] cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("AccountID")}
+                >
                   Account ID
+                  <SortIcon active={sortKey === "AccountID"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("CaseID")}
+                >
                   Case ID
+                  <SortIcon active={sortKey === "CaseID"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("OrderType")}
+                >
                   Order Type
+                  <SortIcon active={sortKey === "OrderType"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap w-[90px] cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("SRD")}
+                >
                   SRD
+                  <SortIcon active={sortKey === "SRD"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
+                <th
+                  className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f] hover:bg-[#ebebed] transition-colors"
+                  onClick={() => handleSort("Status")}
+                >
                   Status
+                  <SortIcon active={sortKey === "Status"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 text-right">
+                <th className="px-6 py-3 text-xs font-semibold text-[#1d1d1f]/55 text-right whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -576,10 +658,10 @@ const OrderRegistry = () => {
                         key={order.id}
                         className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row ${
                           isTerminated
-                            ? "bg-red-50/30 hover:bg-red-50/50"
+                            ? "bg-red-50/30 hover:bg-red-50/60 border-l-2 border-l-red-300"
                             : pinnedIds.has(order.id)
-                              ? "bg-blue-50/30 hover:bg-blue-50/50 border-l-2 border-l-[#094cb2]"
-                              : "hover:bg-[#f5f5f7]"
+                              ? "bg-blue-50/30 hover:bg-blue-50/60 border-l-2 border-l-[#094cb2]"
+                              : "hover:bg-[#f0f5ff] hover:border-l-2 hover:border-l-[#0071e3]"
                         }`}
                       >
                         <td
@@ -589,7 +671,7 @@ const OrderRegistry = () => {
                         >
                           <Link to={`/orders/${order.id}`}>{order.Title}</Link>
                         </td>
-                        <td className="px-6 py-3.5 text-sm">
+                        <td className="px-6 py-3.5 text-sm min-w-[200px]">
                           {customerMap.get(
                             (order.CustomerName ?? "").toLowerCase(),
                           ) ? (
@@ -630,7 +712,7 @@ const OrderRegistry = () => {
                           </div>
                         </td>
                         <td
-                          className={`px-6 py-3.5 font-mono text-xs truncate max-w-[120px] ${
+                          className={`px-6 py-3.5 font-mono text-xs truncate w-[100px] max-w-[100px] ${
                             isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"
                           }`}
                           title={order.AccountID}
@@ -662,14 +744,14 @@ const OrderRegistry = () => {
                           )}
                         </td>
                         <td
-                          className={`px-6 py-3.5 text-sm ${
-                            isTerminated ? "text-red-500" : "text-[#1d1d1f]/60"
+                          className={`px-6 py-3.5 text-xs ${
+                            isTerminated ? "text-red-500" : "text-[#1d1d1f]/55"
                           }`}
                         >
                           {order.OrderType}
                         </td>
                         <td
-                          className={`px-6 py-3.5 text-sm ${
+                          className={`px-6 py-3.5 text-xs w-[90px] ${
                             isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"
                           }`}
                         >
@@ -677,7 +759,7 @@ const OrderRegistry = () => {
                         </td>
                         <td className="px-6 py-3.5">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(
                               order.Status,
                             )}`}
                           >
