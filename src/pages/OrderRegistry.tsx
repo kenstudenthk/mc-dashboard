@@ -11,6 +11,9 @@ import {
   ClipboardList,
   Pin,
   PinOff,
+  LayoutList,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
@@ -312,6 +315,27 @@ const OrderRegistry = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] gap-4">
+      {/* Page-level toolbar: Refresh + Import in top-right */}
+      <div className="flex items-center justify-end gap-2 shrink-0">
+        <button
+          onClick={handleRefresh}
+          disabled={isFetching}
+          className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+        >
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
+          />
+          {isFetching ? "Refreshing…" : "Refresh"}
+        </button>
+        <button
+          onClick={() => setShowBulkImport(true)}
+          className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 transition-colors"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          Import
+        </button>
+      </div>
+
       {ordersError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
           <span className="font-medium">Failed to load orders.</span>
@@ -335,25 +359,44 @@ const OrderRegistry = () => {
             position="bottom"
             wrapperClass="flex-1 sm:flex-none"
           >
-            <div className="flex items-center">
-              {[
-                { key: "All", label: "All Orders", count: allOrders.length },
-                { key: "Pending", label: "Pending", count: pendingCount },
-                {
-                  key: "Completed",
-                  label: "Completed",
-                  count: completedCount,
-                },
-              ].map(({ key, label, count }) => (
+            <div className="flex items-center bg-[#f0f0f5] rounded-xl p-1 gap-0.5 my-2">
+              {(
+                [
+                  {
+                    key: "All",
+                    label: "All Orders",
+                    count: allOrders.length,
+                    Icon: LayoutList,
+                  },
+                  {
+                    key: "Pending",
+                    label: "Pending",
+                    count: pendingCount,
+                    Icon: Clock,
+                  },
+                  {
+                    key: "Completed",
+                    label: "Completed",
+                    count: completedCount,
+                    Icon: CheckCircle2,
+                  },
+                ] as {
+                  key: string;
+                  label: string;
+                  count: number;
+                  Icon: React.ElementType;
+                }[]
+              ).map(({ key, label, count, Icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                     activeTab === key
-                      ? "border-[#0071e3] text-[#1d1d1f] font-semibold"
-                      : "border-transparent text-[#1d1d1f]/50 hover:text-[#1d1d1f]/80"
+                      ? "bg-white text-[#1d1d1f] shadow-sm font-semibold"
+                      : "text-[#1d1d1f]/50 hover:text-[#1d1d1f]/70"
                   }`}
                 >
+                  <Icon className="w-3.5 h-3.5" />
                   {label}
                   <span
                     className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
@@ -368,39 +411,6 @@ const OrderRegistry = () => {
               ))}
             </div>
           </TutorTooltip>
-
-          <div className="flex items-center gap-2 py-2 shrink-0">
-            <button
-              onClick={handleRefresh}
-              disabled={isFetching}
-              className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 disabled:opacity-50 transition-colors"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
-              />
-              {isFetching ? "Refreshing…" : "Refresh"}
-            </button>
-            <button
-              onClick={() => setShowBulkImport(true)}
-              className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 transition-colors"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              Import
-            </button>
-            <TutorTooltip
-              text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
-              position="bottom"
-              wrapperClass="inline-block"
-            >
-              <Link
-                to="/orders/new"
-                className="gradient-cta px-4 py-1.5 rounded-lg font-medium text-sm shadow-sm flex items-center gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                New Order
-              </Link>
-            </TutorTooltip>
-          </div>
         </div>
 
         {/* Row 2: Search + filter */}
@@ -436,6 +446,19 @@ const OrderRegistry = () => {
               <Filter className="w-3.5 h-3.5" />
               Filter
             </button>
+          </TutorTooltip>
+          <TutorTooltip
+            text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
+            position="bottom"
+            wrapperClass="inline-block shrink-0"
+          >
+            <Link
+              to="/orders/new"
+              className="gradient-cta px-4 py-1.5 rounded-lg font-medium text-sm shadow-sm flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Order
+            </Link>
           </TutorTooltip>
         </div>
 
