@@ -352,14 +352,14 @@ const OrderRegistry = () => {
         </div>
       )}
       <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
-        {/* Row 1: Tabs + action buttons */}
-        <div className="px-4 border-b border-[#1d1d1f]/08 bg-white flex items-center justify-between">
+        {/* Row 1: Tabs */}
+        <div className="px-4 border-b border-[#1d1d1f]/08 flex items-end justify-between">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
             position="bottom"
             wrapperClass="flex-1 sm:flex-none"
           >
-            <div className="flex items-center bg-[#f0f0f5] rounded-xl p-1 gap-0.5 my-2">
+            <div className="flex items-end gap-1 pt-2">
               {(
                 [
                   {
@@ -390,10 +390,10 @@ const OrderRegistry = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-sm font-medium transition-all whitespace-nowrap border border-b-0 -mb-px ${
                     activeTab === key
-                      ? "bg-white text-[#1d1d1f] shadow-sm font-semibold"
-                      : "text-[#1d1d1f]/50 hover:text-[#1d1d1f]/70"
+                      ? "bg-white border-[#1d1d1f]/12 text-[#1d1d1f] font-semibold"
+                      : "bg-transparent border-transparent text-[#1d1d1f]/45 hover:text-[#1d1d1f]/70 hover:bg-[#1d1d1f]/04 hover:border-[#1d1d1f]/08"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
