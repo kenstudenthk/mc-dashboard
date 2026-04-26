@@ -1,14 +1,5 @@
-import React from "react";
-import {
-  Search,
-  Bell,
-  ChevronRight,
-  Shield,
-  GraduationCap,
-  Menu,
-  Flag,
-} from "lucide-react";
-import { useLocation, Link } from "react-router-dom";
+import { Search, Bell, Shield, GraduationCap, Menu, Flag } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { usePermission, Role } from "../contexts/PermissionContext";
 import { useTutor } from "../contexts/TutorContext";
 
@@ -55,33 +46,12 @@ const TopNav = ({ onMenuOpen }: TopNavProps) => {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div
-          className="flex items-center text-sm text-[#1d1d1f]/50"
-          style={{ letterSpacing: "-0.224px" }}
+        <span
+          className="text-[#1d1d1f] font-semibold text-base"
+          style={{ letterSpacing: "-0.28px" }}
         >
-          {breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={crumb.path}>
-              {index > 0 && (
-                <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-[#1d1d1f]/25" />
-              )}
-              {index === breadcrumbs.length - 1 ? (
-                <span
-                  className="text-[#1d1d1f] font-semibold text-base"
-                  style={{ letterSpacing: "-0.28px" }}
-                >
-                  {crumb.label}
-                </span>
-              ) : (
-                <Link
-                  to={crumb.path}
-                  className="hover:text-[#0071e3] transition-colors hidden sm:inline"
-                >
-                  {crumb.label}
-                </Link>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
+          {breadcrumbs[breadcrumbs.length - 1].label}
+        </span>
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
