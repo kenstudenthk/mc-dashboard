@@ -353,7 +353,7 @@ const OrderRegistry = () => {
       )}
       <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
         {/* Row 1: Tabs */}
-        <div className="bg-[#f4f6f8] border-b border-[#1d1d1f]/08 flex items-end justify-between">
+        <div className="bg-[#f4f6f8] flex items-end justify-between">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
             position="bottom"
