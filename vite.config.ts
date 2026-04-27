@@ -9,11 +9,25 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      // Only GEMINI_API_KEY needs manual injection (not VITE_-prefixed).
-      // All VITE_* vars are read natively by Vite from .env / .env.local.
       "process.env.GEMINI_API_KEY": JSON.stringify(
         env.GEMINI_API_KEY ?? process.env.GEMINI_API_KEY,
       ),
+      // Explicitly inject all VITE_* vars so they are reliably bundled
+      // regardless of Vite's native .env loading behaviour in CI.
+      "import.meta.env.VITE_API_ORDERS_URL": JSON.stringify(env.VITE_API_ORDERS_URL ?? ""),
+      "import.meta.env.VITE_API_CUSTOMERS_URL": JSON.stringify(env.VITE_API_CUSTOMERS_URL ?? ""),
+      "import.meta.env.VITE_API_PERMISSIONS_URL": JSON.stringify(env.VITE_API_PERMISSIONS_URL ?? ""),
+      "import.meta.env.VITE_API_ORDER_TIMELINE_URL": JSON.stringify(env.VITE_API_ORDER_TIMELINE_URL ?? ""),
+      "import.meta.env.VITE_API_AUDIT_LOGS_URL": JSON.stringify(env.VITE_API_AUDIT_LOGS_URL ?? ""),
+      "import.meta.env.VITE_API_QUICK_LINKS_URL": JSON.stringify(env.VITE_API_QUICK_LINKS_URL ?? ""),
+      "import.meta.env.VITE_API_SERVICE_ACCOUNTS_URL": JSON.stringify(env.VITE_API_SERVICE_ACCOUNTS_URL ?? ""),
+      "import.meta.env.VITE_API_ORDER_STEPS_URL": JSON.stringify(env.VITE_API_ORDER_STEPS_URL ?? ""),
+      "import.meta.env.VITE_API_GET_PAGE_URL": JSON.stringify(env.VITE_API_GET_PAGE_URL ?? ""),
+      "import.meta.env.VITE_API_EMAIL_TEMPLATES_URL": JSON.stringify(env.VITE_API_EMAIL_TEMPLATES_URL ?? ""),
+      "import.meta.env.VITE_API_EMAIL_URL": JSON.stringify(env.VITE_API_EMAIL_URL ?? ""),
+      "import.meta.env.VITE_API_PINNED_ORDER_URL": JSON.stringify(env.VITE_API_PINNED_ORDER_URL ?? ""),
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(env.VITE_SUPABASE_URL ?? ""),
+      "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(env.VITE_SUPABASE_ANON_KEY ?? ""),
     },
     resolve: {
       alias: {
