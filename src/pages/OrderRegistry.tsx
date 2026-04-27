@@ -353,13 +353,13 @@ const OrderRegistry = () => {
       )}
       <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
         {/* Row 1: Tabs */}
-        <div className="bg-[#f4f6f8] flex items-end justify-between">
+        <div className="bg-[#f4f6f8] flex items-center justify-between px-4 py-3">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
             position="bottom"
             wrapperClass="flex-1 sm:flex-none"
           >
-            <div className="flex items-end gap-0.5 pt-2 pl-4">
+            <div className="flex items-center gap-1 bg-black/[0.08] rounded-full p-1">
               {(
                 [
                   {
@@ -390,10 +390,10 @@ const OrderRegistry = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-t-xl text-sm font-medium transition-all whitespace-nowrap border border-b-0 -mb-px ${
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                     activeTab === key
-                      ? "bg-white border-[#1d1d1f]/12 text-[#1d1d1f] font-semibold"
-                      : "bg-transparent border-transparent text-[#1d1d1f]/45 hover:text-[#1d1d1f]/70 hover:bg-[#1d1d1f]/04 hover:border-[#1d1d1f]/08"
+                      ? "bg-black text-white shadow-sm"
+                      : "bg-transparent text-black/60 hover:bg-black/[0.06] hover:text-black"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -401,8 +401,8 @@ const OrderRegistry = () => {
                   <span
                     className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
                       activeTab === key
-                        ? "bg-[#0071e3] text-white"
-                        : "bg-[#1d1d1f]/08 text-[#1d1d1f]/50"
+                        ? "bg-white/20 text-white"
+                        : "bg-black/[0.08] text-black/50"
                     }`}
                   >
                     {count}
