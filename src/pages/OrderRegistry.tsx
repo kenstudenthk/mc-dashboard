@@ -413,10 +413,10 @@ const OrderRegistry = () => {
           </TutorTooltip>
         </div>
 
-        {/* Row 2: Search + filter */}
+        {/* Row 2: Search + New Order */}
         <div className="px-4 py-2 border-b border-[#1d1d1f]/08 bg-white flex items-center gap-2">
           <TutorTooltip
-            text="Search for a specific order by typing the Service No, Customer Name, or Account ID."
+            text="Search for a specific order by typing the Service No, Customer Name, or Account ID. Click the filter icon on the right to show additional filters."
             position="bottom"
             wrapperClass="relative flex-1"
           >
@@ -427,25 +427,20 @@ const OrderRegistry = () => {
                 placeholder="Search by Service No, Account ID, Customer..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+                className="w-full pl-9 pr-9 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
               />
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                title="Toggle filters"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
+                  showFilters
+                    ? "text-[#0071e3]"
+                    : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-[#0071e3]/08"
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+              </button>
             </div>
-          </TutorTooltip>
-          <TutorTooltip
-            text="Click here to show or hide additional filters, such as filtering by Cloud Provider."
-            position="bottom"
-          >
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border ${
-                showFilters
-                  ? "bg-blue-50 text-[#0071e3] border-[#0071e3]/20"
-                  : "bg-white text-[#1d1d1f]/70 border-[#1d1d1f]/08 hover:bg-[#f5f5f7]"
-              }`}
-            >
-              <Filter className="w-3.5 h-3.5" />
-              Filter
-            </button>
           </TutorTooltip>
           <TutorTooltip
             text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
@@ -454,7 +449,7 @@ const OrderRegistry = () => {
           >
             <Link
               to="/orders/new"
-              className="gradient-cta px-4 py-1.5 rounded-lg font-medium text-sm shadow-sm flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-lg font-medium text-sm border border-[#094cb2] text-[#094cb2] hover:bg-[#094cb2] hover:text-white transition-all flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               New Order
