@@ -13,12 +13,25 @@ export interface CreateQuickLinkInput {
   Description: string;
 }
 
+// SharePoint Hyperlink columns return { Url: string, Description: string }
+// instead of a plain string — normalise to the Url string.
+function normalizeSharePointUrl(val: unknown): string {
+  if (typeof val === "string") return val;
+  if (val !== null && typeof val === "object") {
+    const o = val as Record<string, unknown>;
+    if (typeof o.Url === "string") return o.Url;
+    if (typeof o.url === "string") return o.url;
+  }
+  return "";
+}
+
 function withId(data: unknown): unknown {
   if (Array.isArray(data)) return data.map(withId);
   if (data !== null && typeof data === "object") {
     const obj = data as Record<string, unknown>;
     const result: Record<string, unknown> = { ...obj };
     if ("ID" in obj) result.id = obj.ID;
+    if ("URL" in obj) result.URL = normalizeSharePointUrl(obj.URL);
     return result;
   }
   return data;
