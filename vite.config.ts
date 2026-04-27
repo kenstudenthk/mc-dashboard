@@ -4,7 +4,10 @@ import path from "path";
 import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, ".", "");
+  const env = loadEnv(mode, process.cwd(), "");
+  console.log("[vite.config] cwd:", process.cwd());
+  console.log("[vite.config] VITE_API_QUICK_LINKS_URL:", env.VITE_API_QUICK_LINKS_URL ? `SET (${env.VITE_API_QUICK_LINKS_URL.length} chars)` : "NOT FOUND");
+  console.log("[vite.config] VITE_* keys found:", Object.keys(env).filter(k => k.startsWith("VITE_")).join(", "));
 
   return {
     plugins: [react(), tailwindcss()],
