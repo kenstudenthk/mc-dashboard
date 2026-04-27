@@ -56,6 +56,14 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_API_PINNED_ORDER_URL: ${{ secrets.VITE_API_PINNED_ORDER_URL }}
 
+
+      - name: Verify env vars written
+        run: |
+          echo "=== Keys written to .env ==="
+          cut -d= -f1 .env
+          echo "VITE_API_QUICK_LINKS_URL length: ${#VITE_API_QUICK_LINKS_URL}"
+        env:
+          VITE_API_QUICK_LINKS_URL: ${{ secrets.VITE_API_QUICK_LINKS_URL }}
       - name: Build
         run: npm run build
 
