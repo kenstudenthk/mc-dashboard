@@ -1,4 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_QUICK_LINKS_URL as string;
+console.log("[QuickLinks] BASE_URL:", BASE_URL ? `SET (${BASE_URL.length} chars, starts: ${BASE_URL.slice(0, 30)})` : "UNDEFINED/EMPTY");
 
 export interface QuickLink {
   id: number;
