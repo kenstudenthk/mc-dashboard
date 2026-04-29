@@ -30,6 +30,9 @@ const USER_EMAIL = process.env.MIGRATION_USER_EMAIL || "migration@system";
 const MAX_ROWS = process.env.MAX_ROWS ? Number(process.env.MAX_ROWS) : null;
 // START_ROW is the Excel row number (2 = first data row). Rows before it are skipped.
 const START_ROW = process.env.START_ROW ? Number(process.env.START_ROW) : 2;
+// PATCH_MISSING=true: skip all CREATE passes, only fill missing fields on existing SPO records.
+const PATCH_MISSING = process.env.PATCH_MISSING === "true";
+const GET_PAGE_URL = process.env.VITE_API_GET_PAGE_URL;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -166,6 +169,146 @@ async function main() {
   Object.keys(hm).forEach((k) => console.log(`   "${k}"`));
   console.log();
 
+  // ── PATCH MODE ─────────────────────────────────────────────────────────────
+  // Skips all CREATE passes. Fetches existing SPO records by Title, then
+  // patches: PreviousName on customers, OrderType/ContactPerson/ContactPerson2 on orders.
+  if (PATCH_MISSING) {
+    console.log("━━━ PATCH MODE: Filling missing fields ━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("   Customers  → PreviousName");
+    console.log("   Orders     → OrderType, ContactPerson, ContactPerson2\n");
+
+    // Helper: extract item array from any PA response shape
+    function extractList(raw) {
+      const data = raw?.success === true ? (raw.data ?? raw) : raw;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.value)) return data.value;
+      if (Array.isArray(data?.d?.results)) return data.d.results;
+      return [];
+    }
+
+    // 1. Fetch all customers
+    console.log("─── Fetching existing customers…");
+    const custRaw = await post(CUSTOMERS_URL, { action: "GET_ALL" });
+    const custItems = extractList(custRaw);
+    const customerIdMap = {};
+    for (const c of custItems) {
+      const id = Number(c.ID ?? c.id ?? 0);
+      const title = String(c.Title ?? c.Company ?? "").toLowerCase();
+      if (id && title) customerIdMap[title] = id;
+    }
+    console.log(`   ${custItems.length} customers loaded\n`);
+
+    // 2. Fetch all orders (paginated via GET_PAGE, fallback to GET_ALL)
+    console.log("─── Fetching existing orders…");
+    const allOrders = [];
+    if (GET_PAGE_URL) {
+      let offset = 0;
+      const limit = 500;
+      while (true) {
+        // eslint-disable-next-line no-await-in-loop
+        const res = await fetch(GET_PAGE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "GET_PAGE", limit, offset }),
+        });
+        if (!res.ok) throw new Error(`GET_PAGE failed: ${res.status}`);
+        const json = await res.json();
+        const items = extractList(json);
+        allOrders.push(...items);
+        if (items.length < limit) break;
+        offset += limit;
+        // eslint-disable-next-line no-await-in-loop
+        await sleep(200);
+      }
+    } else {
+      console.warn("   ⚠️  VITE_API_GET_PAGE_URL not set — using GET_ALL (may be limited to 100)");
+      const ordRaw = await post(ORDERS_URL, { action: "GET_ALL" });
+      allOrders.push(...extractList(ordRaw));
+    }
+    const orderIdByTitle = {};
+    for (const o of allOrders) {
+      const id = Number(o.ID ?? o.id ?? 0);
+      const title = String(o.Title ?? "");
+      if (id && title) orderIdByTitle[title] = id;
+    }
+    console.log(`   ${allOrders.length} orders loaded\n`);
+
+    const mappedOrders = rows.filter((r) => {
+      const sn = get(r, hm, "Service No.", "Service No");
+      return sn && orderIdByTitle[sn];
+    }).length;
+    if (mappedOrders < rows.length * 0.8)
+      console.warn(`   ⚠️  Only mapped ${mappedOrders}/${rows.length} rows — check GET_PAGE_URL\n`);
+
+    // 3. Patch loop
+    console.log("─── Patching…");
+    let customerPatched = 0;
+    let orderPatched = 0;
+    const seenPatch = new Set();
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNo = i + 2;
+      const company = get(row, hm, "Standardized Company Name", "Company Name");
+      const serviceNo = get(row, hm, "Service No.", "Service No");
+
+      // Customer patch — once per unique company
+      if (company && !seenPatch.has(company.toLowerCase())) {
+        seenPatch.add(company.toLowerCase());
+        const previousName = get(row, hm, "Previous Name");
+        const custId = customerIdMap[company.toLowerCase()];
+        if (custId && previousName) {
+          try {
+            // eslint-disable-next-line no-await-in-loop
+            await post(CUSTOMERS_URL, {
+              action: "UPDATE",
+              userEmail: USER_EMAIL,
+              data: { id: custId, PreviousName: previousName },
+            });
+            customerPatched++;
+            console.log(`  ✅ Customer [${custId}] ${company} → PreviousName: ${previousName}`);
+          } catch (err) {
+            console.error(`  ❌ Customer patch failed (row ${rowNo}): ${company} — ${err.message}`);
+          }
+          // eslint-disable-next-line no-await-in-loop
+          await sleep();
+        }
+      }
+
+      // Order patch
+      if (serviceNo) {
+        const ordId = orderIdByTitle[serviceNo];
+        const orderType = get(row, hm, "Order Type");
+        const contactPerson = get(row, hm, "Contact Person");
+        const contactPerson2 = get(row, hm, "Contact Person 2");
+
+        if (ordId && (orderType || contactPerson || contactPerson2)) {
+          const data = { id: ordId };
+          if (orderType) data.OrderType = orderType;
+          if (contactPerson) data.ContactPerson = contactPerson;
+          if (contactPerson2) data.ContactPerson2 = contactPerson2;
+
+          try {
+            // eslint-disable-next-line no-await-in-loop
+            await post(ORDERS_URL, { action: "UPDATE", userEmail: USER_EMAIL, data });
+            orderPatched++;
+            console.log(`  ✅ Order [${ordId}] ${serviceNo} → patched`);
+          } catch (err) {
+            console.error(`  ❌ Order patch failed (row ${rowNo}): ${serviceNo} — ${err.message}`);
+          }
+          // eslint-disable-next-line no-await-in-loop
+          await sleep();
+        }
+      }
+    }
+
+    console.log("\n━━━ PATCH COMPLETE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log(`✅ Customers patched: ${customerPatched}`);
+    console.log(`✅ Orders patched:    ${orderPatched}`);
+    return;
+  }
+  // ── end PATCH MODE ──────────────────────────────────────────────────────────
+
   const skipped = []; // { row, reason }
   const customerMap = {}; // companyName → SPO customer ID
   const orderIdMap = {}; // row index → SPO order ID
@@ -248,6 +391,7 @@ async function main() {
           OrderReceiveDate: formatDate(getRaw(row, hm, "Order Receive Date")) || "",
           CxSCompleteDate: formatDate(getRaw(row, hm, "CxS Complete Date")) || "",
           ContactPerson: get(row, hm, "Contact Person"),
+          ContactPerson2: get(row, hm, "Contact Person 2"),
           ContactNo: get(row, hm, "Contact Number 1", "Contact Number", "Contact Number (If have)"),
           ContactNo2: get(row, hm, "Contact Number 2"),
           ContactEmail: get(row, hm, "Contact Email 1", "Contact Email", "Contact Email (If have)"),
