@@ -139,10 +139,8 @@ const OrderRegistry = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  <<<<<<< Order_Tebla_improve
-  =======
+  
     const [isEditMode, setIsEditMode] = useState(false);
-  >>>>>>> main
 
   const { userEmail } = usePermission();
   const {
