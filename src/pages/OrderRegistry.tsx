@@ -14,6 +14,7 @@ import {
   LayoutList,
   Clock,
   CheckCircle2,
+  PencilLine,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
@@ -29,6 +30,7 @@ import {
 } from "../services/useOrdersQuery";
 import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
 import { pinnedOrderService } from "../services/pinnedOrderService";
+import { DataEditTable } from "../components/DataEditMode/DataEditTable";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -137,6 +139,7 @@ const OrderRegistry = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const { userEmail } = usePermission();
   const {
@@ -315,7 +318,7 @@ const OrderRegistry = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] gap-4">
-      {/* Page-level toolbar: Refresh + Import in top-right */}
+      {/* Page-level toolbar: Refresh + Import + Edit Mode in top-right */}
       <div className="flex items-center justify-end gap-2 shrink-0">
         <button
           onClick={handleRefresh}
@@ -334,6 +337,17 @@ const OrderRegistry = () => {
           <Upload className="w-3.5 h-3.5" />
           Import
         </button>
+        <button
+          onClick={() => setIsEditMode((v) => !v)}
+          className={`px-3 py-1.5 rounded-lg font-medium text-sm border flex items-center gap-1.5 transition-colors ${
+            isEditMode
+              ? "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+              : "border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7]"
+          }`}
+        >
+          <PencilLine className="w-3.5 h-3.5" />
+          {isEditMode ? "Exit Edit" : "Edit Mode"}
+        </button>
       </div>
 
       {ordersError && (
@@ -351,8 +365,14 @@ const OrderRegistry = () => {
           </button>
         </div>
       )}
+      {isEditMode ? (
+        <DataEditTable
+          orders={allOrders}
+          onExit={() => setIsEditMode(false)}
+        />
+      ) : (
       <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
-        {/* Row 1: Tabs */}
+        {/* Row 1: Tabs + New Order */}
         <div className="bg-[#f4f6f8] flex items-center justify-between px-4 py-3">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
@@ -411,14 +431,27 @@ const OrderRegistry = () => {
               ))}
             </div>
           </TutorTooltip>
+          <TutorTooltip
+            text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
+            position="bottom"
+            wrapperClass="inline-block shrink-0"
+          >
+            <Link
+              to="/orders/new"
+              className="px-4 py-1.5 rounded-lg font-medium text-sm border border-[#094cb2] text-[#094cb2] hover:bg-[#094cb2] hover:text-white transition-all flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Order
+            </Link>
+          </TutorTooltip>
         </div>
 
-        {/* Row 2: Search + New Order */}
-        <div className="px-4 py-2 border-b border-[#1d1d1f]/08 bg-white flex items-center gap-2">
+        {/* Row 2: Search */}
+        <div className="px-4 py-2 border-b border-[#1d1d1f]/08 bg-white">
           <TutorTooltip
             text="Search for a specific order by typing the Service No, Customer Name, or Account ID. Click the filter icon on the right to show additional filters."
             position="bottom"
-            wrapperClass="relative flex-1"
+            wrapperClass="relative w-full"
           >
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
@@ -441,19 +474,6 @@ const OrderRegistry = () => {
                 <Filter className="w-3.5 h-3.5" />
               </button>
             </div>
-          </TutorTooltip>
-          <TutorTooltip
-            text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
-            position="bottom"
-            wrapperClass="inline-block shrink-0"
-          >
-            <Link
-              to="/orders/new"
-              className="px-4 py-1.5 rounded-lg font-medium text-sm border border-[#094cb2] text-[#094cb2] hover:bg-[#094cb2] hover:text-white transition-all flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              New Order
-            </Link>
           </TutorTooltip>
         </div>
 
@@ -977,6 +997,7 @@ const OrderRegistry = () => {
           </div>
         </div>
       </div>
+      )}
 
       {showBulkImport && (
         <BulkImportModal
