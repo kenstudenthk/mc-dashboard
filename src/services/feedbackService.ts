@@ -7,7 +7,7 @@ if (!url || !key) {
   console.error('[feedbackService] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set in .env.local');
 }
 
-const supabase = createClient(url || '', key || '');
+const supabase = url && key ? createClient(url, key) : null;
 
 export interface FeedbackItem {
   id: string;
@@ -34,11 +34,13 @@ export interface CreateFeedbackInput {
 
 export const feedbackService = {
   async create(data: CreateFeedbackInput): Promise<void> {
+    if (!supabase) throw new Error('[feedbackService] Supabase not configured');
     const { error } = await supabase.from('feedback').insert(data);
     if (error) throw new Error(error.message);
   },
 
   async findAll(): Promise<FeedbackItem[]> {
+    if (!supabase) return [];
     const { data, error } = await supabase
       .from('feedback')
       .select('*')

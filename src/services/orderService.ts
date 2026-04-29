@@ -92,8 +92,7 @@ function normalizeChoiceFields<T>(data: T): T {
   return data;
 }
 
-// Maps SharePoint "ID" → "id" and lookup ID fields to their base names.
-// SharePoint lookup columns return the numeric ID as "<FieldName>Id" (e.g. CustomerIDId → CustomerID).
+// Maps SharePoint "ID" → "id", lookup ID fields, and SA field name aliases.
 function withId(data: unknown): unknown {
   if (Array.isArray(data)) return data.map(withId);
   if (data !== null && typeof data === "object") {
@@ -103,6 +102,11 @@ function withId(data: unknown): unknown {
     // Prefer the raw lookup ID over the normalised choice value
     if ("CustomerIDId" in obj && obj.CustomerIDId != null)
       result.CustomerID = obj.CustomerIDId;
+    // SA field name mappings: SPO column name → Order interface name
+    if ("SecondaryID" in obj) result.AccountID = obj.SecondaryID;
+    if ("LoginEmail" in obj) result.AccountLoginEmail = obj.LoginEmail;
+    if ("PrimaryID" in obj) result.BillingAccount = obj.PrimaryID;
+    if ("OtherInfo" in obj) result.OtherAccountInfo = obj.OtherInfo;
     return result;
   }
   return data;

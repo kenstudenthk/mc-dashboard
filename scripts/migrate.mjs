@@ -125,7 +125,7 @@ async function main() {
   }
 
   // Load Excel
-  const xlsxPath = path.join(__dirname, "../MCDashboard.xlsx");
+  const xlsxPath = path.join(__dirname, "../MCdashboard_(Final).xlsx");
   if (!fs.existsSync(xlsxPath)) {
     console.error(`❌ File not found: ${xlsxPath}`);
     process.exit(1);
@@ -133,9 +133,9 @@ async function main() {
   console.log(`📂 Reading ${xlsxPath}`);
 
   const workbook = XLSX.readFile(xlsxPath, { cellDates: true });
-  const sheet = workbook.Sheets["Sheet1"];
+  const sheet = workbook.Sheets["Orders"];
   if (!sheet) {
-    console.error('❌ "Sheet1" not found in workbook.');
+    console.error('❌ "Orders" not found in workbook.');
     console.error(`   Available sheets: ${workbook.SheetNames.join(", ")}`);
     process.exit(1);
   }
@@ -181,7 +181,7 @@ async function main() {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNo = i + 2; // Excel row number (1 = header)
-    const company = get(row, hm, "Company Name");
+    const company = get(row, hm, "Standardized Company Name", "Company Name");
 
     if (!company) {
       skipped.push({ row: rowNo, reason: "Empty Company Name" });
@@ -197,10 +197,11 @@ async function main() {
         data: {
           Title: company,
           Company: company,
-          Email: get(row, hm, "Contact Email", "Contact Email (If have)"),
-          Phone: get(row, hm, "Contact Number", "Contact Number (If have)"),
+          Email: get(row, hm, "Contact Email 1", "Contact Email", "Contact Email (If have)"),
+          Phone: get(row, hm, "Contact Number 1", "Contact Number", "Contact Number (If have)"),
           ContactPerson: get(row, hm, "Contact Person"),
           BillingAddress: get(row, hm, "Billing Address"),
+          PreviousName: get(row, hm, "Previous Name"),
           Status: "Active",
           Tier: "Standard",
         },
@@ -223,7 +224,7 @@ async function main() {
     const row = rows[i];
     const rowNo = i + 2;
     const serviceNo = get(row, hm, "Service No.", "Service No");
-    const company = get(row, hm, "Company Name");
+    const company = get(row, hm, "Standardized Company Name", "Company Name");
 
     if (!serviceNo) {
       skipped.push({ row: rowNo, reason: "Empty Service No. — skipped order" });
@@ -241,15 +242,18 @@ async function main() {
           Status: get(row, hm, "Status") || "Active",
           OrderType: get(row, hm, "Order Type"),
           ServiceType: get(row, hm, "Service Type"),
-          SRD: formatDate(getRaw(row, hm, "SRD")) || null,
+          SRD: formatDate(getRaw(row, hm, "SRD")) || "",
           CloudProvider: get(row, hm, "Product Subscribe"),
           Amount: 0,
-          OrderReceiveDate: formatDate(getRaw(row, hm, "Order Receive Date")) || null,
-          CxSCompleteDate: formatDate(getRaw(row, hm, "CxS Complete Date")) || null,
+          OrderReceiveDate: formatDate(getRaw(row, hm, "Order Receive Date")) || "",
+          CxSCompleteDate: formatDate(getRaw(row, hm, "CxS Complete Date")) || "",
           ContactPerson: get(row, hm, "Contact Person"),
-          ContactNo: get(row, hm, "Contact Number", "Contact Number (If have)"),
-          ContactEmail: get(row, hm, "Contact Email", "Contact Email (If have)"),
+          ContactNo: get(row, hm, "Contact Number 1", "Contact Number", "Contact Number (If have)"),
+          ContactNo2: get(row, hm, "Contact Number 2"),
+          ContactEmail: get(row, hm, "Contact Email 1", "Contact Email", "Contact Email (If have)"),
+          ContactEmail2: get(row, hm, "Contact Email 2"),
           BillingAddress: get(row, hm, "Billing Address"),
+          SubName: get(row, hm, "Project Name"),
           CxSRequestNo: get(row, hm, "CxS Request No.", "CxS Request No"),
           TID: get(row, hm, "TID"),
           OasisNumber: get(row, hm, "OASIS Number"),
@@ -303,13 +307,8 @@ async function main() {
           Title: serviceNo || `SA-Row${rowNo}`,
           OrderID: orderId,
           Provider: get(row, hm, "Product Subscribe"),
-          PrimaryAccountID: get(
-            row,
-            hm,
-            "Billing Account / Master Account",
-            "Billing Account"
-          ),
-          SecondaryID: get(row, hm, "Account/Root ID UID", "Account/Root ID"),
+          PrimaryAccountID: get(row, hm, "Master-Final", "Billing Account / Master Account", "Billing Account"),
+          SecondaryID: get(row, hm, "Account ID", "Account/Root ID UID", "Account/Root ID"),
           AccountName: accountName,
           LoginEmail: loginEmail,
           Password: get(row, hm, "Password"),

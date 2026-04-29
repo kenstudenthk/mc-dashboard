@@ -59,13 +59,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify URL bundled in dist
-        run: |
-          echo "=== Checking dist for QUICK_LINKS URL ==="
-          grep -r "https://default" dist/ --include="*.js" -l || echo "NOT FOUND in dist JS"
-          echo "=== not configured string in dist ==="
-          grep -r "not configured" dist/ --include="*.js" | head -c 200
-
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy dist --project-name=mc-dashboard-git --branch=main --commit-dirty=true
         env:
