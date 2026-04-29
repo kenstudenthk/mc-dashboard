@@ -11,6 +11,10 @@ import {
   ClipboardList,
   Pin,
   PinOff,
+  LayoutList,
+  Clock,
+  CheckCircle2,
+  PencilLine,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
@@ -26,6 +30,7 @@ import {
 } from "../services/useOrdersQuery";
 import { BulkImportModal } from "../components/BulkImport/BulkImportModal";
 import { pinnedOrderService } from "../services/pinnedOrderService";
+import { DataEditTable } from "../components/DataEditMode/DataEditTable";
 
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -45,31 +50,31 @@ function TableSkeleton() {
     <>
       {[...Array(8)].map((_, i) => (
         <tr key={i} className="border-b border-[#1d1d1f]/04 animate-pulse">
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-200 rounded w-24" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-100 rounded w-36" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-100 rounded w-20" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-100 rounded w-28" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-100 rounded w-24" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-100 rounded w-20" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-3.5 bg-gray-100 rounded w-16" />
           </td>
-          <td className="px-6 py-3.5">
+          <td className="px-3 py-3">
             <div className="h-5 bg-gray-200 rounded-full w-20" />
           </td>
-          <td className="px-6 py-3.5" />
+          <td className="px-3 py-3" />
         </tr>
       ))}
     </>
@@ -134,6 +139,10 @@ const OrderRegistry = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  <<<<<<< Order_Tebla_improve
+  =======
+    const [isEditMode, setIsEditMode] = useState(false);
+  >>>>>>> main
 
   const { userEmail } = usePermission();
   const {
@@ -284,6 +293,13 @@ const OrderRegistry = () => {
     filteredOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredOrders.length);
 
+  const pendingCount = allOrders.filter(
+    (o) => !["Completed", "Cancelled"].includes(o.Status),
+  ).length;
+  const completedCount = allOrders.filter(
+    (o) => o.Status === "Completed",
+  ).length;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":
@@ -305,6 +321,38 @@ const OrderRegistry = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] gap-4">
+      {/* Page-level toolbar: Refresh + Import + Edit Mode in top-right */}
+      <div className="flex items-center justify-end gap-2 shrink-0">
+        <button
+          onClick={handleRefresh}
+          disabled={isFetching}
+          className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+        >
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
+          />
+          {isFetching ? "Refreshing…" : "Refresh"}
+        </button>
+        <button
+          onClick={() => setShowBulkImport(true)}
+          className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 transition-colors"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          Import
+        </button>
+        <button
+          onClick={() => setIsEditMode((v) => !v)}
+          className={`px-3 py-1.5 rounded-lg font-medium text-sm border flex items-center gap-1.5 transition-colors ${
+            isEditMode
+              ? "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+              : "border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7]"
+          }`}
+        >
+          <PencilLine className="w-3.5 h-3.5" />
+          {isEditMode ? "Exit Edit" : "Edit Mode"}
+        </button>
+      </div>
+
       {ordersError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
           <span className="font-medium">Failed to load orders.</span>
@@ -320,58 +368,93 @@ const OrderRegistry = () => {
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
-        <div>
-          <h1
-            className="text-[28px] font-semibold text-[#1d1d1f]"
-            style={{ letterSpacing: "-0.28px", lineHeight: "1.1" }}
-          >
-            Order Registry
-          </h1>
-          <p className="text-sm text-[#1d1d1f]/50 mt-1">
-            Manage and track all cloud provisioning orders.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={handleRefresh}
-            disabled={isFetching}
-            className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
-            />
-            {isFetching ? "Refreshing…" : "Refresh"}
-          </button>
-          <button
-            onClick={() => setShowBulkImport(true)}
-            className="px-4 py-2 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-2 transition-colors"
-          >
-            <Upload className="w-4 h-4" />
-            Import
-          </button>
-          <TutorTooltip
-            text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
-            position="bottom"
-            wrapperClass="inline-block"
-          >
-            <Link
-              to="/orders/new"
-              className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              New Order
-            </Link>
-          </TutorTooltip>
-        </div>
-      </div>
-
+      {isEditMode ? (
+        <DataEditTable
+          orders={allOrders}
+          onExit={() => setIsEditMode(false)}
+        />
+      ) : (
       <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="px-4 pt-0 border-b border-[#1d1d1f]/08 flex flex-col sm:flex-row justify-between items-end gap-4 bg-[#f0f0f2]">
+        {/* Row 1: Tabs + New Order */}
+        <div className="bg-[#f4f6f8] flex items-center justify-between px-4 py-3">
           <TutorTooltip
             text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
             position="bottom"
             wrapperClass="flex-1 sm:flex-none"
+          >
+            <div className="flex items-center gap-1 bg-black/[0.08] rounded-full p-1">
+              {(
+                [
+                  {
+                    key: "All",
+                    label: "All Orders",
+                    count: allOrders.length,
+                    Icon: LayoutList,
+                  },
+                  {
+                    key: "Pending",
+                    label: "Pending",
+                    count: pendingCount,
+                    Icon: Clock,
+                  },
+                  {
+                    key: "Completed",
+                    label: "Completed",
+                    count: completedCount,
+                    Icon: CheckCircle2,
+                  },
+                ] as {
+                  key: string;
+                  label: string;
+                  count: number;
+                  Icon: React.ElementType;
+                }[]
+              ).map(({ key, label, count, Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                    activeTab === key
+                      ? "bg-black text-white shadow-sm"
+                      : "bg-transparent text-black/60 hover:bg-black/[0.06] hover:text-black"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                      activeTab === key
+                        ? "bg-white/20 text-white"
+                        : "bg-black/[0.08] text-black/50"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </TutorTooltip>
+          <TutorTooltip
+            text="Click here to create a new cloud service order. You will be asked to fill out customer and service details."
+            position="bottom"
+            wrapperClass="inline-block shrink-0"
+          >
+            <Link
+              to="/orders/new"
+              className="px-4 py-1.5 rounded-lg font-medium text-sm border border-[#094cb2] text-[#094cb2] hover:bg-[#094cb2] hover:text-white transition-all flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Order
+            </Link>
+          </TutorTooltip>
+        </div>
+
+      <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="px-4 pt-0 border-b border-[#1d1d1f]/08 flex flex-col sm:flex-row justify-between items-end gap-4 bg-[#f0f0f2]">
+          <TutorTooltip
+            text="Search for a specific order by typing the Service No, Customer Name, or Account ID. Click the filter icon on the right to show additional filters."
+            position="bottom"
+            wrapperClass="relative w-full"
           >
             <div className="flex items-end gap-0 -mb-px">
               {[
@@ -417,17 +500,17 @@ const OrderRegistry = () => {
             >
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border ${
+                title="Toggle filters"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
                   showFilters
-                    ? "bg-blue-50 text-[#0071e3] border-[#0071e3]/20"
-                    : "bg-white text-[#1d1d1f]/70 border-[#1d1d1f]/08 hover:bg-[#f5f5f7]"
+                    ? "text-[#0071e3]"
+                    : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-[#0071e3]/08"
                 }`}
               >
                 <Filter className="w-3.5 h-3.5" />
-                Filter
               </button>
-            </TutorTooltip>
-          </div>
+            </div>
+          </TutorTooltip>
         </div>
 
         {showFilters && (
@@ -473,22 +556,23 @@ const OrderRegistry = () => {
           <table className="w-full text-left">
             <thead className="hidden md:table-header-group">
               <tr className="border-b-2 border-[#1d1d1f]/10 bg-[#e8e8eb]">
+                <th className="w-6 p-0" />
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("Title")}
                 >
                   Service No.
                   <SortIcon active={sortKey === "Title"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap min-w-[260px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap min-w-[200px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("CustomerName")}
                 >
                   Company Name
                   <SortIcon active={sortKey === "CustomerName"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("CloudProvider")}
                 >
                   Product Subscribe
@@ -498,41 +582,41 @@ const OrderRegistry = () => {
                   />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[100px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[100px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("AccountID")}
                 >
                   Account ID
                   <SortIcon active={sortKey === "AccountID"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("CaseID")}
                 >
                   Case ID
                   <SortIcon active={sortKey === "CaseID"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("OrderType")}
                 >
                   Order Type
                   <SortIcon active={sortKey === "OrderType"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[90px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[90px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("SRD")}
                 >
                   SRD
                   <SortIcon active={sortKey === "SRD"} dir={sortDir} />
                 </th>
                 <th
-                  className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
+                  className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
                   onClick={() => handleSort("Status")}
                 >
                   Status
                   <SortIcon active={sortKey === "Status"} dir={sortDir} />
                 </th>
-                <th className="px-6 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
+                <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -553,7 +637,7 @@ const OrderRegistry = () => {
                         key={`card-${order.id}`}
                         className="md:hidden border-b border-[#1d1d1f]/04"
                       >
-                        <td colSpan={9} className="px-4 py-3">
+                        <td colSpan={10} className="px-4 py-3">
                           <div
                             className={`rounded-xl border p-3 gap-2 flex flex-col ${
                               isTerminated
@@ -657,25 +741,43 @@ const OrderRegistry = () => {
                       {/* ── Desktop table row (hidden on mobile) ── */}
                       <tr
                         key={order.id}
-                        onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}
+                        onClick={() =>
+                          setSelectedOrderId(
+                            selectedOrderId === order.id ? null : order.id,
+                          )
+                        }
                         className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row cursor-pointer ${
                           isTerminated
                             ? "bg-red-50/30 hover:bg-red-50/60 border-l-2 border-l-red-300"
                             : pinnedIds.has(order.id)
-                              ? "bg-blue-50/30 hover:bg-blue-50/60 border-l-2 border-l-[#094cb2]"
+                              ? "bg-blue-50/30 hover:bg-blue-50/60"
                               : selectedOrderId === order.id
                                 ? "bg-[#e8f0fe] border-l-2 border-l-[#0071e3]"
                                 : "hover:bg-[#f0f5ff] hover:border-l-2 hover:border-l-[#0071e3]"
                         }`}
                       >
+                        {/* Pin column — outside data area */}
                         <td
-                          className={`px-6 py-3.5 text-xs font-semibold hover:underline ${
+                          className="w-6 p-0 text-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePinToggle(order.id);
+                          }}
+                        >
+                          {pinnedIds.has(order.id) ? (
+                            <Pin className="w-3.5 h-3.5 fill-current text-red-500 rotate-90 mx-auto" />
+                          ) : (
+                            <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/20 rotate-90 mx-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </td>
+                        <td
+                          className={`px-3 py-3 text-xs font-semibold hover:underline ${
                             isTerminated ? "text-red-600" : "text-[#0071e3]"
                           }`}
                         >
                           <Link to={`/orders/${order.id}`}>{order.Title}</Link>
                         </td>
-                        <td className="px-6 py-3.5 text-sm font-medium min-w-[260px]">
+                        <td className="px-3 py-3 text-sm font-medium min-w-[200px]">
                           {customerMap.get(
                             (order.CustomerName ?? "").toLowerCase(),
                           ) ? (
@@ -701,7 +803,7 @@ const OrderRegistry = () => {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-3.5">
+                        <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
                             <CloudProviderLogo
                               provider={order.CloudProvider ?? ""}
@@ -716,14 +818,14 @@ const OrderRegistry = () => {
                           </div>
                         </td>
                         <td
-                          className={`px-6 py-3.5 font-mono text-xs truncate w-[100px] max-w-[100px] ${
+                          className={`px-3 py-3 font-mono text-xs truncate w-[100px] max-w-[100px] ${
                             isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"
                           }`}
                           title={order.AccountID}
                         >
                           {order.AccountID ?? "—"}
                         </td>
-                        <td className="px-6 py-3.5 text-xs max-w-[120px]">
+                        <td className="px-3 py-3 text-xs max-w-[120px]">
                           {order.CaseID ? (
                             order.CaseIDURL ? (
                               <a
@@ -748,20 +850,20 @@ const OrderRegistry = () => {
                           )}
                         </td>
                         <td
-                          className={`px-6 py-3.5 text-xs ${
+                          className={`px-3 py-3 text-xs ${
                             isTerminated ? "text-red-500" : "text-[#1d1d1f]/55"
                           }`}
                         >
                           {order.OrderType}
                         </td>
                         <td
-                          className={`px-6 py-3.5 text-xs w-[90px] ${
+                          className={`px-3 py-3 text-xs w-[90px] ${
                             isTerminated ? "text-red-500" : "text-[#1d1d1f]/45"
                           }`}
                         >
                           {formatDate(order.SRD)}
                         </td>
-                        <td className="px-6 py-3.5">
+                        <td className="px-3 py-3">
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(
                               order.Status,
@@ -770,27 +872,8 @@ const OrderRegistry = () => {
                             {order.Status}
                           </span>
                         </td>
-                        <td className="px-6 py-3.5 text-right">
+                        <td className="px-3 py-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handlePinToggle(order.id)}
-                              title={
-                                pinnedIds.has(order.id)
-                                  ? "Unpin order"
-                                  : "Pin order"
-                              }
-                              className={`p-1.5 rounded-lg transition-colors ${
-                                pinnedIds.has(order.id)
-                                  ? "text-[#094cb2] hover:bg-blue-50"
-                                  : "opacity-0 group-hover:opacity-100 text-[#1d1d1f]/35 hover:text-[#094cb2] hover:bg-blue-50"
-                              }`}
-                            >
-                              {pinnedIds.has(order.id) ? (
-                                <Pin className="w-4 h-4 fill-current" />
-                              ) : (
-                                <PinOff className="w-4 h-4" />
-                              )}
-                            </button>
                             <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
                                 to={`/orders/${order.id}`}
@@ -950,6 +1033,7 @@ const OrderRegistry = () => {
           </div>
         </div>
       </div>
+      )}
 
       {showBulkImport && (
         <BulkImportModal
