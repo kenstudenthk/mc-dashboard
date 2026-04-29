@@ -139,7 +139,8 @@ const OrderRegistry = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
+  
+    const [isEditMode, setIsEditMode] = useState(false);
 
   const { userEmail } = usePermission();
   const {
@@ -446,22 +447,55 @@ const OrderRegistry = () => {
           </TutorTooltip>
         </div>
 
-        {/* Row 2: Search */}
-        <div className="px-4 py-2 border-b border-[#1d1d1f]/08 bg-white">
+      <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="px-4 pt-0 border-b border-[#1d1d1f]/08 flex flex-col sm:flex-row justify-between items-end gap-4 bg-[#f0f0f2]">
           <TutorTooltip
             text="Search for a specific order by typing the Service No, Customer Name, or Account ID. Click the filter icon on the right to show additional filters."
             position="bottom"
             wrapperClass="relative w-full"
           >
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
-              <input
-                type="text"
-                placeholder="Search by Service No, Account ID, Customer..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-9 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-              />
+            <div className="flex items-end gap-0 -mb-px">
+              {[
+                { key: "All", label: "All Orders" },
+                { key: "Pending", label: "Pending" },
+                { key: "Completed", label: "Completed" },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`px-5 py-2.5 text-sm font-medium border-t border-l border-r rounded-t-lg transition-colors relative -mb-px ${
+                    activeTab === key
+                      ? "bg-white border-[#1d1d1f]/10 border-t-[#0071e3] border-t-2 text-[#1d1d1f] font-semibold border-b-white z-10"
+                      : "bg-[#e8e8ea] border-transparent text-[#1d1d1f]/50 hover:text-[#1d1d1f] hover:bg-[#ebebed]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </TutorTooltip>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto pb-2">
+            <TutorTooltip
+              text="Search for a specific order by typing the Service No, Customer Name, or Account ID."
+              position="bottom"
+              wrapperClass="relative flex-1 sm:w-64"
+            >
+              <div className="relative flex-1 sm:w-full">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
+                <input
+                  type="text"
+                  placeholder="Search by Service No, Account ID, Customer..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+                />
+              </div>
+            </TutorTooltip>
+            <TutorTooltip
+              text="Click here to show or hide additional filters, such as filtering by Cloud Provider."
+              position="bottom"
+            >
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 title="Toggle filters"
