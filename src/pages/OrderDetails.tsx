@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import DOMPurify from "dompurify";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -334,13 +334,13 @@ const OrderDetails = () => {
   const set = (field: keyof CreateOrderInput, value: string | number) =>
     setEditForm((prev) => ({ ...prev, [field]: value }));
 
-  const refreshEmailLogs = () => {
+  const refreshEmailLogs = useCallback(() => {
     if (!order?.Title) return;
     emailService
       .findByOrder(order.Title)
       .then(setEmailLogs)
-      .catch(() => {});
-  };
+      .catch((err) => console.error('[OrderDetails] email logs fetch failed:', err));
+  }, [order?.Title]);
 
   useEffect(() => {
     if (!order?.id) return;
@@ -350,19 +350,19 @@ const OrderDetails = () => {
       orderStepsService.getByOrderId(order.id),
     ]).then(([eventsResult, accountsResult, stepsResult]) => {
       if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
-      if (
-        accountsResult.status === "fulfilled" &&
-        accountsResult.value.length > 0
-      )
+      else console.error('[OrderDetails] timeline fetch failed:', eventsResult.reason);
+      if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
         setServiceAccount(accountsResult.value[0]);
-      if (stepsResult.status === "fulfilled")
-        setCompletedSteps(stepsResult.value);
+      else if (accountsResult.status === "rejected")
+        console.error('[OrderDetails] service account fetch failed:', accountsResult.reason);
+      if (stepsResult.status === "fulfilled") setCompletedSteps(stepsResult.value);
+      else console.error('[OrderDetails] steps fetch failed:', stepsResult.reason);
     });
   }, [order?.id]);
 
   useEffect(() => {
     refreshEmailLogs();
-  }, [order?.Title]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshEmailLogs]);
 
   if (loading) {
     return (
@@ -448,6 +448,7 @@ const OrderDetails = () => {
           <TutorTooltip
             text="Send an email to the customer using a pre-filled template."
             position="bottom"
+            componentName="OrderDetails/SendEmail"
           >
             <button
               onClick={() => setIsEmailPanelOpen(true)}
@@ -466,6 +467,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="Click here to modify the details of this order."
               position="bottom"
+              componentName="OrderDetails/EditOrder"
             >
               <button
                 onClick={handleEditOpen}
@@ -636,6 +638,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="Quick details about the customer associated with this order."
               position="top"
+              componentName="OrderDetails/CustomerSection"
             >
               <div className="card p-6">
                 <div
@@ -697,6 +700,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="This section contains the core technical details about the cloud service provisioned for this order."
               position="top"
+              componentName="OrderDetails/CloudServiceDetails"
             >
               <div className="card p-6">
                 <div
@@ -724,14 +728,12 @@ const OrderDetails = () => {
                       }
                     />
                     <InfoField
-                      label="Billing Account / Secondary ID"
-                      value={serviceAccount?.SecondaryID}
+                      label="Billing Account"
+                      value={serviceAccount?.PrimaryAccountID}
                     />
                     <InfoField
-                      label="Account ID / Root ID / UID"
-                      value={
-                        serviceAccount?.PrimaryAccountID ?? order.AccountID
-                      }
+                      label="Account ID"
+                      value={serviceAccount?.SecondaryID}
                     />
                   </dl>
                   <dl>
@@ -883,6 +885,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="A chronological view of the order's lifecycle."
               position="top"
+              componentName="OrderDetails/Timeline"
             >
               <div className="card p-6">
                 <h2

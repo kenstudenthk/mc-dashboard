@@ -50,6 +50,7 @@ export const feedbackService = {
   },
 
   async updateStatus(id: string, status: FeedbackItem['status']): Promise<void> {
+    if (!supabase) throw new Error('[feedbackService] Supabase not configured');
     const { error } = await supabase
       .from('feedback')
       .update({ status })
