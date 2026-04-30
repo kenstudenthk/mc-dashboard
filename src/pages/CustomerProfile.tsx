@@ -94,7 +94,7 @@ const CustomerProfile = () => {
   const totalSpent = orders.reduce((sum, o) => sum + (o.Amount || 0), 0);
 
   const providerCounts = orders.reduce<Record<string, number>>((acc, o) => {
-    const key = normalizeCloudProvider(o.CloudProvider ?? "") || "Other";
+    const key = o.CloudProvider ? normalizeCloudProvider(o.CloudProvider) : "Other";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
