@@ -16,7 +16,8 @@ export interface ServiceAccount {
 
 export interface CreateServiceAccountInput {
   Title: string;
-  OrderID: number;
+  OrderID?: number;
+  OrderIDId?: number;
   Provider: string;
   PrimaryAccountID?: string;
   SecondaryID?: string;
@@ -61,8 +62,16 @@ export const serviceAccountService = {
   create: (data: CreateServiceAccountInput, userEmail: string) =>
     call<ServiceAccount>({ action: "CREATE", data, userEmail }),
 
-  findByOrderId: async (orderId: number) => {
-    const result = await call<unknown>({ action: "GET_BY_ORDER", data: { orderId } });
+  findAll: async (): Promise<ServiceAccount[]> => {
+    const result = await call<unknown>({ action: "GET_ALL" });
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
+
+  findByOrderId: async (orderId: number) => {
+    const result = await call<unknown>({ action: "GET_BY_ORDER", data: { OrderID: orderId } });
+    return Array.isArray(result) ? (result as ServiceAccount[]) : [];
+  },
+
+  update: (id: number, data: Partial<CreateServiceAccountInput>, userEmail: string) =>
+    call<ServiceAccount>({ action: "UPDATE", data: { id, ...data }, userEmail }),
 };
