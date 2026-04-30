@@ -30,16 +30,17 @@ const Feedback = () => {
   const [typeFilter, setTypeFilter] = useState<string>('All');
   const [statusFilter, setStatusFilter] = useState<string>('All');
 
-  if (!hasPermission('Developer')) {
-    return <Navigate to="/" replace />;
-  }
-
   useEffect(() => {
+    if (!hasPermission('Developer')) return;
     feedbackService.findAll()
       .then(setItems)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [hasPermission]);
+
+  if (!hasPermission('Developer')) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleStatusChange = async (id: string, status: FeedbackItem['status']) => {
     try {
