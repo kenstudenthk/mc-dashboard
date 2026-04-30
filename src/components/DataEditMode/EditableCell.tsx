@@ -1,5 +1,6 @@
 import React from "react";
 import { Order } from "../../services/orderService";
+import { CLOUD_PROVIDER_OPTIONS } from "../../constants/cloudProviders";
 
 const STATUS_OPTIONS = [
   "Processing",
@@ -16,15 +17,6 @@ const ORDER_TYPE_OPTIONS = [
   "Contract Renewal",
   "Termination",
   "Pre-Pro",
-];
-
-const CLOUD_PROVIDER_OPTIONS = [
-  "AWS (Amazon Web Service)",
-  "Microsoft Azure",
-  "Huawei Cloud",
-  "Google Cloud Platform (GCP)",
-  "AliCloud",
-  "Tencent",
 ];
 
 const T2T3_OPTIONS = ["T1", "T2", "T3", "N/A"];
