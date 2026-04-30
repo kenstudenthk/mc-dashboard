@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import DOMPurify from "dompurify";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -334,13 +334,13 @@ const OrderDetails = () => {
   const set = (field: keyof CreateOrderInput, value: string | number) =>
     setEditForm((prev) => ({ ...prev, [field]: value }));
 
-  const refreshEmailLogs = () => {
+  const refreshEmailLogs = useCallback(() => {
     if (!order?.Title) return;
     emailService
       .findByOrder(order.Title)
       .then(setEmailLogs)
       .catch((err) => console.error('[OrderDetails] email logs fetch failed:', err));
-  };
+  }, [order?.Title]);
 
   useEffect(() => {
     if (!order?.id) return;
@@ -362,7 +362,7 @@ const OrderDetails = () => {
 
   useEffect(() => {
     refreshEmailLogs();
-  }, [order?.Title]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshEmailLogs]);
 
   if (loading) {
     return (
