@@ -45,10 +45,10 @@ const PROVIDER_ALIASES: Record<string, CanonicalProvider> = {
  * Maps any known alias (case-insensitive) to its canonical name.
  * Returns the original string if no match found.
  */
-export function normalizeCloudProvider(raw: string): string {
+export function normalizeCloudProvider(raw: string): CanonicalProvider | string {
   if (!raw) return raw;
   return PROVIDER_ALIASES[raw.toLowerCase().trim()] ?? raw;
 }
 
 /** Options array for dropdowns — values match what SPO stores */
-export const CLOUD_PROVIDER_OPTIONS = CANONICAL_PROVIDERS as unknown as string[];
+export const CLOUD_PROVIDER_OPTIONS: readonly string[] = CANONICAL_PROVIDERS;
