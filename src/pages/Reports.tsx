@@ -11,6 +11,7 @@ import {
   CheckCircle, Filter, AlertCircle, Mail, RefreshCw,
 } from 'lucide-react';
 import { orderService, type Order } from '../services/orderService';
+import { normalizeCloudProvider } from '../constants/cloudProviders';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -193,12 +194,14 @@ const Reports = () => {
   const filtered = useMemo(
     () => provider === 'All'
       ? filteredByTime
-      : filteredByTime.filter(o => o.CloudProvider === provider),
+      : filteredByTime.filter(o => normalizeCloudProvider(o.CloudProvider ?? '') === provider),
     [filteredByTime, provider],
   );
 
   const providers = useMemo(
-    () => [...new Set(orders.map(o => o.CloudProvider).filter(Boolean))].sort() as string[],
+    () => [
+      ...new Set(orders.map(o => normalizeCloudProvider(o.CloudProvider ?? '')).filter(Boolean)),
+    ].sort() as string[],
     [orders],
   );
 
