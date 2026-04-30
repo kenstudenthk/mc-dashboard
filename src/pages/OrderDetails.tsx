@@ -448,6 +448,7 @@ const OrderDetails = () => {
           <TutorTooltip
             text="Send an email to the customer using a pre-filled template."
             position="bottom"
+            componentName="OrderDetails/SendEmail"
           >
             <button
               onClick={() => setIsEmailPanelOpen(true)}
@@ -466,6 +467,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="Click here to modify the details of this order."
               position="bottom"
+              componentName="OrderDetails/EditOrder"
             >
               <button
                 onClick={handleEditOpen}
@@ -636,6 +638,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="Quick details about the customer associated with this order."
               position="top"
+              componentName="OrderDetails/CustomerSection"
             >
               <div className="card p-6">
                 <div
@@ -697,6 +700,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="This section contains the core technical details about the cloud service provisioned for this order."
               position="top"
+              componentName="OrderDetails/CloudServiceDetails"
             >
               <div className="card p-6">
                 <div
@@ -881,6 +885,7 @@ const OrderDetails = () => {
             <TutorTooltip
               text="A chronological view of the order's lifecycle."
               position="top"
+              componentName="OrderDetails/Timeline"
             >
               <div className="card p-6">
                 <h2
