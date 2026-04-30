@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { Order } from "../services/orderService";
 import { useOrders } from "../services/useOrdersQuery";
+import { normalizeCloudProvider } from "../constants/cloudProviders";
 
 const INCOMPLETE_STATUSES = new Set([
   "Processing",
@@ -402,7 +403,7 @@ const Dashboard = () => {
                           {order.CustomerName}
                         </td>
                         <td className="py-3 text-xs text-[#1d1d1f]/60">
-                          {order.CloudProvider}
+                          {normalizeCloudProvider(order.CloudProvider ?? "")}
                         </td>
                         <td className="py-3 text-xs text-[#1d1d1f]/45">
                           {formatDate(order.SRD)}
