@@ -769,6 +769,11 @@ const OrderDetails = () => {
                     />
                     <InfoField
                       label={saLabels.accountId}
+                      label="Billing Account"
+                      value={serviceAccount?.PrimaryAccountID}
+                    />
+                    <InfoField
+                      label="Account ID"
                       value={serviceAccount?.SecondaryID}
                     />
                   </dl>
