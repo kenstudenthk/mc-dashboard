@@ -51,8 +51,4 @@ export function normalizeCloudProvider(raw: string): CanonicalProvider | string 
 }
 
 /** Options array for dropdowns — values match what SPO stores */
-<<<<<<< HEAD
 export const CLOUD_PROVIDER_OPTIONS: readonly string[] = CANONICAL_PROVIDERS;
-=======
-export const CLOUD_PROVIDER_OPTIONS = CANONICAL_PROVIDERS as unknown as string[];
->>>>>>> 0bdf5f0 (feat: add cloudProviders constants as single source of truth)
