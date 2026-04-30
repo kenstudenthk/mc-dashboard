@@ -339,7 +339,7 @@ const OrderDetails = () => {
     emailService
       .findByOrder(order.Title)
       .then(setEmailLogs)
-      .catch(() => {});
+      .catch((err) => console.error('[OrderDetails] email logs fetch failed:', err));
   };
 
   useEffect(() => {
@@ -350,13 +350,13 @@ const OrderDetails = () => {
       orderStepsService.getByOrderId(order.id),
     ]).then(([eventsResult, accountsResult, stepsResult]) => {
       if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
-      if (
-        accountsResult.status === "fulfilled" &&
-        accountsResult.value.length > 0
-      )
+      else console.error('[OrderDetails] timeline fetch failed:', eventsResult.reason);
+      if (accountsResult.status === "fulfilled" && accountsResult.value.length > 0)
         setServiceAccount(accountsResult.value[0]);
-      if (stepsResult.status === "fulfilled")
-        setCompletedSteps(stepsResult.value);
+      else if (accountsResult.status === "rejected")
+        console.error('[OrderDetails] service account fetch failed:', accountsResult.reason);
+      if (stepsResult.status === "fulfilled") setCompletedSteps(stepsResult.value);
+      else console.error('[OrderDetails] steps fetch failed:', stepsResult.reason);
     });
   }, [order?.id]);
 
@@ -724,14 +724,12 @@ const OrderDetails = () => {
                       }
                     />
                     <InfoField
-                      label="Billing Account / Secondary ID"
-                      value={serviceAccount?.SecondaryID}
+                      label="Billing Account"
+                      value={serviceAccount?.PrimaryAccountID}
                     />
                     <InfoField
-                      label="Account ID / Root ID / UID"
-                      value={
-                        serviceAccount?.PrimaryAccountID ?? order.AccountID
-                      }
+                      label="Account ID"
+                      value={serviceAccount?.SecondaryID}
                     />
                   </dl>
                   <dl>
