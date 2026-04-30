@@ -38,7 +38,13 @@ const FeedbackNew = () => {
         submitted_by: userEmail ?? 'unknown',
       });
       setSuccess(true);
-      setTimeout(() => navigate(-1), 1500);
+      setTimeout(() => {
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate('/');
+        }
+      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
