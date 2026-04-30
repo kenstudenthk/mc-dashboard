@@ -38,6 +38,7 @@ import {
 import { orderStepsService, OrderStep } from "../services/orderStepsService";
 import { emailService, EmailLog } from "../services/emailService";
 import { EmailComposePanel } from "../components/EmailComposePanel";
+import { normalizeCloudProvider } from "../constants/cloudProviders";
 
 // ─── Option Lists ─────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -62,14 +63,16 @@ function mapCloudProvider(
   raw: string,
 ): ServiceTimelineProps["provider"] | null {
   const s = raw?.toLowerCase() ?? "";
-  if (s.includes("alibaba")) return "Alibaba";
-  if (s.includes("azure") || s.includes("microsoft")) return "Azure";
-  if (s.includes("gcp") || s.includes("google")) return "GCP";
+  // HuaweiHA is a ServiceTimeline-specific subtype; check before normalizing
   if (s.includes("huawei") && (s.includes("ha") || s.includes("hospital")))
     return "HuaweiHA";
-  if (s.includes("huawei")) return "Huawei";
-  if (s.includes("aws") || s.includes("amazon")) return "AWS";
-  return null;
+  const canonical = normalizeCloudProvider(raw);
+  const timelineProviders: Array<ServiceTimelineProps["provider"]> = [
+    "AWS", "Alibaba", "Azure", "GCP", "Huawei",
+  ];
+  return timelineProviders.includes(canonical as ServiceTimelineProps["provider"])
+    ? (canonical as ServiceTimelineProps["provider"])
+    : null;
 }
 
 function mapOrderFlow(orderType: string): ServiceTimelineProps["flow"] {
