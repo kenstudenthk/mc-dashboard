@@ -103,6 +103,8 @@ export function useOrderById(id: number | undefined) {
     queryKey: ['order', id],
     queryFn: () => orderService.findById(id!),
     enabled: id !== undefined,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
