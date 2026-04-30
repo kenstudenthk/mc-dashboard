@@ -8,6 +8,7 @@ import type {
   ConflictItem,
   FinalRow,
 } from "../components/BulkImport/BulkImportTypes";
+import { CANONICAL_PROVIDERS } from "../constants/cloudProviders";
 
 export const ORDER_TYPE_VALUES = [
   "New Install",
@@ -27,14 +28,7 @@ export const STATUS_VALUES = [
   "Pending for other parties",
 ] as const;
 
-export const CLOUD_PROVIDER_VALUES = [
-  "AWS",
-  "Azure",
-  "Huawei",
-  "GCP",
-  "Alibaba",
-  "Tencent",
-] as const;
+export const CLOUD_PROVIDER_VALUES = CANONICAL_PROVIDERS;
 
 const REQUIRED_HEADERS = [
   "Title",
