@@ -76,6 +76,40 @@ function mapOrderFlow(orderType: string): ServiceTimelineProps["flow"] {
   return orderType === "New Install" ? "new" : "migration";
 }
 
+function getServiceAccountLabels(provider: ServiceTimelineProps["provider"] | null) {
+  switch (provider) {
+    case "AWS":
+      return {
+        primaryAccount: "Payer Account",
+        accountId: "AWS ID",
+        accountName: "CloudCheckr (Friendly Account Name)",
+        loginEmail: "Admin Email",
+      };
+    case "Alibaba":
+      return {
+        primaryAccount: "Billing Account",
+        accountId: "UID",
+        accountName: "Account Name / Cloud Checker Name",
+        loginEmail: "Root Account Email",
+      };
+    case "Huawei":
+    case "HuaweiHA":
+      return {
+        primaryAccount: "Billing Account",
+        accountId: "Customer ID",
+        accountName: "Account Name",
+        loginEmail: "Account Email",
+      };
+    default:
+      return {
+        primaryAccount: "Billing Account",
+        accountId: "Account ID",
+        accountName: "Account Name / Cloud Checker Name",
+        loginEmail: "Login Email",
+      };
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
@@ -696,7 +730,9 @@ const OrderDetails = () => {
             </TutorTooltip>
           )}
 
-          {activeSection === 2 && (
+          {activeSection === 2 && (() => {
+            const saLabels = getServiceAccountLabels(mapCloudProvider(order.CloudProvider ?? ""));
+            return (
             <TutorTooltip
               text="This section contains the core technical details about the cloud service provisioned for this order."
               position="top"
@@ -728,22 +764,22 @@ const OrderDetails = () => {
                       }
                     />
                     <InfoField
-                      label="Billing Account"
+                      label={saLabels.primaryAccount}
                       value={serviceAccount?.PrimaryAccountID}
                     />
                     <InfoField
-                      label="Account ID"
+                      label={saLabels.accountId}
                       value={serviceAccount?.SecondaryID}
                     />
                   </dl>
                   <dl>
                     <InfoField
-                      label="Account Name / Cloud Checker Name"
+                      label={saLabels.accountName}
                       value={serviceAccount?.AccountName}
                     />
                     <InfoField label="Domain" value={serviceAccount?.Domain} />
                     <InfoField
-                      label="Login Email"
+                      label={saLabels.loginEmail}
                       value={serviceAccount?.LoginEmail}
                     />
                     <InfoField
@@ -754,7 +790,8 @@ const OrderDetails = () => {
                 </div>
               </div>
             </TutorTooltip>
-          )}
+            );
+          })()}
 
           {activeSection === 3 && (
             <div className="card p-6">

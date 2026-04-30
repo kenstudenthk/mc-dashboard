@@ -342,7 +342,7 @@ async function main() {
           Company: company,
           Email: get(row, hm, "Contact Email 1", "Contact Email", "Contact Email (If have)"),
           Phone: get(row, hm, "Contact Number 1", "Contact Number", "Contact Number (If have)"),
-          ContactPerson: get(row, hm, "Contact Person"),
+          ContactPerson: get(row, hm, "Contact Person 1", "Contact Person"),
           BillingAddress: get(row, hm, "Billing Address"),
           PreviousName: get(row, hm, "Previous Name"),
           Status: "Active",
@@ -390,7 +390,7 @@ async function main() {
           Amount: 0,
           OrderReceiveDate: formatDate(getRaw(row, hm, "Order Receive Date")) || "",
           CxSCompleteDate: formatDate(getRaw(row, hm, "CxS Complete Date")) || "",
-          ContactPerson: get(row, hm, "Contact Person"),
+          ContactPerson: get(row, hm, "Contact Person 1", "Contact Person"),
           ContactPerson2: get(row, hm, "Contact Person 2"),
           ContactNo: get(row, hm, "Contact Number 1", "Contact Number", "Contact Number (If have)"),
           ContactNo2: get(row, hm, "Contact Number 2"),
@@ -408,6 +408,11 @@ async function main() {
           WelcomeLetter: get(row, hm, "Welcome Letter (Yes / No)", "Welcome Letter"),
           By: get(row, hm, "By"),
           OrderFormURL: get(row, hm, "Order Form"),
+          AccountID: get(row, hm, "Account ID"),
+          AccountName: get(row, hm, "Account Name", "Account Name / Cloud Checker Name"),
+          BillingAccount: get(row, hm, "Master-Final", "Billing Account"),
+          AccountLoginEmail: get(row, hm, "Account Login Email"),
+          OtherAccountInfo: get(row, hm, "Other Account Information"),
         },
       });
       const id = extractId(result);
@@ -428,12 +433,7 @@ async function main() {
     const row = rows[i];
     const rowNo = i + 2;
     const loginEmail = get(row, hm, "Account Login Email");
-    const accountName = get(
-      row,
-      hm,
-      "Account Name / Cloud Checker Name",
-      "Account Name"
-    );
+    const accountName = get(row, hm, "Account Name");
 
     // Skip rows with no service account data
     if (!loginEmail && !accountName) continue;
@@ -451,8 +451,8 @@ async function main() {
           Title: serviceNo || `SA-Row${rowNo}`,
           OrderID: orderId,
           Provider: get(row, hm, "Product Subscribe"),
-          PrimaryAccountID: get(row, hm, "Master-Final", "Billing Account / Master Account", "Billing Account"),
-          SecondaryID: get(row, hm, "Account ID", "Account/Root ID UID", "Account/Root ID"),
+          PrimaryAccountID: get(row, hm, "Master-Final"),
+          SecondaryID: get(row, hm, "Account ID"),
           AccountName: accountName,
           LoginEmail: loginEmail,
           Password: get(row, hm, "Password"),
