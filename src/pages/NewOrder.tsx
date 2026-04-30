@@ -1030,7 +1030,7 @@ const NewOrder = () => {
 
       if (productSubscribe && order.id) {
         const otherInfo = [
-          productSubscribe === "Microsoft Azure" && azurePrimaryDomain
+          productSubscribe === "Azure" && azurePrimaryDomain
             ? `Domain: ${azurePrimaryDomain}`
             : null,
           otherAccountInfo || null,
