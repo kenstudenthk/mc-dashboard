@@ -1,4 +1,5 @@
 import React from 'react';
+import { normalizeCloudProvider } from "../constants/cloudProviders";
 
 interface SVGProps { size: number }
 
@@ -90,32 +91,11 @@ const TencentIcon = ({ size }: SVGProps) => (
   </svg>
 );
 
-// Map all known provider name variants → normalized key
-const PROVIDER_KEY: Record<string, string> = {
-  'aws (amazon web service)': 'aws',
-  'amazon web services': 'aws',
-  'aws': 'aws',
-  'microsoft azure': 'azure',
-  'azure': 'azure',
-  'google cloud platform (gcp)': 'gcp',
-  'google cloud platform': 'gcp',
-  'google cloud': 'gcp',
-  'gcp': 'gcp',
-  'huawei cloud': 'huawei',
-  'huawei cloud ha': 'huawei',
-  'huawei': 'huawei',
-  'alicloud': 'alibaba',
-  'alibaba cloud': 'alibaba',
-  'alibaba': 'alibaba',
-  'aliyun': 'alibaba',
-  'tencent cloud': 'tencent',
-  'tencent': 'tencent',
-};
 
 const PROVIDER_DISPLAY: Record<string, string> = {
   aws: 'AWS',
-  azure: 'Microsoft Azure',
-  gcp: 'Google Cloud',
+  azure: 'Azure',
+  gcp: 'GCP',
   huawei: 'Huawei Cloud',
   alibaba: 'Alibaba Cloud',
   tencent: 'Tencent Cloud',
@@ -145,7 +125,7 @@ export function CloudProviderLogo({
   nameClassName = 'text-sm font-medium text-gray-700',
   className = '',
 }: CloudProviderLogoProps) {
-  const key = PROVIDER_KEY[provider.toLowerCase()] ?? '';
+  const key = normalizeCloudProvider(provider).toLowerCase();
   const Icon = ICONS[key];
   const displayName = PROVIDER_DISPLAY[key] ?? provider;
 
@@ -171,5 +151,5 @@ export function CloudProviderLogo({
   );
 }
 
-export { PROVIDER_KEY, PROVIDER_DISPLAY };
+export { PROVIDER_DISPLAY };
 export default CloudProviderLogo;

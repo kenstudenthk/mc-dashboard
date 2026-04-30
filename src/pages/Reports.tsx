@@ -11,14 +11,15 @@ import {
   CheckCircle, Filter, AlertCircle, Mail, RefreshCw,
 } from 'lucide-react';
 import { orderService, type Order } from '../services/orderService';
+import { normalizeCloudProvider } from '../constants/cloudProviders';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PROVIDER_COLORS: Record<string, string> = {
   'AWS': '#FF9900',
   'Azure': '#0089D6',
-  'Huawei Cloud': '#C7000B',
-  'AliCloud': '#FF6A00',
+  'Huawei': '#C7000B',
+  'Alibaba': '#FF6A00',
   'GCP': '#4285F4',
   'Tencent': '#00A4FF',
 };
@@ -193,12 +194,14 @@ const Reports = () => {
   const filtered = useMemo(
     () => provider === 'All'
       ? filteredByTime
-      : filteredByTime.filter(o => o.CloudProvider === provider),
+      : filteredByTime.filter(o => normalizeCloudProvider(o.CloudProvider ?? '') === provider),
     [filteredByTime, provider],
   );
 
   const providers = useMemo(
-    () => [...new Set(orders.map(o => o.CloudProvider).filter(Boolean))].sort() as string[],
+    () => [
+      ...new Set(orders.map(o => normalizeCloudProvider(o.CloudProvider ?? '')).filter(Boolean)),
+    ].sort() as string[],
     [orders],
   );
 
@@ -238,7 +241,10 @@ const Reports = () => {
   const cloudProviderData = useMemo(() => {
     const map: Record<string, number> = {};
     filtered.forEach(o => {
-      if (o.CloudProvider) map[o.CloudProvider] = (map[o.CloudProvider] ?? 0) + 1;
+      if (o.CloudProvider) {
+        const normalized = normalizeCloudProvider(o.CloudProvider);
+        map[normalized] = (map[normalized] ?? 0) + 1;
+      }
     });
     return Object.entries(map)
       .map(([name, value], i) => ({ name, value, color: providerColor(name, i) }))
@@ -292,7 +298,7 @@ const Reports = () => {
       if (!start || !end) return;
       const days = (end.getTime() - start.getTime()) / 86_400_000;
       if (days < 0) return;
-      const p = o.CloudProvider ?? 'Unknown';
+      const p = o.CloudProvider ? normalizeCloudProvider(o.CloudProvider) : 'Unknown';
       (map[p] ??= []).push(days);
     });
     return Object.entries(map)

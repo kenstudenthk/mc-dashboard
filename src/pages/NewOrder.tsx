@@ -7,6 +7,7 @@ import { orderService } from "../services/orderService";
 import { customerService } from "../services/customerService";
 import { serviceAccountService } from "../services/serviceAccountService";
 import { usePermission } from "../contexts/PermissionContext";
+import { CLOUD_PROVIDER_OPTIONS, normalizeCloudProvider } from "../constants/cloudProviders";
 
 const REQUIRED_FIELDS = new Set([
   "companyName",
@@ -16,15 +17,6 @@ const REQUIRED_FIELDS = new Set([
   "srd",
 ]);
 const isRequired = (f: string) => REQUIRED_FIELDS.has(f);
-
-const CLOUD_PROVIDER_MAP: Record<string, string> = {
-  "AWS (Amazon Web Service)": "AWS",
-  "Microsoft Azure": "Azure",
-  "Huawei Cloud": "Huawei",
-  "Google Cloud Platform (GCP)": "GCP",
-  AliCloud: "Alibaba",
-  Tencent: "Tencent",
-};
 
 const STATUS_OPTIONS = [
   "Completed",
@@ -44,14 +36,6 @@ const ORDER_TYPE_OPTIONS = [
   "Pre-Pro",
 ];
 
-const CLOUD_PROVIDER_OPTIONS = [
-  "AWS (Amazon Web Service)",
-  "Microsoft Azure",
-  "Huawei Cloud",
-  "Google Cloud Platform (GCP)",
-  "AliCloud",
-  "Tencent",
-];
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const OAT_BORDER = "border-[#dad4c8]";
@@ -117,7 +101,7 @@ const SelectGroup = ({
   onChange,
 }: {
   label: string;
-  options: string[];
+  options: readonly string[];
   required?: boolean;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -615,7 +599,7 @@ const CloudServiceSection = ({
         </div>
       )}
 
-      {productSubscribe === "AWS (Amazon Web Service)" && (
+      {productSubscribe === "AWS" && (
         <>
           <InputGroup
             label="Billing Account / Master Account"
@@ -644,7 +628,7 @@ const CloudServiceSection = ({
           />
         </>
       )}
-      {productSubscribe === "AliCloud" && (
+      {productSubscribe === "Alibaba" && (
         <>
           <InputGroup
             label="UID"
@@ -661,7 +645,7 @@ const CloudServiceSection = ({
           />
         </>
       )}
-      {productSubscribe === "Microsoft Azure" && (
+      {productSubscribe === "Azure" && (
         <>
           <InputGroup
             label="Tenant ID"
@@ -690,7 +674,7 @@ const CloudServiceSection = ({
           />
         </>
       )}
-      {productSubscribe === "Huawei Cloud" && (
+      {productSubscribe === "Huawei" && (
         <>
           <InputGroup
             label="Huawei ID"
@@ -707,7 +691,7 @@ const CloudServiceSection = ({
           />
         </>
       )}
-      {productSubscribe === "Google Cloud Platform (GCP)" && (
+      {productSubscribe === "GCP" && (
         <>
           <InputGroup
             label="Billing Account ID"
@@ -988,8 +972,7 @@ const NewOrder = () => {
     setSubmitError(null);
 
     try {
-      const cloudProvider =
-        CLOUD_PROVIDER_MAP[productSubscribe] || productSubscribe;
+      const cloudProvider = normalizeCloudProvider(productSubscribe);
       const title = isPreProvision ? "TBC" : serviceNo;
 
       let resolvedCustomerId = customerId;
@@ -1047,7 +1030,7 @@ const NewOrder = () => {
 
       if (productSubscribe && order.id) {
         const otherInfo = [
-          productSubscribe === "Microsoft Azure" && azurePrimaryDomain
+          productSubscribe === "Azure" && azurePrimaryDomain
             ? `Domain: ${azurePrimaryDomain}`
             : null,
           otherAccountInfo || null,

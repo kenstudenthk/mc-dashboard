@@ -18,6 +18,7 @@ import {
 import { TutorTooltip } from "../components/TutorTooltip";
 import { Customer } from "../services/customerService";
 import { Order } from "../services/orderService";
+import { normalizeCloudProvider } from "../constants/cloudProviders";
 import { useCustomerById, useOrders } from "../services/useOrdersQuery";
 
 const getStatusColor = (status: string) => {
@@ -93,7 +94,7 @@ const CustomerProfile = () => {
   const totalSpent = orders.reduce((sum, o) => sum + (o.Amount || 0), 0);
 
   const providerCounts = orders.reduce<Record<string, number>>((acc, o) => {
-    const key = o.CloudProvider || "Other";
+    const key = normalizeCloudProvider(o.CloudProvider ?? "") || "Other";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
@@ -491,7 +492,7 @@ const CustomerProfile = () => {
                                 </div>
                                 <div className="text-right">
                                   <div className="text-xs font-medium text-[#1d1d1f]/70">
-                                    {order.CloudProvider}
+                                    {normalizeCloudProvider(order.CloudProvider ?? "")}
                                   </div>
                                   <div className="mt-1">
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.Status)}`}>

@@ -1,0 +1,314 @@
+{
+  "timestamp": "2026-04-21T08:15:26.961Z",
+  "mode": "commit",
+  "rows": [
+    {
+      "row": 2,
+      "status": "created",
+      "template": {
+        "Title": "1",
+        "ServiceType": "Alibaba",
+        "TemplateCategory": "General",
+        "Subject": "Alibaba Cloud – HKT Account Migration Request - {{CustomerName}}",
+        "BodyHTML": "Dear supports,\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nWe would like to migrate the following Alibaba Cloud account to the HKT master account.\r\n \r\nCustomer's Information:1. HKT Alibaba Cloud Account ID  : 58921034209156552. Customer's Alibaba Cloud Account ID (UID)  : {{AccountID}}3. Customer's Alibaba Cloud root login email address : {{AdminEmail}}4. Company Name  : {{CustomerName}}5. Effective Date  : Please refer to Order Form\r\n \r\n Thank You",
+        "VariableList": "AMEmail; AccountID; CustomerName; ASMEmail; AdminEmail",
+        "ToRecipients": "ali@bdata.com.hk; calvintai@bdata.com.hk;",
+        "CcRecipients": "Thomas.YH.Kwan@pccw.com; {{AMEmail}}; {{ASMEmail}}; hktcloud-sp@pccw.com;",
+        "BccRecipients": "",
+        "IsActive": true,
+        "SortOrder": 1
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Migration Request\" — defaulting to \"General\""
+      ]
+    },
+    {
+      "row": 3,
+      "status": "created",
+      "template": {
+        "Title": "2",
+        "ServiceType": "Alibaba",
+        "TemplateCategory": "Welcome Letter",
+        "Subject": "< Welcome Letter > Multi-Cloud Services  - {{CustomerName}} ( Alibaba Cloud UID : {{AccountID}} )",
+        "BodyHTML": "Dear Valued Customer,\r\n\r\n\r\n \r\nWe are writing to express our gratitude for your HKT Multi-Cloud subscription and welcome you onboard as a new customer.\r\n \r\n \r\nDetails of the service are as follows :\r\n\r\nSubscribed Service  :    Multi-Cloud Service - Alibaba Cloud\r\n Customer Name:   {{CustomerName}}Service No.:   {{ServiceNumber}}Tenant ID:   {{TenantID}}UID:   {{AccountID}}\r\n Login Information  :\r\n URL:   https://account.alibabacloud.com/login/login.htmLogin ID:   {{AdminEmail}}Password:   (owned by customer)\r\n \r\n\r\nShould you have any inquiries, please call our Customer Service Hotlines 2283-6880 or by email  hktcloudems@pccw.com\r\n \r\nThank you for choosing HKT as your service provider.\r\n \r\n\r\n \r\nYours sincerely,\r\nHKT Multi-Cloud service \r\nThis message (and any attachments) may contain information that is confidential, proprietary, privileged or otherwise protected by law. The message is intended solely for the named addressee (or a person responsible for delivering it to the addressee). If you are not the intended recipient of this message, you are not authorized to read, print, retain, copy or disseminate this message or any part of it. If you have received this message in error, please destroy the message or delete it from your system immediately and notify the sender.\r\n本郵件(及任何附件)可能載有機密、專有、具有特權或受法律保護的資料，並僅供收件人(或負責將資料遞交給收件人的人士)使用。如閣下不是本郵件的預定收件人，便無權閱讀、列印、保留、複製或傳佈本郵件或其任何部分。如閣下錯誤地收到本郵件，請立即將之銷毀或從閣下的系統中刪除，並通知寄件人 \r\n***This is a system generated email, please do not reply to this mail***",
+        "VariableList": "CustomerName; AccountID; ServiceNumber; TenantID; AdminEmail; ContactEmail",
+        "ToRecipients": "{{AdminEmail}};",
+        "CcRecipients": "{{ContactEmail}};",
+        "BccRecipients": "Thomas.YH.Kwan@pccw.com; hktcloud-sp@pccw.com; Katie.SY.Chai@pccw.com",
+        "IsActive": true,
+        "SortOrder": 2
+      },
+      "warnings": []
+    },
+    {
+      "row": 4,
+      "status": "created",
+      "template": {
+        "Title": "3",
+        "ServiceType": "Alibaba",
+        "TemplateCategory": "General",
+        "Subject": "<Alibaba Cloud> New Account Creation – {{CustomerName}}",
+        "BodyHTML": "Dear Customer,\r\n\r\n\r\nWe have sent you an invitation from Alibaba Cloud to create and register an account {{AdminEmail}} .\r\n\r\nPlease refer to the attached document titled \"Alibaba Cloud End User Account Registration Onboarding Guide\" for detailed instructions on how to complete the account registration process.\r\n\r\nKindly note that the link provided in the email will remain valid for 15 days from the date of receipt. If the link expires, please feel free to contact us, and we will be happy to resend it to you.\r\nThank You",
+        "VariableList": "AMEmail; CustomerName; ASMEmail; AdminEmail; ContactEmail",
+        "ToRecipients": "{{AdminEmail}}; {{ContactEmail}};",
+        "CcRecipients": "{{AMEmail}}; {{ASMEmail}}; hktcloud-SP@pccw.com",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 3
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Invitation\" — defaulting to \"General\""
+      ]
+    },
+    {
+      "row": 5,
+      "status": "created",
+      "template": {
+        "Title": "4",
+        "ServiceType": "AWS",
+        "TemplateCategory": "General",
+        "Subject": "[EXTERNAL] Ingram Micro AWS invitation to join AWS organization – {{CustomerName}} (AWS ID : {{AccountID}})",
+        "BodyHTML": "Dear Jason, \r\nPlease send invitation to below accounts for migration.       \r\n \r\n Under HKT Master Payer        :143426118095 \r\n Company Name                      : {{CustomerName}} \r\n AWS ID                                   : {{AccountID}} \r\n Root login email address        : {{AdminEmail}} \r\n \r\n Thank You",
+        "VariableList": "CustomerName; ContactEmail; AccountID; AdminEmail; ServiceNumber; TenantID",
+        "ToRecipients": "Jason.Cheung@ingrammicro.com",
+        "CcRecipients": "Daniel.Wong@ingrammicro.com; Thomas.YH.Kwan@pccw.com; hktcloud-sp@pccw.com;  Dora.Lee@ingrammicro.com; Katie.SY.Chai@pccw.com;",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 4
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Migration Request\" — defaulting to \"General\"",
+        "Unresolved token: [EXTERNAL]"
+      ]
+    },
+    {
+      "row": 6,
+      "status": "created",
+      "template": {
+        "Title": "5",
+        "ServiceType": "AWS",
+        "TemplateCategory": "General",
+        "Subject": "Activation for Multi-Cloud Services - {{CustomerName}} (AWS ID {{AccountID}}) {{ServiceDeskNo}}",
+        "BodyHTML": "Dear Customer\r\n\r\nInvitations have been sent out. Would you please accept the invitation within 3 days and let me know once accepted for proceed the next step. Thanks.\r\n\r\n-------------------------------------------------------------------\r\n\r\nPlease follow the instructions below to change the consolidated billing:\r\n\r\n1.      Sign in and access theAWS Management Console and find theAWS Organizations service in the search bar by using AWS ID {{AccountID}} root accounts.\r\n\r\nhttps://console.aws.amazon.com/organizations/\r\n\r\n\r\n\r\n\r\n2.  On the right side of the screen, select the invitationView 1 invitation\r\n\r\n\r\n3.      Click and accept the invitation.\r\n\r\n\r\nYou can follow the attached instructions to accept the invitation.\r\n \r\n If you are unable to accept invitations. Please follow the step in Attachment to check if any existing organization linked then remove the account from the old organization\r\n \r\nPlease kindly notify us once you have accepted the invitation. Thank you!\r\n\r\n\r\nThis message (and any attachments) may contain information that is confidential, proprietary, privileged or otherwise protected by law. The message is intended solely for the named addressee (or a person responsible for delivering it to the addressee). If you are not the intended recipient of this message, you are not authorized to read, print, retain, copy or disseminate this message or any part of it. If you have received this message in error, please destroy the message or delete it from your system immediately and notify the sender.\r\n本郵件(及任何附件)可能載有機密、專有、具有特權或受法律保護的資料，並僅供收件人(或負責將資料遞交給收件人的人士)使用。如閣下不是本郵件的預定收件人，便無權閱讀、列印、保留、複製或傳佈本郵件或其任何部分。如閣下錯誤地收到本郵件，請立即將之銷毀或從閣下的系統中刪除，並通知寄件人",
+        "VariableList": "CustomerName; ServiceDeskNo; Sales Email; AdminEmail; AccountID; ContactEmail",
+        "ToRecipients": "{{ContactEmail}}; {{AdminEmail}};",
+        "CcRecipients": "Thomas.YH.Kwan@pccw.com; hktcloud-sp@pccw.com; Katie.SY.Chai@pccw.com; [Sales Email]",
+        "BccRecipients": "",
+        "IsActive": true,
+        "SortOrder": 5
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Invitation\" — defaulting to \"General\"",
+        "Unresolved token: [Sales Email]",
+        "Unknown variable in list: \"Sales Email\""
+      ]
+    },
+    {
+      "row": 7,
+      "status": "created",
+      "template": {
+        "Title": "6",
+        "ServiceType": "Azure",
+        "TemplateCategory": "General",
+        "Subject": "<Microsoft Azure> Invitation to establish The Microsoft Reseller Relationship to HKT - {{CustomerName}}",
+        "BodyHTML": "Dear Customer,\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nWe hope this email finds you well. We would like to proceed with transferring your Microsoft 365 tenant and Azure subscription from your current partner to HKT (Hong Kong Telecommunications Limited).\r\nHKT is pleased to offer our services as your Microsoft Cloud Solution Provider for your Microsoft Cloud account.\r\nTo accept the invitation, please follow these two steps:\r\nStep 1: Ensure your customer profile is complete by checking here:\r\nLink:   Customer Profile\r\nStep 2: After customer profile is complete (may take up to max 5 minutes to refresh after profile is updated), click the following link to accept this invitation and authorize Hong Kong Telecommunications (HKT) Limited to be your Microsoft Cloud Solution Provider and accept the Microsoft Customer Agreement:\r\nLink:   Accept Invitation\r\nNote: This process will not establish an Admin relationship with HKT. A user with Global Admin permissions is required to accept this relationship.\r\nAdditional Partner Information:Existing Domain Name: [Existing Domain Name]Microsoft ID: {{MicrosoftID}}\r\n \r\nThank you for your cooperation.\r\nIf you have any questions, please feel free to reach out.",
+        "VariableList": "ContactEmail; AMEmail; ASMEmail; CustomerName; Existing Domain Name; MicrosoftID",
+        "ToRecipients": "{{ContactEmail}}",
+        "CcRecipients": "hktcloud-sp@pccw.com; {{AMEmail}}; {{ASMEmail}};",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 6
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Invitation\" — defaulting to \"General\"",
+        "Unresolved token: [Existing Domain Name]",
+        "Unknown variable in list: \"Existing Domain Name\""
+      ]
+    },
+    {
+      "row": 8,
+      "status": "created",
+      "template": {
+        "Title": "7",
+        "ServiceType": "GCP",
+        "TemplateCategory": "Welcome Letter",
+        "Subject": "< Welcome Letter > Multi-Cloud Services - {{CustomerName}} (Google Cloud Platform Subaccount Billing ID : {{AccountID}})",
+        "BodyHTML": "Dear Valued Customer,\r\n \r\nWe are writing to express our gratitude for your HKT Multi-Cloud subscription and welcome you onboard as a new customer.\r\n \r\n Details of the service are as follows:\r\n Subscribed Multi-Cloud Service: Google Cloud Platform (GCP)Customer Name         : {{CustomerName}}Service No.                 : {{ServiceNumber}}Tenant ID                   : {{TenantID}}Subaccount Billing ID : {{AccountID}}\r\n  \r\nShould you have any inquiries, please call our Customer Service Hotlines 2283-6880 or by email : hktcloudems@pccw.com\r\n \r\nThank you for choosing HKT as your service provider.\r\n \r\nYours sincerely\r\nHKT Multi-Cloud service\r\n \r\n \r\n***This is a system generated email, please do not reply to this mail***\r\nThis message (and any attachments) may contain information that is confidential, proprietary, privileged or otherwise protected by law. The message is intended solely for the named addressee (or a person responsible for delivering it to the addressee). If you are not the intended recipient of this message, you are not authorized to read, print, retain, copy or disseminate this message or any part of it. If you have received this message in error, please destroy the message or delete it from your system immediately and notify the sender.\r\n本郵件(及任何附件)可能載有機密、專有、具有特權或受法律保護的資料，並僅供收件人(或負責將資料遞交給收件人的人士)使用。如閣下不是本郵件的預定收件人，便無權閱讀、列印、保留、複製或傳佈本郵件或其任何部分。如閣下錯誤地收到本郵件，請立即將之銷毀或從閣下的系統中刪除，並通知寄件人",
+        "VariableList": "ContactEmail; AdminEmail; ASMEmail; AMEmail; CustomerName; AccountID; TenantID; ServiceNumber",
+        "ToRecipients": "{{AdminEmail}};",
+        "CcRecipients": "{{ContactEmail}};",
+        "BccRecipients": "{{AMEmail}}; {{ASMEmail}}; hktcloud-sp@pccw.com; hktcloudems@pccw.com; Thomas.YH.Kwan@pccw.com",
+        "IsActive": true,
+        "SortOrder": 7
+      },
+      "warnings": []
+    },
+    {
+      "row": 9,
+      "status": "created",
+      "template": {
+        "Title": "8",
+        "ServiceType": "AWS",
+        "TemplateCategory": "Welcome Letter",
+        "Subject": "<Welcome Letter> Multi-Cloud Services - {{CustomerName}} AWS ID : {{AccountID}}",
+        "BodyHTML": "Dear Valued Customer,     \r\n\r\n               \r\n\r\nWe are writing to express our gratitude for your HKT Multi-Cloud subscription and welcome you onboard as a new customer.               \r\n\r\n  \r\n\r\n \r\n\r\nDetails of the service are as follows:               \r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nSubscribed Service             \r\n\r\n\r\n: Multi-Cloud Service – Amazon Web Services (AWS) \r\n\r\n\r\nAWS Account ID                \r\n\r\n\r\n: {{AccountID}} \r\n\r\n\r\nCustomer Name                  \r\n\r\n\r\n: {{CustomerName}} \r\n\r\n\r\nServiceNo.                         \r\n\r\n\r\n: {{ServiceNumber}} \r\n\r\n\r\nTenant ID                            \r\n\r\n\r\n: {{TenantID}} \r\n\r\n\r\n   \r\n\r\n\r\n  \r\n\r\n\r\nConsolidated Billing Portal: \r\n\r\n\r\n            \r\n\r\n\r\n  \r\n\r\n\r\n  \r\n\r\n\r\nURL                                    \r\n\r\n\r\n:https://app-au.cloudcheckr.com/ \r\n\r\n\r\nLogin ID                             \r\n\r\n\r\n: {{AdminEmail}} \r\n\r\n\r\nPassword                             \r\n\r\n\r\n: Setup by customer after receiving the activation email",
+        "VariableList": "CustomerName; AccountID; AdminEmail; ContactEmail; TenantID; ServiceNumber",
+        "ToRecipients": "{{AdminEmail}};",
+        "CcRecipients": "{{ContactEmail}};",
+        "BccRecipients": "Thomas.YH.Kwan@pccw.com ; hktcloud-sp@pccw.com; Katie.SY.Chai@pccw.com;",
+        "IsActive": true,
+        "SortOrder": 8
+      },
+      "warnings": []
+    },
+    {
+      "row": 10,
+      "status": "created",
+      "template": {
+        "Title": "9",
+        "ServiceType": "GCP",
+        "TemplateCategory": "General",
+        "Subject": "{{CustomerName}} Google Cloud Platform (GCP) account link to HKT Billing <{{ServiceDeskNo}}>",
+        "BodyHTML": "Dear Customer,\r\n \r\nThank youfor choosing HKT Google Cloud service.\r\nPlease share Google Cloud Platform (GCP) account the account ID to us for link the GCP account to HKT Billing.\r\nIf you do not have the account, you can follow the step in the attached guide to create the account.",
+        "VariableList": "ContactEmail; AMEmail; ASMEmail; CustomerName; ServiceDeskNo",
+        "ToRecipients": "{{ContactEmail}}",
+        "CcRecipients": "{{AMEmail}}; {{ASMEmail}}; hktcloud-sp@pccw.com; hktcloudems@pccw.com",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 9
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Invitation\" — defaulting to \"General\""
+      ]
+    },
+    {
+      "row": 11,
+      "status": "created",
+      "template": {
+        "Title": "10",
+        "ServiceType": "Huawei",
+        "TemplateCategory": "General",
+        "Subject": "Huawei Cloud New account creation – {{CustomerName}} {{ServiceDeskNo}}",
+        "BodyHTML": "Dear {{CustomerName}},\r\n\r\n Please access below link for HUAWEI CLOUD account creation and let us know after you complete.\r\n You may follow the guide which we attached.\r\nIf you have any question on it, please kindly let us know.\r\n\r\n {{InvitationURL}}",
+        "VariableList": "CustomerName; ServiceDeskNo; ContactEmail; ASMEmail; AMEmail; InvitationURL",
+        "ToRecipients": "{{ContactEmail}}",
+        "CcRecipients": "{{AMEmail}}; {{ASMEmail}}; hktcloud-sp@pccw.com; Bonnie.NL.Fan@pccw.com; support@hktcloudems.zohodesk.com",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 10
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Invitation\" — defaulting to \"General\""
+      ]
+    },
+    {
+      "row": 12,
+      "status": "created",
+      "template": {
+        "Title": "11",
+        "ServiceType": "Huawei",
+        "TemplateCategory": "Order Confirmation",
+        "Subject": ".",
+        "BodyHTML": "Dear all,\r\n\r\n Account had been unfrozen and set monthly budget as USD $[USD] (HKD $[HKD])[Image]",
+        "VariableList": "AMEmail; USD; HKD; ASMEmail",
+        "ToRecipients": "{{AMEmail}}; {{ASMEmail}}",
+        "CcRecipients": "hktcloud-sp@pccw.com",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 11
+      },
+      "warnings": [
+        "Unresolved token: [USD]",
+        "Unresolved token: [HKD]",
+        "Unresolved token: [Image]",
+        "Unknown variable in list: \"USD\"",
+        "Unknown variable in list: \"HKD\""
+      ]
+    },
+    {
+      "row": 13,
+      "status": "created",
+      "template": {
+        "Title": "12",
+        "ServiceType": "Azure",
+        "TemplateCategory": "Welcome Letter",
+        "Subject": "< Welcome Letter > Multi-Cloud Services - {{CustomerName}} ( Microsoft Azure )",
+        "BodyHTML": "Dear Valued Customer,      \r\n\r\n                \r\n\r\nWe are writing to express our gratitude for your HKT Multi-Cloud subscription and welcome you onboard as a new customer.                 \r\n\r\n   \r\n\r\n  \r\n\r\nDetails of the service are as follows:                \r\n\r\n                \r\n\r\n\r\n\r\n\r\n\r\nSubscribedService :             \r\n\r\n\r\nMulti-Cloud Service – Microsoft Azure  \r\n\r\n\r\nMicrosoftID :                \r\n\r\n\r\n {{MicrosoftID}}  \r\n\r\n\r\nAzure SubscriptionID :              \r\n\r\n\r\n {{AzureSubscriptionID}} \r\n\r\n\r\nCustomerName:                         \r\n\r\n\r\n {{CustomerName}} \r\n\r\n\r\nService No. :                         \r\n\r\n\r\n {{ServiceNumber}}  \r\n\r\n\r\nTenantID :                            \r\n\r\n\r\n {{TenantID}}  \r\n\r\n\r\n \r\n\r\n\r\n \r\n\r\n\r\nConsolidated Billing Portal:  \r\n\r\n\r\n             \r\n\r\n\r\n   \r\n\r\n\r\n   \r\n\r\n\r\nURL",
+        "VariableList": "CustomerName; ServiceNumber; TenantID; AdminEmail; ContactEmail; AzureSubscriptionID; Sales Email; ASMEmail; MicrosoftID",
+        "ToRecipients": "{{AdminEmail}}",
+        "CcRecipients": "{{ContactEmail}};",
+        "BccRecipients": "[Sales Email]; {{ASMEmail}}; Thomas.YH.Kwan@pccw.com; hktcloud-sp@pccw.com; Katie.SY.Chai@pccw.com; hktcloudems@pccw.com",
+        "IsActive": true,
+        "SortOrder": 12
+      },
+      "warnings": [
+        "Unresolved token: [Sales Email]",
+        "Unknown variable in list: \"Sales Email\""
+      ]
+    },
+    {
+      "row": 14,
+      "status": "created",
+      "template": {
+        "Title": "13",
+        "ServiceType": "Azure",
+        "TemplateCategory": "General",
+        "Subject": ".",
+        "BodyHTML": "Dear Customer,\r\n \r\nWe are delighted to inform you that your Azure subscription transfer request has been successfully completed. We have located your Azure Subscription within our partner center.\r\n \r\nTo proceed further, it is necessary for you to remove the delegated admin privileges granted to the previous partner in both the Microsoft 365 admin center and the Azure subscription. Once you have completed this step, kindly notify us, and we will send you an invitation to request delegated admin privileges on our behalf. We will also provide detailed instructions on how to add Azure RBAC permissions to our account.\r\nPlease find attached document comprising four parts, which will guide you through the process step by step. By following these instructions, you will be able to complete the necessary tasks smoothly.\r\n Remove the pervious partner delegated admin privilegesRemove the pervious partner Azure RBAC accessAccept our Granular Delegated Admin Privileges (GDAP) requestReinstate Azure RBAC access on your Azure subscription (Powershell)\r\n \r\nShould you have any questions or concerns, please feel free to reach out to me.\r\nThank you for your cooperation.",
+        "VariableList": "ContactEmail; ASMEmail; AMEmail",
+        "ToRecipients": "{{ContactEmail}}",
+        "CcRecipients": "hktcloud-sp@pccw.com; {{AMEmail}}; {{ASMEmail}};",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 13
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Request Permission\" — defaulting to \"General\""
+      ]
+    },
+    {
+      "row": 15,
+      "status": "created",
+      "template": {
+        "Title": "14",
+        "ServiceType": "Azure",
+        "TemplateCategory": "General",
+        "Subject": "",
+        "BodyHTML": "Dear Customer,\r\n \r\nWe have confirmed that Hong Kong Telecommunications (HKT) Limited has been added as your Microsoft Cloud Solution Provider for your Microsoft 365 tenant. We will proceed with transferring the Azure subscription from your current partner to us.\r\n \r\nTo initiate this transfer, we will create a transfer request via the Microsoft Partner Center. In order to complete the process, we kindly request your assistance in contacting your current partner and providing us with the following information:\r\n \r\n 1. Current Partner Name\r\n 2. Current Partner Microsoft ID",
+        "VariableList": "AMEmail; ASMEmail",
+        "ToRecipients": ".",
+        "CcRecipients": "hktcloud-sp@pccw.com; {{AMEmail}}; {{ASMEmail}}",
+        "BccRecipients": ".",
+        "IsActive": true,
+        "SortOrder": 14
+      },
+      "warnings": [
+        "Unknown TemplateCategory: \"Request Information\" — defaulting to \"General\""
+      ]
+    },
+    {
+      "row": 16,
+      "status": "created",
+      "template": {
+        "Title": "15",
+        "ServiceType": "Huawei",
+        "TemplateCategory": "Welcome Letter",
+        "Subject": "< Welcome Letter > Multi-Cloud Services  - {{CustomerName}} ( Huawei Account ID : {{AccountID}} )",
+        "BodyHTML": "Dear Valued Customer,\r\nWe are writing to express our gratitude for your HKT Multi-Cloud subscription and welcome you onboard as a new customer.\r\nDetails of the service are as follows:Subscribed Multi-Cloud Service: Huawei CloudCustomer Name     : {{CustomerName}}Service No.             : {{ServiceNumber}}Tenant ID                 : {{TenantID}}Huawei Account ID : {{AccountID}}  Login Information :   URL                         : https://auth.huaweicloud.com/authui/login.htmlLogin ID                  : (owned by customer)Password                 : (owned by customer)\r\n \r\nShould you have any inquiries, please call our Customer Service Hotlines 2283-6880 or by email  hktcloudems@pccw.com\r\n \r\n \r\nThank you for choosing HKT as your service provider.\r\nYours sincerely,\r\nHKT Multi-Cloud service\r\n***This is a system generated email, please do not reply to this mail***\r\nThis message (and any attachments) may contain information that is confidential, proprietary, privileged or otherwise protected by law. The message is intended solely for the named addressee (or a person responsible for delivering it to the addressee). If you are not the intended recipient of this message, you are not authorized to read, print, retain, copy or disseminate this message or any part of it. If you have received this message in error, please destroy the message or delete it from your system immediately and notify the sender.\r\n本郵件(及任何附件)可能載有機密、專有、具有特權或受法律保護的資料，並僅供收件人(或負責將資料遞交給收件人的人士)使用。如閣下不是本郵件的預定收件人，便無權閱讀、列印、保留、複製或傳佈本郵件或其任何部分。如閣下錯誤地收到本郵件，請立即將之銷毀或從閣下的系統中刪除，並通知寄件人 -",
+        "VariableList": "ContactEmail; AdminEmail; CustomerName; AccountID; ServiceNumber; TenantID",
+        "ToRecipients": "{{AdminEmail}}",
+        "CcRecipients": "{{ContactEmail}};",
+        "BccRecipients": "hktcloud-sp@pccw.com",
+        "IsActive": true,
+        "SortOrder": 15
+      },
+      "warnings": []
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "created": 15,
+    "skipped": 0,
+    "errors": 0
+  }
+}
