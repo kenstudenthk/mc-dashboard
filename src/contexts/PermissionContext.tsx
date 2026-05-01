@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getRole } from "../services/permissionService";
-import { authService } from "../services/authService";
+import { supabase } from "../lib/supabase";
 
 export type Role = "User" | "Admin" | "Global Admin" | "Developer";
 
@@ -14,6 +14,7 @@ interface PermissionContextType {
   userEmail: string;
   isAuthorized: boolean | null; // null = still checking, true = authorized, false = not in permissions list
   loggedOut: boolean;
+  forcePasswordChange: boolean; // true = signed in but must change password before app access
   setCurrentRole: (role: Role) => void;
   setUserEmail: (email: string) => void;
   hasPermission: (requiredRole: Role) => boolean;
@@ -36,49 +37,72 @@ export const PermissionProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  // Default to Global Admin so the user can see most features initially
   const [currentRole, setCurrentRole] = useState<Role>("Global Admin");
   const [userEmail, setUserEmail] = useState<string>(
     () => localStorage.getItem("userEmail") ?? "",
   );
-  // null = checking, true = found in SharePoint, false = not registered
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [hasCFAccess, setHasCFAccess] = useState(false);
   const [loggedOut, setLoggedOut] = useState(false);
+  const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
-  // On mount: try Cloudflare Access identity first (production),
-  // fall back to localStorage email (local development).
-  useEffect(() => {
-    authService.getIdentity().then((identity) => {
-      if (identity?.email) {
-        // Production: Cloudflare-verified identity — enforce SharePoint check
-        setHasCFAccess(true);
-        const email = identity.email;
-        setUserEmail(email);
-        getRole(email)
-          .then((role) => {
-            if (VALID_ROLES.includes(role as Role)) {
-              applyRole(role, setCurrentRole);
-              setIsAuthorized(true);
-            } else {
-              // Email passed OTP but is not in the SharePoint permissions list
-              setIsAuthorized(false);
-            }
-          })
-          .catch(() => setIsAuthorized(false));
-      } else {
-        // Local development: no Cloudflare identity, skip authorization check
-        const email = localStorage.getItem("userEmail") ?? "";
-        if (email) {
-          setUserEmail(email);
-          getRole(email)
-            .then((role) => applyRole(role, setCurrentRole))
-            .catch(() => {/* keep default role */});
+  function authorizeSession(email: string) {
+    setUserEmail(email);
+    getRole(email)
+      .then((role) => {
+        if (VALID_ROLES.includes(role as Role)) {
+          applyRole(role, setCurrentRole);
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
         }
-        setIsAuthorized(true);
+      })
+      .catch(() => setIsAuthorized(false));
+  }
+
+  useEffect(() => {
+    // Seed email from localStorage while session check is in-flight
+    const cached = localStorage.getItem("userEmail");
+    if (cached) setUserEmail(cached);
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user?.email) {
+        setLoggedOut(true);
+        return;
+      }
+      if (session.user.user_metadata?.force_password_change) {
+        setForcePasswordChange(true);
+        setUserEmail(session.user.email);
+        return;
+      }
+      authorizeSession(session.user.email);
+    });
+
+    // Ongoing auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        setIsAuthorized(null);
+        setForcePasswordChange(false);
+        setLoggedOut(true);
+      } else if (
+        (event === "SIGNED_IN" || event === "USER_UPDATED") &&
+        session?.user?.email
+      ) {
+        if (session.user.user_metadata?.force_password_change) {
+          setForcePasswordChange(true);
+          setUserEmail(session.user.email);
+          return;
+        }
+        setForcePasswordChange(false);
+        setLoggedOut(false);
+        authorizeSession(session.user.email);
       }
     });
-  }, []);
+
+    return () => subscription.unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist email to localStorage whenever it changes
   useEffect(() => {
@@ -90,14 +114,20 @@ export const PermissionProvider = ({
     if (email) {
       getRole(email)
         .then((role) => applyRole(role, setCurrentRole))
-        .catch(() => {
-          /* keep current role on failure */
-        });
+        .catch(() => {});
     }
   };
 
   const hasPermission = (requiredRole: Role) => {
     return roleHierarchy[currentRole] >= roleHierarchy[requiredRole];
+  };
+
+  const logout = () => {
+    supabase.auth.signOut().then(() => {
+      localStorage.removeItem("userEmail");
+      setForcePasswordChange(false);
+      setLoggedOut(true);
+    });
   };
 
   return (
@@ -106,11 +136,12 @@ export const PermissionProvider = ({
         currentRole,
         userEmail,
         isAuthorized,
+        loggedOut,
+        forcePasswordChange,
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
-        loggedOut,
-        logout: () => { authService.logout(hasCFAccess).then(() => setLoggedOut(true)); },
+        logout,
       }}
     >
       {children}
