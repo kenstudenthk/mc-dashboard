@@ -13,6 +13,7 @@ interface PermissionContextType {
   currentRole: Role;
   userEmail: string;
   isAuthorized: boolean | null; // null = still checking, true = authorized, false = not in permissions list
+  loggedOut: boolean;
   setCurrentRole: (role: Role) => void;
   setUserEmail: (email: string) => void;
   hasPermission: (requiredRole: Role) => boolean;
@@ -43,6 +44,7 @@ export const PermissionProvider = ({
   // null = checking, true = found in SharePoint, false = not registered
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [hasCFAccess, setHasCFAccess] = useState(false);
+  const [loggedOut, setLoggedOut] = useState(false);
 
   // On mount: try Cloudflare Access identity first (production),
   // fall back to localStorage email (local development).
@@ -107,7 +109,8 @@ export const PermissionProvider = ({
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
-        logout: () => authService.logout(hasCFAccess),
+        loggedOut,
+        logout: () => { authService.logout(hasCFAccess).then(() => setLoggedOut(true)); },
       }}
     >
       {children}

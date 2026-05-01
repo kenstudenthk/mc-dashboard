@@ -24,7 +24,29 @@ import { PermissionProvider, usePermission } from './contexts/PermissionContext'
 import { TutorProvider } from './contexts/TutorContext';
 
 function AppContent() {
-  const { isAuthorized, userEmail, logout } = usePermission();
+  const { isAuthorized, loggedOut, userEmail, logout } = usePermission();
+
+  if (loggedOut) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#f4f6f8]">
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-full bg-[#e6f0ff] flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-[#094cb2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold text-[#1d1d1f] mb-2">You've been signed out</h1>
+          <p className="text-sm text-[#1d1d1f]/50 mb-6">Sign in again to continue.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 text-sm font-medium text-white bg-[#094cb2] rounded-lg hover:bg-[#0741a3] transition-colors"
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthorized === null) {
     return (
