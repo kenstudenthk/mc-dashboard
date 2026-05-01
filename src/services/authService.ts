@@ -21,10 +21,16 @@ export const authService = {
   },
 
   /**
-   * Signs the user out via Cloudflare Access. Redirects to the Access logout
-   * endpoint which clears the session token and redirects back to the login page.
+   * Signs the user out. When Cloudflare Access is active (production), redirects
+   * to the Access logout endpoint which clears the session token. In local
+   * development where Access is not available, clears localStorage and reloads.
    */
-  logout: (): void => {
-    window.location.href = "/cdn-cgi/access/logout";
+  logout: (useCloudflarAccess: boolean): void => {
+    localStorage.removeItem("userEmail");
+    if (useCloudflarAccess) {
+      window.location.href = "/cdn-cgi/access/logout";
+    } else {
+      window.location.href = "/";
+    }
   },
 };

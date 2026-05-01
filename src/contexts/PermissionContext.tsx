@@ -42,6 +42,7 @@ export const PermissionProvider = ({
   );
   // null = checking, true = found in SharePoint, false = not registered
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [hasCFAccess, setHasCFAccess] = useState(false);
 
   // On mount: try Cloudflare Access identity first (production),
   // fall back to localStorage email (local development).
@@ -49,6 +50,7 @@ export const PermissionProvider = ({
     authService.getIdentity().then((identity) => {
       if (identity?.email) {
         // Production: Cloudflare-verified identity — enforce SharePoint check
+        setHasCFAccess(true);
         const email = identity.email;
         setUserEmail(email);
         getRole(email)
@@ -105,7 +107,7 @@ export const PermissionProvider = ({
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
-        logout: authService.logout,
+        logout: () => authService.logout(hasCFAccess),
       }}
     >
       {children}
