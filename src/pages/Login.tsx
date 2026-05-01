@@ -1,59 +1,17 @@
 /**
- * src/pages/Login.tsx
- *
- * Full auth flow — Multi Cloud Order Dashboard
- *
- * ┌─────────────────────────────────────────────────────────────┐
- * │  HANDOFF NOTES FOR CLAUDE CODE                              │
- * │                                                             │
- * │  1. Install / confirm dep:                                  │
- * │       @supabase/supabase-js  (already in package.json ✓)   │
- * │                                                             │
- * │  2. Create  src/lib/supabase.ts :                           │
- * │       import { createClient } from '@supabase/supabase-js'  │
- * │       export const supabase = createClient(                 │
- * │         import.meta.env.VITE_SUPABASE_URL,                 │
- * │         import.meta.env.VITE_SUPABASE_ANON_KEY             │
- * │       )                                                     │
- * │                                                             │
- * │  3. Add to .env:                                            │
- * │       VITE_SUPABASE_URL=https://xxxx.supabase.co           │
- * │       VITE_SUPABASE_ANON_KEY=your-anon-key                 │
- * │                                                             │
- * │  4. Update src/services/authService.ts — replace           │
- * │     Cloudflare getIdentity / logout with Supabase           │
- * │     getSession / signOut (see TODOs below)                  │
- * │                                                             │
- * │  5. Update src/contexts/PermissionContext.tsx —             │
- * │     replace authService.getIdentity() with                  │
- * │     supabase.auth.getSession() + onAuthStateChange()        │
- * │                                                             │
- * │  6. First-time login flag — set on the Supabase user:       │
- * │     supabase.auth.admin.updateUserById(userId, {            │
- * │       user_metadata: { force_password_change: true }        │
- * │     })                                                      │
- * │     This page reads that flag after sign-in.                │
- * │                                                             │
- * │  7. Mount this page in App.tsx:                             │
- * │     if (isAuthorized === null)                              │
- * │       return <Login initialScreen="loading" />              │
- * │     if (isAuthorized === false)                             │
- * │       return <Login initialScreen="access-denied" />        │
- * │     Or add <Route path="/login" element={<Login />} />      │
- * └─────────────────────────────────────────────────────────────┘
+ * src/pages/Login.tsx — Full auth flow for Multi Cloud Order Dashboard.
+ * Supabase integration complete; all screens wired.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowLeft,
   CheckCircle2, AlertCircle, RefreshCw, Send,
 } from 'lucide-react';
 
-// TODO [1]: Import your Supabase client once src/lib/supabase.ts is created
-// import { supabase } from '../lib/supabase';
-
-// TODO [2]: Keep this import once authService is updated for Supabase
-// import { authService } from '../services/authService';
+// TODO [1]: ✓ Supabase client imported
+import { supabase } from '../lib/supabase';
+// TODO [2]: authService no longer needed directly in Login — supabase client used directly.
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -72,6 +30,8 @@ export interface LoginProps {
   onSuccess?: () => void;
   /** Starting screen. Defaults to 'login'. */
   initialScreen?: Screen;
+  /** Pre-fill the first-time email (used when force_password_change is detected by PermissionContext) */
+  initialEmail?: string;
 }
 
 // ─── Password rules ───────────────────────────────────────────────────────────
@@ -286,25 +246,17 @@ function SignInScreen({ onSuccess, onForgot, onFirstTime }: {
     setLoading(true);
 
     try {
-      // TODO [4]: Replace with Supabase sign-in
-      // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      // if (error) {
-      //   setErrors({ password: error.message });
-      //   setLoading(false);
-      //   return;
-      // }
-      // Check first-time login flag set in user_metadata
-      // if (data.user?.user_metadata?.force_password_change) {
-      //   onFirstTime(email);
-      // } else {
-      //   onSuccess();
-      // }
-
-      // ── DEMO ONLY (remove when wired to Supabase) ──
-      await new Promise(r => setTimeout(r, 1400));
-      if (password === 'temp123') onFirstTime(email);
-      else onSuccess();
-      // ───────────────────────────────────────────────
+      // TODO [4]: ✓ Supabase sign-in wired
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setErrors({ password: error.message });
+        return;
+      }
+      if (data.user?.user_metadata?.force_password_change) {
+        onFirstTime(email);
+      } else {
+        onSuccess();
+      }
     } catch {
       setErrors({ password: 'An unexpected error occurred. Please try again.' });
     } finally {
@@ -377,19 +329,12 @@ function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => 
     setLoading(true);
 
     try {
-      // TODO [5]: Update password via Supabase and clear the force_password_change flag
-      // Step 1 — verify temp password is still valid (user should already be signed in)
-      // Step 2 — update the password:
-      // const { error } = await supabase.auth.updateUser({ password: next });
-      // if (error) { setErrors({ next: error.message }); return; }
-      // Step 3 — clear the first-time flag:
-      // await supabase.auth.updateUser({ data: { force_password_change: false } });
-      // onDone();
-
-      // ── DEMO ONLY ──
-      await new Promise(r => setTimeout(r, 1400));
+      // TODO [5]: ✓ Update password via Supabase and clear force_password_change
+      // User is already signed in (signInWithPassword succeeded on the previous screen).
+      const { error: pwError } = await supabase.auth.updateUser({ password: next });
+      if (pwError) { setErrors({ next: pwError.message }); return; }
+      await supabase.auth.updateUser({ data: { force_password_change: false } });
       onDone();
-      // ───────────────
     } catch {
       setErrors({ next: 'Failed to update password. Please try again.' });
     } finally {
@@ -449,17 +394,12 @@ function ForgotEmailScreen({ onBack, onSent }: { onBack: () => void; onSent: (em
     setLoading(true);
 
     try {
-      // TODO [6]: Send reset email via Supabase
-      // const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      //   redirectTo: `${window.location.origin}/login?screen=reset-password`,
-      // });
-      // if (error) { setError(error.message); return; }
-      // onSent(email);
-
-      // ── DEMO ONLY ──
-      await new Promise(r => setTimeout(r, 1400));
+      // TODO [6]: ✓ Send reset email via Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login?screen=reset-password`,
+      });
+      if (error) { setError(error.message); return; }
       onSent(email);
-      // ───────────────
     } catch {
       setError('Failed to send reset email. Please try again.');
     } finally {
@@ -501,7 +441,10 @@ function CheckInboxScreen({ email, onBack, onOpenLink }: {
 
   async function handleResend() {
     setResent(true);
-    // TODO [7]: Call supabase.auth.resetPasswordForEmail(email, { redirectTo: ... }) again
+    // TODO [7]: ✓ Resend via Supabase
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login?screen=reset-password`,
+    });
     setTimeout(() => setResent(false), 3000);
   }
 
@@ -569,17 +512,11 @@ function ResetPasswordScreen({ onDone }: { onDone: () => void }) {
     setLoading(true);
 
     try {
-      // TODO [8]: Update password — user is already authenticated via the email magic link
-      // Supabase automatically signs the user in when they click the reset link.
-      // The token is exchanged in the URL hash; the Supabase client handles it automatically.
-      // const { error } = await supabase.auth.updateUser({ password: next });
-      // if (error) { setErrors({ next: error.message }); return; }
-      // onDone();
-
-      // ── DEMO ONLY ──
-      await new Promise(r => setTimeout(r, 1400));
+      // TODO [8]: ✓ Update password — user is already authenticated via the reset email link.
+      // Supabase auto-exchanges the token in the URL hash when this page loads.
+      const { error } = await supabase.auth.updateUser({ password: next });
+      if (error) { setErrors({ next: error.message }); return; }
       onDone();
-      // ───────────────
     } catch {
       setErrors({ next: 'Failed to reset password. Please try again.' });
     } finally {
@@ -649,11 +586,10 @@ function LoadingScreen() {
 // ─── Screen: Access Denied ────────────────────────────────────────────────────
 
 function AccessDeniedScreen() {
-  // TODO [9]: Replace with supabase.auth.signOut() once authService is updated
-  function handleSignOut() {
-    // await supabase.auth.signOut();
-    // window.location.href = '/login';
-    window.location.href = '/cdn-cgi/access/logout'; // remove when Cloudflare is gone
+  // TODO [9]: ✓ Supabase sign-out wired
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
   }
 
   return (
@@ -680,10 +616,19 @@ function AccessDeniedScreen() {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function Login({ onSuccess, initialScreen = 'login' }: LoginProps) {
+export default function Login({ onSuccess, initialScreen = 'login', initialEmail = '' }: LoginProps) {
   const [screen, setScreen] = useState<Screen>(initialScreen);
-  const [firstTimeEmail, setFirstTimeEmail] = useState('');
+  const [firstTimeEmail, setFirstTimeEmail] = useState(initialEmail);
   const [forgotEmail, setForgotEmail] = useState('');
+
+  // Handle Supabase auth redirects — switches to reset-password when the user
+  // follows the password-reset email link back to this page.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setScreen('reset-password');
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   function handleSuccess() {
     setScreen('success');
