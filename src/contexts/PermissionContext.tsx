@@ -1,23 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getRole } from "../services/permissionService";
 import { authService } from "../services/authService";
+import type { User } from "@supabase/supabase-js";
 
 export type Role = "User" | "Admin" | "Global Admin" | "Developer";
 
 const VALID_ROLES: Role[] = ["User", "Admin", "Global Admin", "Developer"];
-const applyRole = (raw: string, set: (r: Role) => void) => {
-  if (VALID_ROLES.includes(raw as Role)) set(raw as Role);
-};
-
-interface PermissionContextType {
-  currentRole: Role;
-  userEmail: string;
-  isAuthorized: boolean | null; // null = still checking, true = authorized, false = not in permissions list
-  setCurrentRole: (role: Role) => void;
-  setUserEmail: (email: string) => void;
-  hasPermission: (requiredRole: Role) => boolean;
-  logout: () => void;
-}
 
 const roleHierarchy: Record<Role, number> = {
   User: 1,
@@ -25,6 +12,21 @@ const roleHierarchy: Record<Role, number> = {
   "Global Admin": 3,
   Developer: 4,
 };
+
+function roleFromUser(user: User): Role {
+  const raw = user.user_metadata?.role as string | undefined;
+  return VALID_ROLES.includes(raw as Role) ? (raw as Role) : "User";
+}
+
+interface PermissionContextType {
+  currentRole: Role;
+  userEmail: string;
+  userId: string;
+  isAuthorized: boolean | null; // null = checking, true = signed in, false = not signed in
+  setCurrentRole: (role: Role) => void;
+  hasPermission: (requiredRole: Role) => boolean;
+  logout: () => void;
+}
 
 const PermissionContext = createContext<PermissionContextType | undefined>(
   undefined,
@@ -35,77 +37,52 @@ export const PermissionProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  // Default to Global Admin so the user can see most features initially
-  const [currentRole, setCurrentRole] = useState<Role>("Global Admin");
-  const [userEmail, setUserEmail] = useState<string>(
-    () => localStorage.getItem("userEmail") ?? "",
-  );
-  // null = checking, true = found in SharePoint, false = not registered
+  const [currentRole, setCurrentRole] = useState<Role>("User");
+  const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  // On mount: try Cloudflare Access identity first (production),
-  // fall back to localStorage email (local development).
+  const applyIdentity = (
+    identity: { email: string; user: User } | null,
+  ) => {
+    if (!identity) {
+      setIsAuthorized(false);
+      setUserEmail("");
+      setUserId("");
+      setCurrentRole("User");
+      return;
+    }
+    setUserEmail(identity.email);
+    setUserId(identity.user.id);
+    setCurrentRole(roleFromUser(identity.user));
+    setIsAuthorized(true);
+  };
+
   useEffect(() => {
-    authService.getIdentity().then((identity) => {
-      if (identity?.email) {
-        // Production: Cloudflare-verified identity — enforce SharePoint check
-        const email = identity.email;
-        setUserEmail(email);
-        getRole(email)
-          .then((role) => {
-            if (VALID_ROLES.includes(role as Role)) {
-              applyRole(role, setCurrentRole);
-              setIsAuthorized(true);
-            } else {
-              // Email passed OTP but is not in the SharePoint permissions list
-              setIsAuthorized(false);
-            }
-          })
-          .catch(() => setIsAuthorized(false));
-      } else {
-        // Local development: no Cloudflare identity, skip authorization check
-        const email = localStorage.getItem("userEmail") ?? "";
-        if (email) {
-          setUserEmail(email);
-          getRole(email)
-            .then((role) => applyRole(role, setCurrentRole))
-            .catch(() => {/* keep default role */});
-        }
-        setIsAuthorized(true);
-      }
-    });
+    // Hydrate from existing session on mount (handles page refresh).
+    authService.getSession().then(applyIdentity);
+
+    // Keep auth state in sync for sign-in, sign-out, and token refresh.
+    const {
+      data: { subscription },
+    } = authService.onAuthStateChange(applyIdentity);
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Persist email to localStorage whenever it changes
-  useEffect(() => {
-    if (userEmail) localStorage.setItem("userEmail", userEmail);
-  }, [userEmail]);
-
-  const handleSetUserEmail = (email: string) => {
-    setUserEmail(email);
-    if (email) {
-      getRole(email)
-        .then((role) => applyRole(role, setCurrentRole))
-        .catch(() => {
-          /* keep current role on failure */
-        });
-    }
-  };
-
-  const hasPermission = (requiredRole: Role) => {
-    return roleHierarchy[currentRole] >= roleHierarchy[requiredRole];
-  };
+  const hasPermission = (requiredRole: Role) =>
+    roleHierarchy[currentRole] >= roleHierarchy[requiredRole];
 
   return (
     <PermissionContext.Provider
       value={{
         currentRole,
         userEmail,
+        userId,
         isAuthorized,
         setCurrentRole,
-        setUserEmail: handleSetUserEmail,
         hasPermission,
-        logout: authService.logout,
+        logout: authService.signOut,
       }}
     >
       {children}
@@ -114,9 +91,8 @@ export const PermissionProvider = ({
 };
 
 export const usePermission = () => {
-  const context = useContext(PermissionContext);
-  if (!context) {
+  const ctx = useContext(PermissionContext);
+  if (!ctx)
     throw new Error("usePermission must be used within a PermissionProvider");
-  }
-  return context;
+  return ctx;
 };

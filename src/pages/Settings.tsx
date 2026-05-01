@@ -22,8 +22,7 @@ import {
 } from "../services/permissionService";
 
 const Settings = () => {
-  const { currentRole, userEmail, setUserEmail, hasPermission } =
-    usePermission();
+  const { currentRole, userEmail, hasPermission } = usePermission();
   const [activeTab, setActiveTab] = useState("profile");
   const [profileEmail, setProfileEmail] = useState(userEmail || "");
   const [profileName, setProfileName] = useState("");
@@ -57,8 +56,7 @@ const Settings = () => {
   }, [activeTab]);
 
   const handleSaveProfile = () => {
-    if (!profileEmail) return;
-    setUserEmail(profileEmail);
+    // Email is managed by Supabase Auth and cannot be changed here.
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
   };
@@ -228,7 +226,9 @@ const Settings = () => {
               style={{ letterSpacing: "-0.12px" }}
             >
               Signed in as{" "}
-              <span className="font-semibold text-[#1d1d1f]">{currentRole}</span>
+              <span className="font-semibold text-[#1d1d1f]">
+                {currentRole}
+              </span>
             </p>
           </div>
         </div>
@@ -390,12 +390,18 @@ const Settings = () => {
 
               {showAddUser && (
                 <div className="p-5 bg-[#f5f5f7] rounded-xl space-y-4">
-                  <p className="text-[13px] font-semibold text-[#1d1d1f]" style={{ letterSpacing: "-0.12px" }}>
+                  <p
+                    className="text-[13px] font-semibold text-[#1d1d1f]"
+                    style={{ letterSpacing: "-0.12px" }}
+                  >
                     New User
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                      <label
+                        className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                        style={{ letterSpacing: "0.04em" }}
+                      >
                         Full Name
                       </label>
                       <input
@@ -408,7 +414,10 @@ const Settings = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                      <label
+                        className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                        style={{ letterSpacing: "0.04em" }}
+                      >
                         Email
                       </label>
                       <input
@@ -421,7 +430,10 @@ const Settings = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                      <label
+                        className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                        style={{ letterSpacing: "0.04em" }}
+                      >
                         Role
                       </label>
                       <select
@@ -436,12 +448,17 @@ const Settings = () => {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase" style={{ letterSpacing: "0.04em" }}>
+                      <label
+                        className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                        style={{ letterSpacing: "0.04em" }}
+                      >
                         Status
                       </label>
                       <select
                         value={newStatus}
-                        onChange={(e) => setNewStatus(e.target.value as UserStatus)}
+                        onChange={(e) =>
+                          setNewStatus(e.target.value as UserStatus)
+                        }
                         className="w-full px-3.5 py-2.5 bg-white border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
                       >
                         <option value="Active">Active</option>
@@ -462,7 +479,13 @@ const Settings = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setShowAddUser(false); setNewName(""); setNewEmail(""); setNewRole("User"); setNewStatus("Active"); }}
+                      onClick={() => {
+                        setShowAddUser(false);
+                        setNewName("");
+                        setNewEmail("");
+                        setNewRole("User");
+                        setNewStatus("Active");
+                      }}
                       className="text-[13px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
                     >
                       Cancel
@@ -487,10 +510,18 @@ const Settings = () => {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-[#1d1d1f]/06">
-                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">Name</th>
-                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">Email</th>
-                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">Role</th>
-                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">Status</th>
+                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                          Name
+                        </th>
+                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                          Email
+                        </th>
+                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                          Role
+                        </th>
+                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                          Status
+                        </th>
                         <th className="pb-2.5 label-text text-[#1d1d1f]/35 text-right">
                           Actions
                         </th>
@@ -623,7 +654,9 @@ const Settings = () => {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-[#1d1d1f]/06">
-                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">User</th>
+                        <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                          User
+                        </th>
                         <th className="pb-2.5 label-text text-[#1d1d1f]/35">
                           Current Role
                         </th>
