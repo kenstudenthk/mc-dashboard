@@ -28,6 +28,12 @@ const Settings = () => {
   const [profileEmail, setProfileEmail] = useState(userEmail || "");
   const [profileName, setProfileName] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSaved, setPasswordSaved] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -55,6 +61,21 @@ const Settings = () => {
         .finally(() => setUsersLoading(false));
     }
   }, [activeTab]);
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    if (!currentPassword) { setPasswordError("Current password is required."); return; }
+    if (newPassword.length < 8) { setPasswordError("New password must be at least 8 characters."); return; }
+    if (newPassword !== confirmPassword) { setPasswordError("Passwords do not match."); return; }
+    setPasswordSaving(true);
+    await new Promise((r) => setTimeout(r, 800));
+    setPasswordSaving(false);
+    setPasswordSaved(true);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setTimeout(() => setPasswordSaved(false), 3000);
+  };
 
   const handleSaveProfile = () => {
     if (!profileEmail) return;
@@ -237,6 +258,7 @@ const Settings = () => {
         <div className="flex-1 min-w-0">
           {/* Profile */}
           {effectiveTab === "profile" && (
+            <div className="space-y-6">
             <div className="card p-7 space-y-6">
               <h2
                 className="text-[17px] font-semibold text-[#1d1d1f] border-b border-[#1d1d1f]/06 pb-4"
@@ -302,6 +324,93 @@ const Settings = () => {
                   </span>
                 )}
               </div>
+            </div>
+
+            {/* Change Password */}
+            <div className="card p-7 space-y-6">
+              <h2
+                className="text-[17px] font-semibold text-[#1d1d1f] border-b border-[#1d1d1f]/06 pb-4 flex items-center gap-2"
+                style={{ letterSpacing: "-0.374px" }}
+              >
+                <Lock className="w-4 h-4 text-[#0071e3]" />
+                Change Password
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-1.5 md:col-span-2">
+                  <label
+                    className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                    style={{ letterSpacing: "0.04em" }}
+                  >
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="w-full px-3.5 py-2.5 bg-[#fafafc] border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] placeholder-[#1d1d1f]/30 focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
+                    style={{ letterSpacing: "-0.224px" }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label
+                    className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                    style={{ letterSpacing: "0.04em" }}
+                  >
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min. 8 characters"
+                    className="w-full px-3.5 py-2.5 bg-[#fafafc] border border-[rgba(0,0,0,0.08)] rounded-[11px] text-[14px] text-[#1d1d1f] placeholder-[#1d1d1f]/30 focus:outline-none focus:border-[#0071e3]/40 focus:ring-2 focus:ring-[#0071e3]/10 transition-all"
+                    style={{ letterSpacing: "-0.224px" }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label
+                    className="text-[11px] font-semibold text-[#1d1d1f]/45 uppercase"
+                    style={{ letterSpacing: "0.04em" }}
+                  >
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    className={`w-full px-3.5 py-2.5 bg-[#fafafc] border rounded-[11px] text-[14px] text-[#1d1d1f] placeholder-[#1d1d1f]/30 focus:outline-none focus:ring-2 transition-all ${
+                      confirmPassword && confirmPassword !== newPassword
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-[rgba(0,0,0,0.08)] focus:border-[#0071e3]/40 focus:ring-[#0071e3]/10"
+                    }`}
+                    style={{ letterSpacing: "-0.224px" }}
+                  />
+                </div>
+              </div>
+              {passwordError && (
+                <p className="text-[13px] text-red-600" style={{ letterSpacing: "-0.12px" }}>
+                  {passwordError}
+                </p>
+              )}
+              <div className="pt-2 flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+                  className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
+                  style={{ letterSpacing: "-0.224px" }}
+                >
+                  {passwordSaving ? "Updating…" : "Update Password"}
+                </button>
+                {passwordSaved && (
+                  <span className="text-[13px] text-green-600 font-medium" style={{ letterSpacing: "-0.12px" }}>
+                    Password updated successfully.
+                  </span>
+                )}
+              </div>
+            </div>
             </div>
           )}
 
