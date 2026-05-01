@@ -21,16 +21,18 @@ export const authService = {
   },
 
   /**
-   * Signs the user out. When Cloudflare Access is active (production), redirects
-   * to the Access logout endpoint which clears the session token. In local
-   * development where Access is not available, clears localStorage and reloads.
+   * Signs the user out. Clears localStorage and, when Cloudflare Access is
+   * active, fires a best-effort request to clear the CF session cookie without
+   * navigating away so the app can show its own signed-out screen.
    */
-  logout: (useCloudflarAccess: boolean): void => {
+  logout: async (hasCFAccess: boolean): Promise<void> => {
     localStorage.removeItem("userEmail");
-    if (useCloudflarAccess) {
-      window.location.href = "/cdn-cgi/access/logout";
-    } else {
-      window.location.href = "/";
+    if (hasCFAccess) {
+      try {
+        await fetch("/cdn-cgi/access/logout", { redirect: "manual" });
+      } catch {
+        // token will expire naturally if the endpoint is unreachable
+      }
     }
   },
 };
