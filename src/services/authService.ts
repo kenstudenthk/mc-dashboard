@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAdmin } from '../lib/supabase';
 
 interface AuthIdentity {
   email: string;
@@ -26,4 +26,23 @@ export const authService = {
     });
     return { error };
   },
+
+  inviteUser: async (email: string): Promise<{ error: any }> => {
+    if (!supabaseAdmin) {
+      console.warn("Supabase Admin client not initialized. Falling back to magic link for local dev.");
+      // Fallback for local development if the service role key isn't present
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
+      return { error };
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    });
+    return { error };
+  }
 };
