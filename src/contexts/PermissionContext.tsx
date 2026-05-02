@@ -60,36 +60,28 @@ export const PermissionProvider = ({
   }
 
   useEffect(() => {
-    // Seed email from localStorage while session check is in-flight
-    const cached = localStorage.getItem("userEmail");
-    if (cached) setUserEmail(cached);
-
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user?.email) {
-        setLoggedOut(true);
-        return;
-      }
-      if (session.user.user_metadata?.force_password_change) {
-        setForcePasswordChange(true);
-        setUserEmail(session.user.email);
-        return;
-      }
-      authorizeSession(session.user.email);
-    });
-
-    // Ongoing auth state listener
+    // Use onAuthStateChange exclusively (including INITIAL_SESSION) so the
+    // loading screen never gets stuck when getSession() would hang on a stale
+    // refresh token. INITIAL_SESSION fires synchronously on mount with the
+    // current session (or null), making a separate getSession() call redundant.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
-        setIsAuthorized(null);
-        setForcePasswordChange(false);
-        setLoggedOut(true);
-      } else if (
-        (event === "SIGNED_IN" || event === "USER_UPDATED") &&
-        session?.user?.email
+      if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
+        if (!session?.user?.email) {
+          setIsAuthorized(null);
+          setForcePasswordChange(false);
+          setLoggedOut(true);
+          return;
+        }
+      }
+
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "USER_UPDATED"
       ) {
+        if (!session?.user?.email) return;
         if (session.user.user_metadata?.force_password_change) {
           setForcePasswordChange(true);
           setUserEmail(session.user.email);
