@@ -95,8 +95,12 @@ const Settings = () => {
     try {
       await createUser(newEmail, newName, newRole, newStatus);
       
-      // Send invitation email (standard password reset flow)
-      await authService.sendPasswordResetEmail(newEmail);
+      // Send invitation email via Supabase Admin API
+      const { error } = await authService.inviteUser(newEmail);
+      if (error) {
+        console.error("Failed to send invitation email:", error);
+        // We don't throw here so the user is still created in PA even if the email fails
+      }
 
       const updated = await getAllUsers();
       setUsers(updated);
