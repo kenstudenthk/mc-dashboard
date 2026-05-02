@@ -103,3 +103,15 @@ export async function createUser(
   });
   if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
 }
+
+export async function deleteUser(id: number): Promise<void> {
+  const res = await fetch(URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "DELETE_USER",
+      data: { Id: id },
+    }),
+  });
+  if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
+}

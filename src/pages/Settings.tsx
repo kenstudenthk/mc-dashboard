@@ -16,11 +16,13 @@ import {
   getAllUsers,
   updateUser,
   createUser,
+  deleteUser,
   type SPUser,
   type UserRole,
   type UserStatus,
 } from "../services/permissionService";
 import { authService } from "../services/authService";
+import { Trash2, Mail } from "lucide-react";
 
 const Settings = () => {
   const { currentRole, userEmail, setUserEmail, hasPermission } =
@@ -154,6 +156,45 @@ const Settings = () => {
       setTimeout(() => setResetSentIndex(null), 3000);
     } catch {
       setUsersError("Failed to send reset link. Please try again.");
+    } finally {
+      setSavingIndex(null);
+    }
+  };
+
+  const handleDeleteUser = async (index: number, user: SPUser) => {
+    if (currentRole !== "Developer" && currentRole !== "Global Admin") {
+      alert("You don't have permission. Please notice Global Admin to delete.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${user.displayName || user.email}? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setSavingIndex(index);
+    try {
+      await deleteUser(user.id);
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch {
+      setUsersError("Failed to delete user. Please try again.");
+    } finally {
+      setSavingIndex(null);
+    }
+  };
+
+  const handleResendInvitation = async (index: number, email: string) => {
+    setSavingIndex(index);
+    try {
+      const { error } = await authService.sendPasswordResetEmail(email);
+      if (error) throw error;
+      setResetSentIndex(index);
+      setTimeout(() => setResetSentIndex(null), 3000);
+    } catch {
+      setUsersError("Failed to resend invitation. Please try again.");
     } finally {
       setSavingIndex(null);
     }
@@ -681,33 +722,58 @@ const Settings = () => {
                             )}
                           </td>
                           <td className="py-3 text-right">
-                            {editingTeamIndex === i ? (
-                              <div className="flex items-center justify-end gap-3">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingTeamIndex(null)}
-                                  className="text-[12px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={savingIndex === i}
-                                  onClick={() => handleSaveTeamStatus(i, user)}
-                                  className="text-[12px] text-[#0071e3] font-medium hover:underline disabled:opacity-50"
-                                >
-                                  {savingIndex === i ? "Saving…" : "Save"}
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setEditingTeamIndex(i)}
-                                className="text-[13px] text-[#0071e3] hover:underline font-medium"
-                              >
-                                Edit
-                              </button>
-                            )}
+                            <div className="flex items-center justify-end gap-3">
+                              {editingTeamIndex === i ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingTeamIndex(null)}
+                                    className="text-[12px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={savingIndex === i}
+                                    onClick={() => handleSaveTeamStatus(i, user)}
+                                    className="text-[12px] text-[#0071e3] font-medium hover:underline disabled:opacity-50"
+                                  >
+                                    {savingIndex === i ? "Saving…" : "Save"}
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingTeamIndex(i)}
+                                    className="text-[12px] text-[#0071e3] hover:underline font-medium"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleResendInvitation(i, user.email)}
+                                    disabled={savingIndex === i}
+                                    className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1"
+                                  >
+                                    <Mail className="w-3 h-3 text-[#0071e3]/60" />
+                                    {resetSentIndex === i ? (
+                                      <span className="text-green-600">Sent!</span>
+                                    ) : (
+                                      "Re-send"
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteUser(i, user)}
+                                    className="text-[12px] text-red-600 hover:underline font-medium flex items-center gap-1"
+                                  >
+                                    <Trash2 className="w-3 h-3 text-red-600/60" />
+                                    Delete
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
