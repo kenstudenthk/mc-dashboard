@@ -60,13 +60,20 @@ export const PermissionProvider = ({
   }
 
   useEffect(() => {
-    // Use onAuthStateChange exclusively (including INITIAL_SESSION) so the
-    // loading screen never gets stuck when getSession() would hang on a stale
-    // refresh token. INITIAL_SESSION fires synchronously on mount with the
-    // current session (or null), making a separate getSession() call redundant.
+    let resolved = false;
+
+    // Safety net: if Supabase is unreachable (wrong URL/key, project paused,
+    // network issue) INITIAL_SESSION never fires and the loading screen hangs.
+    // After 8 s we give up and show the login form.
+    const timeout = setTimeout(() => {
+      if (!resolved) setLoggedOut(true);
+    }, 8000);
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") resolved = true;
+
       if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
         if (!session?.user?.email) {
           setIsAuthorized(null);
@@ -93,7 +100,10 @@ export const PermissionProvider = ({
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist email to localStorage whenever it changes
