@@ -138,7 +138,7 @@ const Customers = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#1d1d1f]/06">
+              <tr className="hidden md:table-row border-b border-[#1d1d1f]/06">
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35">
                   Customer
                 </th>
@@ -189,10 +189,71 @@ const Customers = () => {
                 </tr>
               ) : (
                 filtered.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    className="border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors group"
-                  >
+                  <React.Fragment key={customer.id}>
+                    {/* Mobile Card View */}
+                    <tr className="md:hidden border-b border-[#1d1d1f]/04">
+                      <td colSpan={6} className="px-4 py-3">
+                        <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-sm shrink-0">
+                                {(customer.Title || customer.Company || "??")
+                                  .substring(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                              <div>
+                                <Link
+                                  to={`/customers/${customer.id}`}
+                                  className="text-sm font-semibold text-[#0071e3] hover:underline"
+                                >
+                                  {customer.Title ||
+                                    customer.Company ||
+                                    `Customer #${customer.id}`}
+                                </Link>
+                                <div className="text-xs text-[#1d1d1f]/40">
+                                  #{customer.id}
+                                </div>
+                              </div>
+                            </div>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                customer.Status === "Active"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {customer.Status}
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-col gap-1.5 bg-[#f5f5f7] p-2.5 rounded-lg">
+                            <div className="flex items-center gap-2 text-xs text-[#1d1d1f]/70">
+                              <Mail className="w-3.5 h-3.5 text-[#1d1d1f]/40" />
+                              <span className="truncate">{customer.Email || "—"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-[#1d1d1f]/70">
+                              <Phone className="w-3.5 h-3.5 text-[#1d1d1f]/40" />
+                              <span>{customer.Phone || "—"}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-1">
+                            <Link
+                              to={`/customers/${customer.id}`}
+                              className="px-3 py-1.5 text-xs font-medium text-[#0071e3] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              View Profile
+                            </Link>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Desktop Table Row */}
+                    <tr
+                      className="hidden md:table-row border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors group"
+                    >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-semibold text-xs">
@@ -260,6 +321,7 @@ const Customers = () => {
                       </div>
                     </td>
                   </tr>
+                  </React.Fragment>
                 ))
               )}
             </tbody>

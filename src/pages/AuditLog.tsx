@@ -152,7 +152,7 @@ const AuditLog = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#1d1d1f]/06">
+              <tr className="hidden md:table-row border-b border-[#1d1d1f]/06">
                 <th className="px-6 py-3.5 label-text text-[#1d1d1f]/35 w-48">
                   Date & Time
                 </th>
@@ -191,10 +191,56 @@ const AuditLog = () => {
                 </tr>
               ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors"
-                  >
+                  <React.Fragment key={log.id}>
+                    {/* Mobile Card View */}
+                    <tr className="md:hidden border-b border-[#1d1d1f]/04">
+                      <td colSpan={5} className="px-4 py-3">
+                        <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2.5">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex items-center gap-1.5 text-xs text-[#1d1d1f]/45 whitespace-nowrap">
+                              <Clock className="w-3.5 h-3.5 text-[#1d1d1f]/25" />
+                              {formatTimestamp(log.Created)}
+                            </div>
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getActionColor(log.Action)}`}
+                              style={
+                                log.Action === "Email"
+                                  ? { background: "#ddf4fd", borderColor: "#3bd3fd50" }
+                                  : undefined
+                              }
+                            >
+                              {getActionIcon(log.Action)}
+                              {log.Action}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="w-6 h-6 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center text-[10px] font-bold">
+                              {log.UserEmail?.charAt(0).toUpperCase() ?? "?"}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-[#1d1d1f]">
+                                {log.UserEmail ?? "—"}
+                              </span>
+                              {log.TargetID && (
+                                <Link to={`/orders/${log.TargetID}`} className="text-[11px] font-semibold text-[#0071e3] hover:underline">
+                                  {log.TargetID}
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="bg-[#f5f5f7] p-2.5 rounded-lg text-xs text-[#1d1d1f]/70 mt-1 break-words">
+                            {log.Details}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Desktop Table Row */}
+                    <tr
+                      className="hidden md:table-row border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors"
+                    >
                     <td className="px-6 py-3.5 text-xs text-[#1d1d1f]/45 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-[#1d1d1f]/25" />
@@ -235,6 +281,7 @@ const AuditLog = () => {
                       {log.Details}
                     </td>
                   </tr>
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>

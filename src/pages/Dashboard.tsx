@@ -205,7 +205,7 @@ const Dashboard = () => {
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-[#1d1d1f]/06">
+                  <tr className="hidden md:table-row border-b border-[#1d1d1f]/06">
                     <th className="pb-2.5 label-text text-[#1d1d1f]/35">
                       Service No.
                     </th>
@@ -239,10 +239,34 @@ const Dashboard = () => {
                     </tr>
                   ) : (
                     incompleteOrders.slice(0, 5).map((order) => (
-                      <tr
-                        key={order.id}
-                        className="border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
-                      >
+                      <React.Fragment key={order.id}>
+                        {/* Mobile Card View */}
+                        <tr className="md:hidden border-b border-[#1d1d1f]/04">
+                          <td colSpan={4} className="py-3">
+                            <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <Link to={`/orders/${order.Title}`} className="text-sm font-semibold text-[#0071e3] hover:underline truncate">
+                                  {order.Title}
+                                </Link>
+                                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}>
+                                  {order.Status}
+                                </span>
+                              </div>
+                              <div className="text-xs text-[#1d1d1f]/70 truncate">
+                                {order.CustomerName}
+                              </div>
+                              <div className="text-xs text-[#1d1d1f]/45 flex justify-between items-center mt-1 pt-2 border-t border-[#1d1d1f]/04">
+                                <span>SRD: {formatDate(order.SRD)}</span>
+                                <Link to={`/orders/${order.Title}`} className="text-[#0071e3] font-medium">View →</Link>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Desktop Table Row */}
+                        <tr
+                          className="hidden md:table-row border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
+                        >
                         <td className="py-3 text-xs font-semibold text-[#0071e3] hover:underline">
                           <Link to={`/orders/${order.Title}`}>
                             {order.Title}
@@ -262,6 +286,7 @@ const Dashboard = () => {
                           {formatDate(order.SRD)}
                         </td>
                       </tr>
+                      </React.Fragment>
                     ))
                   )}
                 </tbody>
@@ -285,7 +310,7 @@ const Dashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-[#1d1d1f]/06">
+                  <tr className="hidden md:table-row border-b border-[#1d1d1f]/06">
                     <th className="pb-2.5 label-text text-[#1d1d1f]/35">
                       Service No.
                     </th>
@@ -318,10 +343,31 @@ const Dashboard = () => {
                     </tr>
                   ) : (
                     srdTodayOrders.map((order) => (
-                      <tr
-                        key={order.id}
-                        className="border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
-                      >
+                      <React.Fragment key={order.id}>
+                        {/* Mobile Card View */}
+                        <tr className="md:hidden border-b border-[#1d1d1f]/04">
+                          <td colSpan={3} className="py-3">
+                            <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <Link to={`/orders/${order.Title}`} className="text-sm font-semibold text-[#0071e3] hover:underline truncate">
+                                  {order.Title}
+                                </Link>
+                                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}>
+                                  {order.Status}
+                                </span>
+                              </div>
+                              <div className="text-xs text-[#1d1d1f]/70 truncate flex justify-between items-center mt-1">
+                                <span>{order.CustomerName}</span>
+                                <Link to={`/orders/${order.Title}`} className="text-[#0071e3] font-medium text-[10px]">View →</Link>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Desktop Table Row */}
+                        <tr
+                          className="hidden md:table-row border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
+                        >
                         <td className="py-3 text-xs font-semibold text-[#0071e3] hover:underline">
                           <Link to={`/orders/${order.Title}`}>
                             {order.Title}
@@ -338,6 +384,7 @@ const Dashboard = () => {
                           </span>
                         </td>
                       </tr>
+                      </React.Fragment>
                     ))
                   )}
                 </tbody>
@@ -362,7 +409,7 @@ const Dashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-[#1d1d1f]/06">
+                  <tr className="hidden md:table-row border-b border-[#1d1d1f]/06">
                     <th className="pb-2.5 label-text text-[#1d1d1f]/35">
                       Customer
                     </th>
@@ -396,10 +443,36 @@ const Dashboard = () => {
                     </tr>
                   ) : (
                     preProvisionOrders.map((order) => (
-                      <tr
-                        key={order.id}
-                        className="border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
-                      >
+                      <React.Fragment key={order.id}>
+                        {/* Mobile Card View */}
+                        <tr className="md:hidden border-b border-[#1d1d1f]/04">
+                          <td colSpan={4} className="py-3">
+                            <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="text-sm font-semibold text-[#1d1d1f] truncate">
+                                  {order.CustomerName}
+                                </span>
+                                <span className="text-xs font-medium text-[#1d1d1f]/60 whitespace-nowrap bg-[#f5f5f7] px-2 py-0.5 rounded">
+                                  {normalizeCloudProvider(order.CloudProvider ?? "")}
+                                </span>
+                              </div>
+                              <div className="text-xs text-[#1d1d1f]/45 flex justify-between items-center mt-1 pt-2 border-t border-[#1d1d1f]/04">
+                                <span>SRD: {formatDate(order.SRD)}</span>
+                                <Link
+                                  to={`/orders/${order.Title}`}
+                                  className="text-[#0071e3] hover:text-[#0071e3]/70 transition-colors inline-flex p-1 bg-blue-50 rounded-lg"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Link>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Desktop Table Row */}
+                        <tr
+                          className="hidden md:table-row border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
+                        >
                         <td className="py-3 text-xs font-medium text-[#1d1d1f] truncate max-w-[120px]">
                           {order.CustomerName}
                         </td>
@@ -418,6 +491,7 @@ const Dashboard = () => {
                           </Link>
                         </td>
                       </tr>
+                      </React.Fragment>
                     ))
                   )}
                 </tbody>
