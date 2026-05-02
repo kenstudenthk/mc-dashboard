@@ -69,28 +69,34 @@ const Feedback = () => {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-[#1d1d1f]/08 flex gap-3 flex-wrap">
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            className="px-3 py-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/10 rounded-lg text-xs focus:outline-none"
-          >
-            <option value="All">All Types</option>
-            <option value="Bug">Bug</option>
-            <option value="Idea">Idea</option>
-            <option value="Other">Other</option>
-          </select>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/10 rounded-lg text-xs focus:outline-none"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Open">Open</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Done">Done</option>
-          </select>
-        </div>
+        <TutorTooltip
+          text="Use these filters to narrow down feedback items by their type (Bug, Idea, Other) or their current resolution status."
+          position="bottom"
+          componentName="Feedback.Filters"
+        >
+          <div className="p-4 border-b border-[#1d1d1f]/08 flex gap-3 flex-wrap">
+            <select
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value)}
+              className="px-3 py-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/10 rounded-lg text-xs focus:outline-none"
+            >
+              <option value="All">All Types</option>
+              <option value="Bug">Bug</option>
+              <option value="Idea">Idea</option>
+              <option value="Other">Other</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 bg-[#f5f5f7] border border-[#1d1d1f]/10 rounded-lg text-xs focus:outline-none"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+        </TutorTooltip>
 
         {loading && (
           <div className="p-8 text-center text-sm text-[#1d1d1f]/40">Loading feedback…</div>

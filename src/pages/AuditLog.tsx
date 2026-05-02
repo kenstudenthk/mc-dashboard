@@ -113,6 +113,7 @@ const AuditLog = () => {
               text="Search logs by user name, service number, or specific details."
               position="bottom"
               wrapperClass="relative flex-1 sm:w-80"
+              componentName="AuditLog.Search"
             >
               <div className="relative flex-1 sm:w-full">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
@@ -128,6 +129,7 @@ const AuditLog = () => {
             <TutorTooltip
               text="Filter logs to show only specific actions like creations, updates, or deletions."
               position="bottom"
+              componentName="AuditLog.Filter"
             >
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-[#1d1d1f]/30" />

@@ -470,170 +470,184 @@ const Reports = () => {
 
       {/* Row 1: Provider pie + Monthly trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <ChartCard title="Orders by Cloud Provider">
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={cloudProviderData}
-                  cx="50%" cy="50%"
-                  innerRadius={75} outerRadius={110}
-                  paddingAngle={4} dataKey="value"
-                >
-                  {cloudProviderData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
-
-        <ChartCard title="Monthly Order Trend">
-          {monthlyTrend.length === 0 ? (
-            <div className="h-72 flex items-center justify-center text-sm text-[#1d1d1f]/35">
-              No date data available
-            </div>
-          ) : (
+        <TutorTooltip text="Distribution of orders across different cloud providers like AWS, Azure, GCP, etc." position="top" componentName="Reports.Chart.Providers">
+          <ChartCard title="Orders by Cloud Provider">
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyTrend} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={AXIS_TICK} />
-                  <YAxis axisLine={false} tickLine={false} tick={AXIS_TICK} allowDecimals={false} />
+                <PieChart>
+                  <Pie
+                    data={cloudProviderData}
+                    cx="50%" cy="50%"
+                    innerRadius={75} outerRadius={110}
+                    paddingAngle={4} dataKey="value"
+                  >
+                    {cloudProviderData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
                   <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  <Line
-                    type="monotone" dataKey="count"
-                    stroke="#0071e3" strokeWidth={2}
-                    dot={{ r: 3, fill: '#0071e3' }} activeDot={{ r: 5 }}
-                  />
-                </LineChart>
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
+                </PieChart>
               </ResponsiveContainer>
             </div>
-          )}
-        </ChartCard>
+          </ChartCard>
+        </TutorTooltip>
+
+        <TutorTooltip text="Monthly trend of order volume over time to identify seasonal patterns or growth." position="top" componentName="Reports.Chart.Trend">
+          <ChartCard title="Monthly Order Trend">
+            {monthlyTrend.length === 0 ? (
+              <div className="h-72 flex items-center justify-center text-sm text-[#1d1d1f]/35">
+                No date data available
+              </div>
+            ) : (
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={monthlyTrend} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={AXIS_TICK} />
+                    <YAxis axisLine={false} tickLine={false} tick={AXIS_TICK} allowDecimals={false} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Line
+                      type="monotone" dataKey="count"
+                      stroke="#0071e3" strokeWidth={2}
+                      dot={{ r: 3, fill: '#0071e3' }} activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+        </TutorTooltip>
       </div>
 
       {/* Row 2: Order type + Service type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <ChartCard title="Orders by Type">
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={orderTypeData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={AXIS_TICK} />
-                <YAxis axisLine={false} tickLine={false} tick={AXIS_TICK} allowDecimals={false} />
-                <Tooltip cursor={{ fill: 'rgba(29,29,31,0.03)' }} contentStyle={TOOLTIP_STYLE} />
-                <Bar dataKey="count" fill="#0071e3" radius={[4, 4, 0, 0]} barSize={36} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
-
-        <ChartCard title="Orders by Service Type">
-          {serviceTypeData.length === 0 ? (
-            <div className="h-72 flex items-center justify-center text-sm text-[#1d1d1f]/35">
-              No service type data
-            </div>
-          ) : (
+        <TutorTooltip text="Breakdown of orders by their category (e.g., New Order, Termination, Change)." position="top" componentName="Reports.Chart.Types">
+          <ChartCard title="Orders by Type">
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={serviceTypeData} layout="vertical"
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(29,29,31,0.06)" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={AXIS_TICK} allowDecimals={false} />
-                  <YAxis
-                    type="category" dataKey="name"
-                    axisLine={false} tickLine={false}
-                    tick={{ ...AXIS_TICK, fontSize: 10 }} width={100}
-                  />
+                <BarChart data={orderTypeData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={AXIS_TICK} />
+                  <YAxis axisLine={false} tickLine={false} tick={AXIS_TICK} allowDecimals={false} />
                   <Tooltip cursor={{ fill: 'rgba(29,29,31,0.03)' }} contentStyle={TOOLTIP_STYLE} />
-                  <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={18} />
+                  <Bar dataKey="count" fill="#0071e3" radius={[4, 4, 0, 0]} barSize={36} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          )}
-        </ChartCard>
+          </ChartCard>
+        </TutorTooltip>
+
+        <TutorTooltip text="Distribution of orders by service type (e.g., Cloud Connect, Managed Service)." position="top" componentName="Reports.Chart.Services">
+          <ChartCard title="Orders by Service Type">
+            {serviceTypeData.length === 0 ? (
+              <div className="h-72 flex items-center justify-center text-sm text-[#1d1d1f]/35">
+                No service type data
+              </div>
+            ) : (
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={serviceTypeData} layout="vertical"
+                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(29,29,31,0.06)" />
+                    <XAxis type="number" axisLine={false} tickLine={false} tick={AXIS_TICK} allowDecimals={false} />
+                    <YAxis
+                      type="category" dataKey="name"
+                      axisLine={false} tickLine={false}
+                      tick={{ ...AXIS_TICK, fontSize: 10 }} width={100}
+                    />
+                    <Tooltip cursor={{ fill: 'rgba(29,29,31,0.03)' }} contentStyle={TOOLTIP_STYLE} />
+                    <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={18} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+        </TutorTooltip>
       </div>
 
       {/* Avg processing time by provider */}
       {avgProcessingData.length > 0 && (
-        <ChartCard title="Average Processing Time by Provider (days)">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={avgProcessingData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
-                <XAxis dataKey="provider" axisLine={false} tickLine={false} tick={AXIS_TICK} />
-                <YAxis axisLine={false} tickLine={false} tick={AXIS_TICK} unit=" d" />
-                <Tooltip
-                  contentStyle={TOOLTIP_STYLE}
-                  formatter={(v: number) => [`${v} days`, 'Avg']}
-                />
-                <Bar dataKey="avgDays" radius={[4, 4, 0, 0]} barSize={40}>
-                  {avgProcessingData.map((entry, i) => (
-                    <Cell key={i} fill={providerColor(entry.provider, i)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
+        <TutorTooltip text="Average number of days taken to complete an order, grouped by cloud provider." position="top" componentName="Reports.Chart.AvgTime">
+          <ChartCard title="Average Processing Time by Provider (days)">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={avgProcessingData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(29,29,31,0.06)" />
+                  <XAxis dataKey="provider" axisLine={false} tickLine={false} tick={AXIS_TICK} />
+                  <YAxis axisLine={false} tickLine={false} tick={AXIS_TICK} unit=" d" />
+                  <Tooltip
+                    contentStyle={TOOLTIP_STYLE}
+                    formatter={(v: number) => [`${v} days`, 'Avg']}
+                  />
+                  <Bar dataKey="avgDays" radius={[4, 4, 0, 0]} barSize={40}>
+                    {avgProcessingData.map((entry, i) => (
+                      <Cell key={i} fill={providerColor(entry.provider, i)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+        </TutorTooltip>
       )}
 
       {/* Status Breakdown */}
-      <ChartCard
-        title="Status Breakdown"
-        right={
-          <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>{completionRate}% Completion Rate</span>
-          </div>
-        }
-      >
-        <div className="flex flex-wrap gap-3">
-          {statusSummary.map((s, i) => (
-            <div
-              key={i}
-              className="p-4 rounded-lg bg-[#f5f5f7] flex flex-col items-center justify-center text-center min-w-[90px]"
-            >
-              <div
-                className={`w-11 h-11 rounded-full ${s.bg} ${s.color} flex items-center justify-center font-bold text-base mb-2.5`}
-              >
-                {s.value}
-              </div>
-              <div className="text-xs font-medium text-[#1d1d1f]/60">{s.label}</div>
+      <TutorTooltip text="Current lifecycle status of all filtered orders." position="top" componentName="Reports.StatusBreakdown">
+        <ChartCard
+          title="Status Breakdown"
+          right={
+            <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{completionRate}% Completion Rate</span>
             </div>
-          ))}
-        </div>
-      </ChartCard>
+          }
+        >
+          <div className="flex flex-wrap gap-3">
+            {statusSummary.map((s, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-lg bg-[#f5f5f7] flex flex-col items-center justify-center text-center min-w-[90px]"
+              >
+                <div
+                  className={`w-11 h-11 rounded-full ${s.bg} ${s.color} flex items-center justify-center font-bold text-base mb-2.5`}
+                >
+                  {s.value}
+                </div>
+                <div className="text-xs font-medium text-[#1d1d1f]/60">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+      </TutorTooltip>
 
       {/* Top Customers */}
-      <ChartCard title="Top Customers by Order Count">
-        <div className="space-y-2.5">
-          {topCustomers.map((c, i) => {
-            const pct = filtered.length > 0 ? (c.count / filtered.length) * 100 : 0;
-            return (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-xs text-[#1d1d1f]/35 w-4 text-right shrink-0">{i + 1}</span>
-                <span className="text-sm text-[#1d1d1f] w-48 truncate shrink-0">{c.name}</span>
-                <div className="flex-1 h-2 bg-[#f5f5f7] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#0071e3] rounded-full transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
+      <TutorTooltip text="Top 10 customers by the number of orders placed." position="top" componentName="Reports.TopCustomers">
+        <ChartCard title="Top Customers by Order Count">
+          <div className="space-y-2.5">
+            {topCustomers.map((c, i) => {
+              const pct = filtered.length > 0 ? (c.count / filtered.length) * 100 : 0;
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-xs text-[#1d1d1f]/35 w-4 text-right shrink-0">{i + 1}</span>
+                  <span className="text-sm text-[#1d1d1f] w-48 truncate shrink-0">{c.name}</span>
+                  <div className="flex-1 h-2 bg-[#f5f5f7] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#0071e3] rounded-full transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-[#1d1d1f] w-8 text-right shrink-0">
+                    {c.count}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-[#1d1d1f] w-8 text-right shrink-0">
-                  {c.count}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </ChartCard>
+              );
+            })}
+          </div>
+        </ChartCard>
+      </TutorTooltip>
 
     </div>
   );

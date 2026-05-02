@@ -25,11 +25,16 @@ import { PermissionProvider, usePermission } from './contexts/PermissionContext'
 import { TutorProvider } from './contexts/TutorContext';
 
 function AppContent() {
-  const { isAuthorized, loggedOut, forcePasswordChange, userEmail } = usePermission();
+  const { isAuthorized, loggedOut, forcePasswordChange, isPasswordRecovery, userEmail, clearPasswordRecovery } = usePermission();
 
   // User needs to (re-)authenticate
   if (loggedOut) {
     return <Login initialScreen="login" />;
+  }
+
+  // User clicked a password reset link
+  if (isPasswordRecovery) {
+    return <Login initialScreen="reset-password" onSuccess={clearPasswordRecovery} />;
   }
 
   // User is signed in but must set a new password before accessing the app

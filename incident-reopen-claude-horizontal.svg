@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 500" width="2400" height="500">
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', 'SimHei', sans-serif; }
+  </style>
+  <defs>
+    <marker id="arrow-claude" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#5a5a5a"/>
+    </marker>
+    <filter id="shadow-soft">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="2400" height="500" fill="#f8f6f3"/>
+  <text x="1200" y="60" text-anchor="middle" fill="#1a1a1a" font-size="24" font-weight="700">Incident Re-opening Flow (Horizontal / Claude Style)</text>
+  <rect x="60" y="260" width="80" height="40" rx="20" ry="20" fill="#e8e6e3" stroke="#4a4a4a" stroke-width="2"/>
+  <text x="100" y="285" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="600">START</text>
+  <rect x="210.0" y="230.0" width="280" height="100" rx="12" ry="12" fill="#a8c5e6" stroke="#4a4a4a" stroke-width="2.5" filter="url(#shadow-soft)"/>
+  <text x="350" y="258.0" text-anchor="middle" fill="#1a1a1a" font-size="16" font-weight="600">Human Error</text>
+  <text x="350" y="282.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Helpdesk Staff makes INC a</text>
+  <text x="350" y="300.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">CHILD to an unrelated REQ</text>
+  <rect x="640.0" y="230.0" width="280" height="100" rx="12" ry="12" fill="#9dd4c7" stroke="#4a4a4a" stroke-width="2.5" filter="url(#shadow-soft)"/>
+  <text x="780" y="258.0" text-anchor="middle" fill="#1a1a1a" font-size="16" font-weight="600">WORKFLOW B</text>
+  <text x="780" y="282.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Batch Auto-Closure runs</text>
+  <text x="780" y="300.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">1. Sets Parent REQ to CLOSED</text>
+  <text x="780" y="318.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">2. Triggers Field Sync</text>
+  <rect x="1070.0" y="230.0" width="280" height="100" rx="12" ry="12" fill="#e8e6e3" stroke="#4a4a4a" stroke-width="2.5" filter="url(#shadow-soft)"/>
+  <text x="1210" y="258.0" text-anchor="middle" fill="#1a1a1a" font-size="16" font-weight="600">Field Synchronization</text>
+  <text x="1210" y="282.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Parent's Assignee/Group</text>
+  <text x="1210" y="300.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">are copied to Child INC</text>
+  <rect x="1500.0" y="230.0" width="280" height="100" rx="12" ry="12" fill="#9dd4c7" stroke="#4a4a4a" stroke-width="2.5" filter="url(#shadow-soft)"/>
+  <text x="1640" y="258.0" text-anchor="middle" fill="#1a1a1a" font-size="16" font-weight="600">WORKFLOW A</text>
+  <text x="1640" y="282.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Auto-In Progress runs</text>
+  <text x="1640" y="300.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Detects Assignee change</text>
+  <text x="1640" y="318.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Changes INC to IN PROGRESS</text>
+  <rect x="1930.0" y="230.0" width="280" height="100" rx="12" ry="12" fill="#f4e4c1" stroke="#4a4a4a" stroke-width="2.5" filter="url(#shadow-soft)"/>
+  <text x="2070" y="258.0" text-anchor="middle" fill="#1a1a1a" font-size="16" font-weight="600">INCIDENT RE-OPENED</text>
+  <text x="2070" y="282.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Resolved Ticket now In Progress</text>
+  <text x="2070" y="300.0" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="400">Notification Email Sent</text>
+  <rect x="2260" y="260" width="80" height="40" rx="20" ry="20" fill="#e8e6e3" stroke="#4a4a4a" stroke-width="2"/>
+  <text x="2300" y="285" text-anchor="middle" fill="#1a1a1a" font-size="14" font-weight="600">END</text>
+  <line x1="140" y1="280" x2="210" y2="280" stroke="#5a5a5a" stroke-width="2" marker-end="url(#arrow-claude)"/>
+  <line x1="490" y1="280" x2="640" y2="280" stroke="#5a5a5a" stroke-width="2" marker-end="url(#arrow-claude)"/>
+  <rect x="505.0" y="268" width="120" height="24" fill="#f8f6f3" opacity="0.95"/>
+  <text x="565.0" y="284" text-anchor="middle" fill="#5a5a5a" font-size="14" font-style="italic">15 Days Pass</text>
+  <line x1="920" y1="280" x2="1070" y2="280" stroke="#5a5a5a" stroke-width="2" marker-end="url(#arrow-claude)"/>
+  <rect x="935.0" y="268" width="120" height="24" fill="#f8f6f3" opacity="0.95"/>
+  <text x="995.0" y="284" text-anchor="middle" fill="#5a5a5a" font-size="14" font-weight="600">Trigger Sync</text>
+  <line x1="1350" y1="280" x2="1500" y2="280" stroke="#5a5a5a" stroke-width="2" marker-end="url(#arrow-claude)"/>
+  <rect x="1365.0" y="268" width="120" height="24" fill="#f8f6f3" opacity="0.95"/>
+  <text x="1425.0" y="284" text-anchor="middle" fill="#5a5a5a" font-size="14" font-weight="600">New Assignee</text>
+  <line x1="1780" y1="280" x2="1930" y2="280" stroke="#5a5a5a" stroke-width="2" marker-end="url(#arrow-claude)"/>
+  <rect x="1795.0" y="268" width="120" height="24" fill="#f8f6f3" opacity="0.95"/>
+  <text x="1855.0" y="284" text-anchor="middle" fill="#5a5a5a" font-size="14" font-weight="600">Status Update</text>
+  <line x1="2210" y1="280" x2="2260" y2="280" stroke="#5a5a5a" stroke-width="2" marker-end="url(#arrow-claude)"/>
+</svg>

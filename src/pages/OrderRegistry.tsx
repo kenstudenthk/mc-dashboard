@@ -522,67 +522,139 @@ const OrderRegistry = () => {
               <thead className="hidden md:table-header-group">
                 <tr className="border-b-2 border-[#1d1d1f]/10 bg-[#e8e8eb]">
                   <th className="w-6 p-0" />
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("Title")}
-                  >
-                    Service No.
-                    <SortIcon active={sortKey === "Title"} dir={sortDir} />
+                  <th className="px-3 py-3">
+                    <TutorTooltip
+                      text="Sort by Service No. Click to toggle ascending/descending."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("Title")}
+                      >
+                        Service No.
+                        <SortIcon active={sortKey === "Title"} dir={sortDir} />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap min-w-[200px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("CustomerName")}
-                  >
-                    Company Name
-                    <SortIcon
-                      active={sortKey === "CustomerName"}
-                      dir={sortDir}
-                    />
+                  <th className="px-3 py-3 min-w-[200px]">
+                    <TutorTooltip
+                      text="Sort by Company Name."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("CustomerName")}
+                      >
+                        Company Name
+                        <SortIcon
+                          active={sortKey === "CustomerName"}
+                          dir={sortDir}
+                        />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("CloudProvider")}
-                  >
-                    Product Subscribe
-                    <SortIcon
-                      active={sortKey === "CloudProvider"}
-                      dir={sortDir}
-                    />
+                  <th className="px-3 py-3">
+                    <TutorTooltip
+                      text="Sort by Cloud Provider."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("CloudProvider")}
+                      >
+                        Product Subscribe
+                        <SortIcon
+                          active={sortKey === "CloudProvider"}
+                          dir={sortDir}
+                        />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[100px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("AccountID")}
-                  >
-                    Account ID
-                    <SortIcon active={sortKey === "AccountID"} dir={sortDir} />
+                  <th className="px-3 py-3 w-[100px]">
+                    <TutorTooltip
+                      text="Sort by Account ID."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("AccountID")}
+                      >
+                        Account ID
+                        <SortIcon active={sortKey === "AccountID"} dir={sortDir} />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("CaseID")}
-                  >
-                    Case ID
-                    <SortIcon active={sortKey === "CaseID"} dir={sortDir} />
+                  <th className="px-3 py-3">
+                    <TutorTooltip
+                      text="Sort by Case ID."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("CaseID")}
+                      >
+                        Case ID
+                        <SortIcon active={sortKey === "CaseID"} dir={sortDir} />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("OrderType")}
-                  >
-                    Order Type
-                    <SortIcon active={sortKey === "OrderType"} dir={sortDir} />
+                  <th className="px-3 py-3">
+                    <TutorTooltip
+                      text="Sort by Order Type."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("OrderType")}
+                      >
+                        Order Type
+                        <SortIcon active={sortKey === "OrderType"} dir={sortDir} />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap w-[90px] cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("SRD")}
-                  >
-                    SRD
-                    <SortIcon active={sortKey === "SRD"} dir={sortDir} />
+                  <th className="px-3 py-3 w-[90px]">
+                    <TutorTooltip
+                      text="Sort by Service Ready Date."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("SRD")}
+                      >
+                        SRD
+                        <SortIcon active={sortKey === "SRD"} dir={sortDir} />
+                      </button>
+                    </TutorTooltip>
                   </th>
-                  <th
-                    className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 hover:bg-[#dddde0] transition-colors"
-                    onClick={() => handleSort("Status")}
-                  >
-                    Status
-                    <SortIcon active={sortKey === "Status"} dir={sortDir} />
+                  <th className="px-3 py-3">
+                    <TutorTooltip
+                      text="Sort by Order Status."
+                      position="top"
+                      wrapperClass="inline-block w-full"
+                      componentName="OrderRegistry.Table.Header"
+                    >
+                      <button
+                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        onClick={() => handleSort("Status")}
+                      >
+                        Status
+                        <SortIcon active={sortKey === "Status"} dir={sortDir} />
+                      </button>
+                    </TutorTooltip>
                   </th>
                   <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
                     Actions

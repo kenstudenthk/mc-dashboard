@@ -15,10 +15,12 @@ interface PermissionContextType {
   isAuthorized: boolean | null; // null = still checking, true = authorized, false = not in permissions list
   loggedOut: boolean;
   forcePasswordChange: boolean; // true = signed in but must change password before app access
+  isPasswordRecovery: boolean; // true = user clicked a password reset link and needs to set a new password
   setCurrentRole: (role: Role) => void;
   setUserEmail: (email: string) => void;
   hasPermission: (requiredRole: Role) => boolean;
   logout: () => void;
+  clearPasswordRecovery: () => void;
 }
 
 const roleHierarchy: Record<Role, number> = {
@@ -44,6 +46,7 @@ export const PermissionProvider = ({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [loggedOut, setLoggedOut] = useState(false);
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   function authorizeSession(email: string, metaRole?: string) {
     setUserEmail(email);
@@ -98,6 +101,10 @@ export const PermissionProvider = ({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION") resolved = true;
+
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+      }
 
       if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
         if (!session?.user?.email) {
@@ -160,6 +167,10 @@ export const PermissionProvider = ({
     });
   };
 
+  const clearPasswordRecovery = () => {
+    setIsPasswordRecovery(false);
+  };
+
   return (
     <PermissionContext.Provider
       value={{
@@ -168,16 +179,19 @@ export const PermissionProvider = ({
         isAuthorized,
         loggedOut,
         forcePasswordChange,
+        isPasswordRecovery,
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
         logout,
+        clearPasswordRecovery,
       }}
     >
       {children}
     </PermissionContext.Provider>
   );
 };
+
 
 export const usePermission = () => {
   const context = useContext(PermissionContext);

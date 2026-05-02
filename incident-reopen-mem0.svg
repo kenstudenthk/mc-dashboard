@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 900" width="1150" height="900">
+  <style>
+    text { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Courier New', 'Microsoft YaHei', 'SimHei', monospace; fill: #e2e8f0; }
+  </style>
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0f1a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#a855f7"/>
+    </marker>
+    <filter id="glow-purple">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-green">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1150" height="900" fill="url(#bg-grad)"/>
+  <text x="575" y="50" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="700">Incident Flow as Memory Architecture (Mem0 Style)</text>
+  <text x="50" y="100" fill="#94a3b8" font-size="14" font-weight="700">SENSORY LAYER</text>
+  <text x="500" y="100" fill="#a855f7" font-size="14" font-weight="700">ORCHESTRATION LAYER</text>
+  <text x="900" y="100" fill="#10b981" font-size="14" font-weight="700">MEMORY TIER</text>
+  <rect x="40.0" y="160.0" width="220" height="80" rx="6" ry="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="150" y="185.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">Helpdesk Interface</text>
+  <text x="150" y="205.0" text-anchor="middle" font-size="12" fill="#94a3b8">User input channel</text>
+  <rect x="40.0" y="360.0" width="220" height="80" rx="6" ry="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="150" y="385.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">Cron System</text>
+  <text x="150" y="405.0" text-anchor="middle" font-size="12" fill="#94a3b8">15 Days Pass Trigger</text>
+  <rect x="40.0" y="710.0" width="220" height="80" rx="6" ry="6" fill="#450a0a" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="150" y="735.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">Notification Service</text>
+  <text x="150" y="755.0" text-anchor="middle" font-size="12" fill="#94a3b8">SMTP Dispatcher</text>
+  <rect x="410.0" y="350.0" width="280" height="100" rx="6" ry="6" fill="#1e1b4b" stroke="#7c3aed" stroke-width="1.5" filter="url(#glow-purple)"/>
+  <text x="550" y="375.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">Workflow B Engine</text>
+  <text x="550" y="395.0" text-anchor="middle" font-size="12" fill="#94a3b8">Batch Auto-Closure</text>
+  <text x="550" y="411.0" text-anchor="middle" font-size="12" fill="#94a3b8">Admin Context</text>
+  <rect x="410.0" y="530.0" width="280" height="100" rx="6" ry="6" fill="#1e1b4b" stroke="#7c3aed" stroke-width="1.5" filter="url(#glow-purple)"/>
+  <text x="550" y="555.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">Field Sync Component</text>
+  <text x="550" y="575.0" text-anchor="middle" font-size="12" fill="#94a3b8">State Synchronizer</text>
+  <rect x="410.0" y="700.0" width="280" height="100" rx="6" ry="6" fill="#1e1b4b" stroke="#7c3aed" stroke-width="1.5" filter="url(#glow-purple)"/>
+  <text x="550" y="725.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">Workflow A Engine</text>
+  <text x="550" y="745.0" text-anchor="middle" font-size="12" fill="#94a3b8">Auto-In Progress Rule</text>
+  <text x="550" y="761.0" text-anchor="middle" font-size="12" fill="#94a3b8">State Monitor</text>
+  <path d="M 840.0,362.0 L 840.0,438.0 A 110.0,12 0 0,0 1060.0,438.0 L 1060.0,362.0 A 110.0,12 0 0,1 840.0,362.0 Z" fill="#052e16" stroke="#059669" stroke-width="1.5" filter="url(#glow-green)"/>
+  <ellipse cx="950" cy="362.0" rx="110.0" ry="12" fill="#052e16" stroke="#059669" stroke-width="1.5" filter="url(#glow-green)"/>
+  <text x="950" y="387.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">REQ Memory Store</text>
+  <text x="950" y="407.0" text-anchor="middle" font-size="12" fill="#94a3b8">Long-term Record DB</text>
+  <path d="M 840.0,617.0 L 840.0,703.0 A 110.0,12 0 0,0 1060.0,703.0 L 1060.0,617.0 A 110.0,12 0 0,1 840.0,617.0 Z" fill="#052e16" stroke="#059669" stroke-width="1.5" filter="url(#glow-green)"/>
+  <ellipse cx="950" cy="617.0" rx="110.0" ry="12" fill="#052e16" stroke="#059669" stroke-width="1.5" filter="url(#glow-green)"/>
+  <text x="950" y="642.0" text-anchor="middle" font-size="14" font-weight="700" fill="#e2e8f0">INC Memory Store</text>
+  <text x="950" y="662.0" text-anchor="middle" font-size="12" fill="#94a3b8">Working/Child Ticket DB</text>
+  <text x="950" y="678.0" text-anchor="middle" font-size="12" fill="#94a3b8">Current State</text>
+  <path d="M 260,200 Q 550,200 840,640" stroke="#10b981" stroke-width="1.5" fill="none" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+  <rect x="460.0" y="300.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="550.0" y="314.0" text-anchor="middle" fill="#10b981" font-size="12">store(parentId=REQ)</text>
+  <line x1="260" y1="400" x2="410" y2="400" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <rect x="245.0" y="390.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="335.0" y="404.0" text-anchor="middle" fill="#3b82f6" font-size="12">trigger(batch_close)</text>
+  <line x1="690" y1="400" x2="840" y2="400" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+  <rect x="675.0" y="390.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="765.0" y="404.0" text-anchor="middle" fill="#10b981" font-size="12">update(status=CLOSED)</text>
+  <line x1="550" y1="450" x2="550" y2="530" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <rect x="460.0" y="480.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="550.0" y="494.0" text-anchor="middle" fill="#3b82f6" font-size="12">dispatch(sync_event)</text>
+  <line x1="690" y1="560" x2="840" y2="430" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <rect x="675.0" y="485.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="765.0" y="499.0" text-anchor="middle" fill="#10b981" font-size="12">retrieve(Assignee)</text>
+  <line x1="690" y1="600" x2="840" y2="640" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+  <rect x="675.0" y="610.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="765.0" y="624.0" text-anchor="middle" fill="#10b981" font-size="12">update(Assignee)</text>
+  <line x1="840" y1="680" x2="690" y2="730" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+  <rect x="675.0" y="695.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="765.0" y="709.0" text-anchor="middle" fill="#a855f7" font-size="12">event(Assignee_Changed)</text>
+  <line x1="690" y1="770" x2="840" y2="690" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+  <rect x="675.0" y="720.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="765.0" y="734.0" text-anchor="middle" fill="#10b981" font-size="12">update(status=IN_PROGRESS)</text>
+  <line x1="410" y1="750" x2="260" y2="750" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <rect x="245.0" y="740.0" width="180" height="20" fill="#0f172a" rx="4"/>
+  <text x="335.0" y="754.0" text-anchor="middle" fill="#ef4444" font-size="12">dispatch(email_alert)</text>
+  <rect x="850" y="800" width="250" height="80" rx="4" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="860" y="820" font-size="13" font-weight="700" fill="#e2e8f0">Legend</text>
+  <line x1="860" y1="840" x2="890" y2="840" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="900" y="844" font-size="12" fill="#94a3b8">Memory Read retrieve()</text>
+  <line x1="860" y1="865" x2="890" y2="865" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+  <text x="900" y="869" font-size="12" fill="#94a3b8">Memory Write store()</text>
+</svg>

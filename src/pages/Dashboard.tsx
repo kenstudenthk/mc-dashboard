@@ -132,6 +132,7 @@ const Dashboard = () => {
           text="Click here to start provisioning a new cloud service order."
           position="bottom"
           wrapperClass="inline-block"
+          componentName="Dashboard.CreateOrder"
         >
           <Link
             to="/orders/new"
