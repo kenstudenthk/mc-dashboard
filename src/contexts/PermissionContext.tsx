@@ -45,8 +45,24 @@ export const PermissionProvider = ({
   const [loggedOut, setLoggedOut] = useState(false);
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
-  function authorizeSession(email: string) {
+  function authorizeSession(email: string, metaRole?: string) {
     setUserEmail(email);
+
+    // If the Power Automate permissions URL isn't configured (e.g. local dev or
+    // Cloudflare Pages without the env var), skip the network call and fall back
+    // to the role stored in Supabase user_metadata.
+    const paUrl = import.meta.env.VITE_API_PERMISSIONS_URL as
+      | string
+      | undefined;
+    if (!paUrl) {
+      const role: Role = VALID_ROLES.includes(metaRole as Role)
+        ? (metaRole as Role)
+        : "User";
+      setCurrentRole(role);
+      setIsAuthorized(true);
+      return;
+    }
+
     getRole(email)
       .then((role) => {
         if (VALID_ROLES.includes(role as Role)) {
@@ -56,7 +72,16 @@ export const PermissionProvider = ({
           setIsAuthorized(false);
         }
       })
-      .catch(() => setIsAuthorized(false));
+      .catch(() => {
+        // PA call failed — fall back to Supabase user_metadata role.
+        // If that's also missing, grant "User" so a valid invited account
+        // can still access the app.
+        const role: Role = VALID_ROLES.includes(metaRole as Role)
+          ? (metaRole as Role)
+          : "User";
+        setCurrentRole(role);
+        setIsAuthorized(true);
+      });
   }
 
   useEffect(() => {
@@ -96,7 +121,10 @@ export const PermissionProvider = ({
         }
         setForcePasswordChange(false);
         setLoggedOut(false);
-        authorizeSession(session.user.email);
+        authorizeSession(
+          session.user.email,
+          session.user.user_metadata?.role as string | undefined,
+        );
       }
     });
 
