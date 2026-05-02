@@ -621,6 +621,14 @@ export default function Login({ onSuccess, initialScreen = 'login', initialEmail
   const [firstTimeEmail, setFirstTimeEmail] = useState(initialEmail);
   const [forgotEmail, setForgotEmail] = useState('');
 
+  useEffect(() => {
+    setScreen(initialScreen);
+  }, [initialScreen]);
+
+  useEffect(() => {
+    if (initialEmail) setFirstTimeEmail(initialEmail);
+  }, [initialEmail]);
+
   // Handle Supabase auth redirects — switches to reset-password when the user
   // follows the password-reset email link back to this page.
   useEffect(() => {
