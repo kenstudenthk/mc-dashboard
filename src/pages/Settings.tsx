@@ -20,6 +20,7 @@ import {
   type UserRole,
   type UserStatus,
 } from "../services/permissionService";
+import { authService } from "../services/authService";
 
 const Settings = () => {
   const { currentRole, userEmail, setUserEmail, hasPermission } =
@@ -50,6 +51,7 @@ const Settings = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
+  const [resetSentIndex, setResetSentIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (activeTab === "team" || activeTab === "roles") {
@@ -90,6 +92,10 @@ const Settings = () => {
     setUsersError(null);
     try {
       await createUser(newEmail, newName, newRole, newStatus);
+      
+      // Send invitation email (standard password reset flow)
+      await authService.sendPasswordResetEmail(newEmail);
+
       const updated = await getAllUsers();
       setUsers(updated);
       setNewName("");
@@ -134,6 +140,20 @@ const Settings = () => {
       setTimeout(() => setRoleSavedIndex(null), 2000);
     } catch {
       setUsersError("Failed to save role. Please try again.");
+    } finally {
+      setSavingIndex(null);
+    }
+  };
+
+  const handleResetPassword = async (index: number, email: string) => {
+    setSavingIndex(index);
+    try {
+      const { error } = await authService.sendPasswordResetEmail(email);
+      if (error) throw error;
+      setResetSentIndex(index);
+      setTimeout(() => setResetSentIndex(null), 3000);
+    } catch {
+      setUsersError("Failed to send reset link. Please try again.");
     } finally {
       setSavingIndex(null);
     }
@@ -800,15 +820,20 @@ const Settings = () => {
                               )}
                               <button
                                 type="button"
+                                disabled={savingIndex === i}
                                 onClick={() =>
-                                  alert(
-                                    `Password reset link sent to ${user.email}`,
-                                  )
+                                  handleResetPassword(i, user.email)
                                 }
-                                className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1.5"
+                                className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1.5 disabled:opacity-50"
                               >
-                                <Key className="w-3 h-3" />
-                                Reset Password
+                                {resetSentIndex === i ? (
+                                  <span className="text-green-600 font-semibold">Email Sent!</span>
+                                ) : (
+                                  <>
+                                    <Key className="w-3 h-3" />
+                                    {savingIndex === i ? "Sending..." : "Reset Password"}
+                                  </>
+                                )}
                               </button>
                             </div>
                           </td>

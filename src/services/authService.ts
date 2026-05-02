@@ -19,4 +19,11 @@ export const authService = {
     localStorage.removeItem('userEmail');
     await supabase.auth.signOut();
   },
+
+  sendPasswordResetEmail: async (email: string): Promise<{ error: any }> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    });
+    return { error };
+  },
 };
