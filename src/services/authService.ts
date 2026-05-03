@@ -42,6 +42,9 @@ export const authService = {
 
     const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${window.location.origin}/`,
+      data: {
+        force_password_change: true
+      }
     });
     return { error };
   }
