@@ -10,7 +10,6 @@ import {
   FileText,
   Server,
   Building,
-  X,
   Mail,
   ChevronDown,
   ChevronUp,
@@ -149,9 +148,13 @@ const getStatusStyle = (
 const InfoField = ({
   label,
   value,
+  isEdit = false,
+  children,
 }: {
   label: string;
-  value: React.ReactNode;
+  value?: React.ReactNode;
+  isEdit?: boolean;
+  children?: React.ReactNode;
 }) => (
   <div
     className="py-2.5 border-b last:border-0"
@@ -161,7 +164,7 @@ const InfoField = ({
       {label}
     </dt>
     <dd className="text-sm font-medium" style={{ color: "#000" }}>
-      {value || "—"}
+      {isEdit ? children : (value || "—")}
     </dd>
   </div>
 );
@@ -169,111 +172,6 @@ const InfoField = ({
 // ─── Edit Panel Components ────────────────────────────────────────────────────
 const inputClass = (val: string) =>
   `w-full px-3.5 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition-all text-sm placeholder:text-[#9f9b93] ${val ? "bg-white border-black/30" : "bg-[#faf9f7] border-[#dad4c8]"}`;
-
-const PanelField = ({
-  label,
-  children,
-  span2 = false,
-}: {
-  label: string;
-  children: React.ReactNode;
-  span2?: boolean;
-}) => (
-  <div className={`space-y-1 ${span2 ? "col-span-2" : ""}`}>
-    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>
-      {label}
-    </label>
-    {children}
-  </div>
-);
-
-const PanelToggle = ({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) => (
-  <div className="space-y-1">
-    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>
-      {label}
-    </label>
-    <div
-      className="flex items-center gap-1 p-1 rounded-lg w-fit"
-      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
-    >
-      {options.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onChange(value === opt ? "" : opt)}
-          className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
-          style={
-            value === opt
-              ? { background: "#000", color: "#fff" }
-              : { color: "#9f9b93" }
-          }
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-const PanelSegmented = ({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) => (
-  <div className="space-y-1">
-    <label className="text-xs font-medium" style={{ color: "#9f9b93" }}>
-      {label}
-    </label>
-    <div
-      className="flex items-center gap-1 p-1 rounded-lg"
-      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
-    >
-      {options.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onChange(value === opt ? "" : opt)}
-          className="flex-1 py-1.5 rounded-md text-xs font-medium transition-all"
-          style={
-            value === opt
-              ? { background: "#000", color: "#fff" }
-              : { color: "#9f9b93" }
-          }
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-const PanelSectionLabel = ({ title }: { title: string }) => (
-  <div className="flex items-center gap-2 pt-1 pb-0.5">
-    <span
-      className="text-[10px] font-semibold uppercase tracking-widest"
-      style={{ color: "#9f9b93" }}
-    >
-      {title}
-    </span>
-    <div className="flex-1 h-px" style={{ background: "#dad4c8" }} />
-  </div>
-);
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 const OrderDetails = () => {
@@ -297,7 +195,7 @@ const OrderDetails = () => {
   const loading = isLoading && !order;
   const error = isError ? "Failed to load order details." : null;
 
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editForm, setEditForm] = useState<Partial<CreateOrderInput>>({});
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -343,11 +241,11 @@ const OrderDetails = () => {
       Remark: order.Remark ?? "",
     });
     setEditError(null);
-    setIsEditOpen(true);
+    setIsEditMode(true);
   };
 
   const handleEditClose = () => {
-    setIsEditOpen(false);
+    setIsEditMode(false);
     setEditError(null);
   };
 
@@ -462,57 +360,82 @@ const OrderDetails = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className="p-2 rounded-xl transition-colors hover:bg-white"
-            style={{
-              background: "#faf9f7",
-              border: "1px solid #dad4c8",
-              color: "#9f9b93",
-            }}
-          >
-            <Printer className="w-4 h-4" />
-          </button>
-          <button
-            className="p-2 rounded-xl transition-colors hover:bg-white"
-            style={{
-              background: "#faf9f7",
-              border: "1px solid #dad4c8",
-              color: "#9f9b93",
-            }}
-          >
-            <Download className="w-4 h-4" />
-          </button>
-          <TutorTooltip
-            text="Send an email to the customer using a pre-filled template."
-            position="bottom"
-            componentName="OrderDetails/SendEmail"
-          >
-            <button
-              onClick={() => setIsEmailPanelOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: "#ddf4fd",
-                border: "1px solid #3bd3fd50",
-                color: "#0089ad",
-              }}
-            >
-              <Mail className="w-4 h-4" />
-              Send Email
-            </button>
-          </TutorTooltip>
-          {canEdit && (
-            <TutorTooltip
-              text="Click here to modify the details of this order."
-              position="bottom"
-              componentName="OrderDetails/EditOrder"
-            >
+          {!isEditMode ? (
+            <>
               <button
-                onClick={handleEditOpen}
-                className="gradient-cta px-5 py-2 font-medium text-sm"
+                className="p-2 rounded-xl transition-colors hover:bg-white"
+                style={{
+                  background: "#faf9f7",
+                  border: "1px solid #dad4c8",
+                  color: "#9f9b93",
+                }}
               >
-                Edit Order
+                <Printer className="w-4 h-4" />
               </button>
-            </TutorTooltip>
+              <button
+                className="p-2 rounded-xl transition-colors hover:bg-white"
+                style={{
+                  background: "#faf9f7",
+                  border: "1px solid #dad4c8",
+                  color: "#9f9b93",
+                }}
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              <TutorTooltip
+                text="Send an email to the customer using a pre-filled template."
+                position="bottom"
+                componentName="OrderDetails/SendEmail"
+              >
+                <button
+                  onClick={() => setIsEmailPanelOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                  style={{
+                    background: "#ddf4fd",
+                    border: "1px solid #3bd3fd50",
+                    color: "#0089ad",
+                  }}
+                >
+                  <Mail className="w-4 h-4" />
+                  Send Email
+                </button>
+              </TutorTooltip>
+              {canEdit && (
+                <TutorTooltip
+                  text="Click here to modify the details of this order."
+                  position="bottom"
+                  componentName="OrderDetails/EditOrder"
+                >
+                  <button
+                    onClick={handleEditOpen}
+                    className="gradient-cta px-5 py-2 font-medium text-sm"
+                  >
+                    Edit Order
+                  </button>
+                </TutorTooltip>
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleEditClose}
+                className="px-5 py-2 rounded-xl text-sm font-medium transition-all hover:bg-[#faf9f7]"
+                style={{
+                  background: "#fff",
+                  border: "1px solid #dad4c8",
+                  color: "#55534e",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={editSaving}
+                className="gradient-cta px-6 py-2 font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {editSaving ? "Saving…" : "Save Changes"}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -622,12 +545,41 @@ const OrderDetails = () => {
                   Order Information
                 </h2>
               </div>
+              {editError && (
+                <div
+                  className="mb-4 px-4 py-3 text-sm rounded-xl"
+                  style={{
+                    color: "#b0101a",
+                    background: "#fc798120",
+                    border: "1px solid #fc798150",
+                  }}
+                >
+                  {editError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <dl>
-                  <InfoField label="Order Title" value={order.Title} />
-                  <InfoField label="Project Name" value={order.SubName} />
+                  <InfoField label="Order Title" value={order.Title} isEdit={isEditMode}>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.Title ?? ""}
+                      onChange={(e) => set("Title", e.target.value)}
+                      className={inputClass(editForm.Title ?? "")}
+                    />
+                  </InfoField>
+                  <InfoField label="Project Name" value={order.SubName} isEdit={isEditMode}>
+                    <input
+                      type="text"
+                      value={editForm.SubName ?? ""}
+                      onChange={(e) => set("SubName", e.target.value)}
+                      className={inputClass(editForm.SubName ?? "")}
+                      placeholder="e.g. Project Alpha"
+                    />
+                  </InfoField>
                   <InfoField
                     label="Status"
+                    isEdit={isEditMode}
                     value={
                       <span
                         className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
@@ -636,39 +588,103 @@ const OrderDetails = () => {
                         {order.Status}
                       </span>
                     }
-                  />
-                  <InfoField label="Order Type" value={order.OrderType} />
+                  >
+                    <select
+                      value={editForm.Status ?? ""}
+                      onChange={(e) => set("Status", e.target.value)}
+                      className={inputClass(editForm.Status ?? "")}
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </InfoField>
+                  <InfoField label="Order Type" value={order.OrderType} isEdit={isEditMode}>
+                    <select
+                      value={editForm.OrderType ?? ""}
+                      onChange={(e) => set("OrderType", e.target.value)}
+                      className={inputClass(editForm.OrderType ?? "")}
+                    >
+                      <option value="">Select…</option>
+                      {ORDER_TYPE_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </InfoField>
                 </dl>
                 <dl>
-                  <InfoField label="SRD" value={formatDate(order.SRD)} />
-                  <InfoField label="Service Type" value={order.ServiceType} />
+                  <InfoField label="SRD" value={formatDate(order.SRD)} isEdit={isEditMode}>
+                    <input
+                      type="date"
+                      value={editForm.SRD ?? ""}
+                      onChange={(e) => set("SRD", e.target.value)}
+                      className={inputClass(editForm.SRD ?? "")}
+                    />
+                  </InfoField>
+                  <InfoField label="Service Type" value={order.ServiceType} isEdit={isEditMode}>
+                    <input
+                      type="text"
+                      value={editForm.ServiceType ?? ""}
+                      onChange={(e) => set("ServiceType", e.target.value)}
+                      className={inputClass(editForm.ServiceType ?? "")}
+                    />
+                  </InfoField>
                   <InfoField
                     label="Amount"
+                    isEdit={isEditMode}
                     value={
                       order.Amount != null
                         ? `$${Number(order.Amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
                         : "—"
                     }
-                  />
-                  <InfoField label="OASIS Number" value={order.OasisNumber} />
+                  >
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editForm.Amount ?? ""}
+                      onChange={(e) =>
+                        set("Amount", parseFloat(e.target.value) || 0)
+                      }
+                      className={inputClass(String(editForm.Amount ?? ""))}
+                    />
+                  </InfoField>
+                  <InfoField label="OASIS Number" value={order.OasisNumber} isEdit={isEditMode}>
+                    <input
+                      type="text"
+                      value={editForm.OasisNumber ?? ""}
+                      onChange={(e) => set("OasisNumber", e.target.value)}
+                      className={inputClass(editForm.OasisNumber ?? "")}
+                    />
+                  </InfoField>
                 </dl>
               </div>
-              {order.Remark && (
-                <div
-                  className="mt-4 pt-4"
-                  style={{ borderTop: "1px solid #eee9df" }}
+              <div
+                className="mt-4 pt-4"
+                style={{ borderTop: "1px solid #eee9df" }}
+              >
+                <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>
+                  Remark
+                </dt>
+                <dd
+                  className="text-sm"
+                  style={{ color: "#000" }}
                 >
-                  <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>
-                    Remark
-                  </dt>
-                  <dd
-                    className="text-sm whitespace-pre-wrap"
-                    style={{ color: "#000" }}
-                  >
-                    {order.Remark}
-                  </dd>
-                </div>
-              )}
+                  {isEditMode ? (
+                    <textarea
+                      value={editForm.Remark ?? ""}
+                      onChange={(e) => set("Remark", e.target.value)}
+                      className={`${inputClass(editForm.Remark ?? "")} min-h-[100px] resize-none`}
+                    />
+                  ) : (
+                    <span className="whitespace-pre-wrap">{order.Remark || "—"}</span>
+                  )}
+                </dd>
+              </div>
             </div>
           )}
 
@@ -691,44 +707,107 @@ const OrderDetails = () => {
                     Customer
                   </h2>
                 </div>
-                <Link
-                  to={`/customers/${order.CustomerID}`}
-                  className="text-sm font-semibold hover:underline transition-colors block mb-2"
-                  style={{ color: "#078a52" }}
-                >
-                  {order.CustomerName}
-                </Link>
-                <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>
-                  ID #{order.CustomerID}
-                </p>
+                {!isEditMode && (
+                  <>
+                    <Link
+                      to={`/customers/${order.CustomerID}`}
+                      className="text-sm font-semibold hover:underline transition-colors block mb-2"
+                      style={{ color: "#078a52" }}
+                    >
+                      {order.CustomerName}
+                    </Link>
+                    <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>
+                      ID #{order.CustomerID}
+                    </p>
+                  </>
+                )}
                 <dl>
+                  {isEditMode && (
+                    <InfoField label="Customer Name" isEdit={true}>
+                      <input
+                        type="text"
+                        value={editForm.CustomerName ?? ""}
+                        onChange={(e) => set("CustomerName", e.target.value)}
+                        className={inputClass(editForm.CustomerName ?? "")}
+                      />
+                    </InfoField>
+                  )}
                   <InfoField
                     label="Contact Person"
                     value={order.ContactPerson}
-                  />
-                  <InfoField label="Contact No." value={order.ContactNo} />
-                  <InfoField label="Contact Email" value={order.ContactEmail} />
-                  <InfoField label="2nd Contact No." value={order.ContactNo2} />
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="text"
+                      value={editForm.ContactPerson ?? ""}
+                      onChange={(e) => set("ContactPerson", e.target.value)}
+                      className={inputClass(editForm.ContactPerson ?? "")}
+                    />
+                  </InfoField>
+                  <InfoField
+                    label="Contact No."
+                    value={order.ContactNo}
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="text"
+                      value={editForm.ContactNo ?? ""}
+                      onChange={(e) => set("ContactNo", e.target.value)}
+                      className={inputClass(editForm.ContactNo ?? "")}
+                    />
+                  </InfoField>
+                  <InfoField
+                    label="Contact Email"
+                    value={order.ContactEmail}
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="email"
+                      value={editForm.ContactEmail ?? ""}
+                      onChange={(e) => set("ContactEmail", e.target.value)}
+                      className={inputClass(editForm.ContactEmail ?? "")}
+                    />
+                  </InfoField>
+                  <InfoField
+                    label="2nd Contact No."
+                    value={order.ContactNo2}
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="text"
+                      value={editForm.ContactNo2 ?? ""}
+                      onChange={(e) => set("ContactNo2", e.target.value)}
+                      className={inputClass(editForm.ContactNo2 ?? "")}
+                    />
+                  </InfoField>
                   <InfoField
                     label="2nd Contact Email"
                     value={order.ContactEmail2}
-                  />
-                  {order.BillingAddress && (
-                    <div className="py-2.5">
-                      <dt
-                        className="label-text mb-1"
-                        style={{ color: "#9f9b93" }}
-                      >
-                        Billing Address
-                      </dt>
-                      <dd
-                        className="text-sm font-medium whitespace-pre-wrap"
-                        style={{ color: "#000" }}
-                      >
-                        {order.BillingAddress}
-                      </dd>
-                    </div>
-                  )}
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="email"
+                      value={editForm.ContactEmail2 ?? ""}
+                      onChange={(e) => set("ContactEmail2", e.target.value)}
+                      className={inputClass(editForm.ContactEmail2 ?? "")}
+                    />
+                  </InfoField>
+                  <div className="py-2.5">
+                    <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>
+                      Billing Address
+                    </dt>
+                    <dd className="text-sm font-medium" style={{ color: "#000" }}>
+                      {isEditMode ? (
+                        <textarea
+                          value={editForm.BillingAddress ?? ""}
+                          onChange={(e) => set("BillingAddress", e.target.value)}
+                          className={`${inputClass(editForm.BillingAddress ?? "")} min-h-[70px] resize-none`}
+                        />
+                      ) : (
+                        <span className="whitespace-pre-wrap">{order.BillingAddress || "—"}</span>
+                      )}
+                    </dd>
+                  </div>
                 </dl>
               </div>
             </TutorTooltip>
@@ -759,6 +838,7 @@ const OrderDetails = () => {
                   <dl>
                     <InfoField
                       label="Product Subscribe"
+                      isEdit={isEditMode}
                       value={
                         <CloudProviderLogo
                           provider={order.CloudProvider ?? ""}
@@ -766,7 +846,14 @@ const OrderDetails = () => {
                           nameClassName="text-sm font-medium"
                         />
                       }
-                    />
+                    >
+                      <input
+                        type="text"
+                        value={editForm.CloudProvider ?? ""}
+                        onChange={(e) => set("CloudProvider", e.target.value)}
+                        className={inputClass(editForm.CloudProvider ?? "")}
+                      />
+                    </InfoField>
                     <InfoField
                       label={saLabels.primaryAccount}
                       value={serviceAccount?.PrimaryAccountID}
@@ -816,21 +903,61 @@ const OrderDetails = () => {
                   <InfoField
                     label="Order Receive Date"
                     value={formatDate(order.OrderReceiveDate ?? "")}
-                  />
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="date"
+                      value={editForm.OrderReceiveDate ?? ""}
+                      onChange={(e) => set("OrderReceiveDate", e.target.value)}
+                      className={inputClass(editForm.OrderReceiveDate ?? "")}
+                    />
+                  </InfoField>
                   <InfoField
                     label="CxS Complete Date"
+                    isEdit={isEditMode}
                     value={
                       order.CxSCompleteDate
                         ? formatDate(order.CxSCompleteDate)
                         : "TBC"
                     }
-                  />
+                  >
+                    <input
+                      type="date"
+                      value={editForm.CxSCompleteDate ?? ""}
+                      onChange={(e) => set("CxSCompleteDate", e.target.value)}
+                      className={inputClass(editForm.CxSCompleteDate ?? "")}
+                    />
+                  </InfoField>
                   <InfoField
                     label="CxS Request No."
                     value={order.CxSRequestNo}
-                  />
-                  <InfoField label="TID" value={order.TID} />
-                  {order.SDNumber ? (
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="text"
+                      value={editForm.CxSRequestNo ?? ""}
+                      onChange={(e) => set("CxSRequestNo", e.target.value)}
+                      className={inputClass(editForm.CxSRequestNo ?? "")}
+                    />
+                  </InfoField>
+                  <InfoField label="TID" value={order.TID} isEdit={isEditMode}>
+                    <input
+                      type="text"
+                      value={editForm.TID ?? ""}
+                      onChange={(e) => set("TID", e.target.value)}
+                      className={inputClass(editForm.TID ?? "")}
+                    />
+                  </InfoField>
+                  {isEditMode ? (
+                    <InfoField label="SD Number" isEdit={true}>
+                      <input
+                        type="text"
+                        value={editForm.SDNumber ?? ""}
+                        onChange={(e) => set("SDNumber", e.target.value)}
+                        className={inputClass(editForm.SDNumber ?? "")}
+                      />
+                    </InfoField>
+                  ) : order.SDNumber ? (
                     <div
                       className="py-2.5 border-b last:border-0"
                       style={{ borderColor: "#eee9df" }}
@@ -858,64 +985,168 @@ const OrderDetails = () => {
                   )}
                 </dl>
                 <dl>
-                  <InfoField label="PS Job (Y/N)" value={order.PSJob} />
-                  <InfoField label="T2 / T3" value={order.T2T3} />
+                  <InfoField label="PS Job (Y/N)" value={order.PSJob} isEdit={isEditMode}>
+                    <div
+                      className="flex items-center gap-1 p-1 rounded-lg w-fit"
+                      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                    >
+                      {["Y", "N"].map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => set("PSJob", editForm.PSJob === opt ? "" : opt)}
+                          className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                          style={
+                            editForm.PSJob === opt
+                              ? { background: "#000", color: "#fff" }
+                              : { color: "#9f9b93" }
+                          }
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </InfoField>
+                  <InfoField label="T2 / T3" value={order.T2T3} isEdit={isEditMode}>
+                    <div
+                      className="flex items-center gap-1 p-1 rounded-lg"
+                      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                    >
+                      {["T1", "T2", "T3", "N/A"].map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => set("T2T3", editForm.T2T3 === opt ? "" : opt)}
+                          className="flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all"
+                          style={
+                            editForm.T2T3 === opt
+                              ? { background: "#000", color: "#fff" }
+                              : { color: "#9f9b93" }
+                          }
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </InfoField>
                   <InfoField
                     label="Welcome Letter"
                     value={order.WelcomeLetter}
-                  />
-                  <InfoField label="Handled By" value={order.By} />
-                  {order.CaseID &&
-                    (order.CaseIDURL ? (
-                      <div
-                        className="py-2.5 border-b last:border-0"
-                        style={{ borderColor: "#eee9df" }}
-                      >
-                        <dt
-                          className="label-text mb-1"
-                          style={{ color: "#9f9b93" }}
-                        >
-                          Case ID
-                        </dt>
-                        <dd className="text-sm font-medium">
-                          <a
-                            href={order.CaseIDURL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                            style={{ color: "#078a52" }}
-                          >
-                            {order.CaseID}
-                          </a>
-                        </dd>
-                      </div>
-                    ) : (
-                      <InfoField label="Case ID" value={order.CaseID} />
-                    ))}
-                  {order.OrderFormURL && (
+                    isEdit={isEditMode}
+                  >
                     <div
-                      className="py-2.5 border-b last:border-0"
-                      style={{ borderColor: "#eee9df" }}
+                      className="flex items-center gap-1 p-1 rounded-lg w-fit"
+                      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
                     >
-                      <dt
-                        className="label-text mb-1"
-                        style={{ color: "#9f9b93" }}
-                      >
-                        Order Form
-                      </dt>
-                      <dd className="text-sm font-medium">
-                        <a
-                          href={order.OrderFormURL}
-                          download
-                          rel="noopener noreferrer"
-                          className="hover:underline inline-flex items-center gap-1"
-                          style={{ color: "#078a52" }}
+                      {["Yes", "No"].map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => set("WelcomeLetter", editForm.WelcomeLetter === opt ? "" : opt)}
+                          className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                          style={
+                            editForm.WelcomeLetter === opt
+                              ? { background: "#000", color: "#fff" }
+                              : { color: "#9f9b93" }
+                          }
                         >
-                          <Download className="w-3.5 h-3.5" />
-                          Download File
-                        </a>
-                      </dd>
+                          {opt}
+                        </button>
+                      ))}
                     </div>
+                  </InfoField>
+                  <InfoField label="Handled By" value={order.By} isEdit={isEditMode}>
+                    <input
+                      type="text"
+                      value={editForm.By ?? ""}
+                      onChange={(e) => set("By", e.target.value)}
+                      className={inputClass(editForm.By ?? "")}
+                    />
+                  </InfoField>
+                  {isEditMode ? (
+                    <>
+                      <InfoField label="Case ID" isEdit={true}>
+                        <input
+                          type="text"
+                          value={editForm.CaseID ?? ""}
+                          onChange={(e) => set("CaseID", e.target.value)}
+                          className={inputClass(editForm.CaseID ?? "")}
+                        />
+                      </InfoField>
+                      <InfoField label="Case ID URL" isEdit={true}>
+                        <input
+                          type="url"
+                          value={editForm.CaseIDURL ?? ""}
+                          onChange={(e) => set("CaseIDURL", e.target.value)}
+                          className={inputClass(editForm.CaseIDURL ?? "")}
+                          placeholder="https://…"
+                        />
+                      </InfoField>
+                      <InfoField label="Order Form URL" isEdit={true}>
+                        <input
+                          type="url"
+                          value={editForm.OrderFormURL ?? ""}
+                          onChange={(e) => set("OrderFormURL", e.target.value)}
+                          className={inputClass(editForm.OrderFormURL ?? "")}
+                          placeholder="https://…"
+                        />
+                      </InfoField>
+                    </>
+                  ) : (
+                    <>
+                      {order.CaseID &&
+                        (order.CaseIDURL ? (
+                          <div
+                            className="py-2.5 border-b last:border-0"
+                            style={{ borderColor: "#eee9df" }}
+                          >
+                            <dt
+                              className="label-text mb-1"
+                              style={{ color: "#9f9b93" }}
+                            >
+                              Case ID
+                            </dt>
+                            <dd className="text-sm font-medium">
+                              <a
+                                href={order.CaseIDURL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                                style={{ color: "#078a52" }}
+                              >
+                                {order.CaseID}
+                              </a>
+                            </dd>
+                          </div>
+                        ) : (
+                          <InfoField label="Case ID" value={order.CaseID} />
+                        ))}
+                      {order.OrderFormURL && (
+                        <div
+                          className="py-2.5 border-b last:border-0"
+                          style={{ borderColor: "#eee9df" }}
+                        >
+                          <dt
+                            className="label-text mb-1"
+                            style={{ color: "#9f9b93" }}
+                          >
+                            Order Form
+                          </dt>
+                          <dd className="text-sm font-medium">
+                            <a
+                              href={order.OrderFormURL}
+                              download
+                              rel="noopener noreferrer"
+                              className="hover:underline inline-flex items-center gap-1"
+                              style={{ color: "#078a52" }}
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Download File
+                            </a>
+                          </dd>
+                        </div>
+                      )}
+                    </>
                   )}
                 </dl>
               </div>
@@ -1138,370 +1369,6 @@ const OrderDetails = () => {
         serviceAccount={serviceAccount}
         onSent={refreshEmailLogs}
       />
-
-      {/* ── Edit Slide Panel ─────────────────────────────────────────────── */}
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isEditOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
-        onClick={handleEditClose}
-      />
-
-      {/* Panel */}
-      <div
-        className={`fixed inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
-          isEditOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Panel Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4 shrink-0"
-          style={{ borderBottom: "1px solid #dad4c8" }}
-        >
-          <div>
-            <h2 className="text-[16px] font-semibold" style={{ color: "#000" }}>
-              Edit Order
-            </h2>
-            <p className="text-xs mt-0.5" style={{ color: "#9f9b93" }}>
-              {order?.Title}
-            </p>
-          </div>
-          <button
-            onClick={handleEditClose}
-            className="p-1.5 rounded-lg transition-colors hover:bg-[#faf9f7]"
-            style={{ color: "#9f9b93" }}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Panel Body */}
-        <form
-          onSubmit={handleEditSave}
-          className="overflow-y-auto flex-1 px-6 py-5 space-y-5"
-        >
-          {editError && (
-            <div
-              className="px-4 py-3 text-sm rounded-xl"
-              style={{
-                color: "#b0101a",
-                background: "#fc798120",
-                border: "1px solid #fc798150",
-              }}
-            >
-              {editError}
-            </div>
-          )}
-
-          {/* Order Info */}
-          <section className="space-y-3">
-            <PanelSectionLabel title="Order Info" />
-            <div className="grid grid-cols-2 gap-3">
-              <PanelField label="Order Title" span2>
-                <input
-                  type="text"
-                  required
-                  value={editForm.Title ?? ""}
-                  onChange={(e) => set("Title", e.target.value)}
-                  className={inputClass(editForm.Title ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Project Name" span2>
-                <input
-                  type="text"
-                  value={editForm.SubName ?? ""}
-                  onChange={(e) => set("SubName", e.target.value)}
-                  className={inputClass(editForm.SubName ?? "")}
-                  placeholder="e.g. Project Alpha"
-                />
-              </PanelField>
-              <PanelField label="Status">
-                <select
-                  value={editForm.Status ?? ""}
-                  onChange={(e) => set("Status", e.target.value)}
-                  className={inputClass(editForm.Status ?? "")}
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </PanelField>
-              <PanelField label="Order Type">
-                <select
-                  value={editForm.OrderType ?? ""}
-                  onChange={(e) => set("OrderType", e.target.value)}
-                  className={inputClass(editForm.OrderType ?? "")}
-                >
-                  <option value="">Select…</option>
-                  {ORDER_TYPE_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </PanelField>
-              <PanelField label="SRD">
-                <input
-                  type="date"
-                  value={editForm.SRD ?? ""}
-                  onChange={(e) => set("SRD", e.target.value)}
-                  className={inputClass(editForm.SRD ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Cloud Provider">
-                <input
-                  type="text"
-                  value={editForm.CloudProvider ?? ""}
-                  onChange={(e) => set("CloudProvider", e.target.value)}
-                  className={inputClass(editForm.CloudProvider ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Service Type">
-                <input
-                  type="text"
-                  value={editForm.ServiceType ?? ""}
-                  onChange={(e) => set("ServiceType", e.target.value)}
-                  className={inputClass(editForm.ServiceType ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Amount ($)">
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={editForm.Amount ?? ""}
-                  onChange={(e) =>
-                    set("Amount", parseFloat(e.target.value) || 0)
-                  }
-                  className={inputClass(String(editForm.Amount ?? ""))}
-                />
-              </PanelField>
-            </div>
-          </section>
-
-          {/* Tracking */}
-          <section className="space-y-3">
-            <PanelSectionLabel title="Tracking" />
-            <div className="grid grid-cols-2 gap-3">
-              <PanelField label="OASIS Number">
-                <input
-                  type="text"
-                  value={editForm.OasisNumber ?? ""}
-                  onChange={(e) => set("OasisNumber", e.target.value)}
-                  className={inputClass(editForm.OasisNumber ?? "")}
-                />
-              </PanelField>
-              <PanelField label="CxS Request No.">
-                <input
-                  type="text"
-                  value={editForm.CxSRequestNo ?? ""}
-                  onChange={(e) => set("CxSRequestNo", e.target.value)}
-                  className={inputClass(editForm.CxSRequestNo ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Order Receive Date">
-                <input
-                  type="date"
-                  value={editForm.OrderReceiveDate ?? ""}
-                  onChange={(e) => set("OrderReceiveDate", e.target.value)}
-                  className={inputClass(editForm.OrderReceiveDate ?? "")}
-                />
-              </PanelField>
-              <PanelField label="CxS Complete Date">
-                <input
-                  type="date"
-                  value={editForm.CxSCompleteDate ?? ""}
-                  onChange={(e) => set("CxSCompleteDate", e.target.value)}
-                  className={inputClass(editForm.CxSCompleteDate ?? "")}
-                />
-              </PanelField>
-              <PanelField label="TID">
-                <input
-                  type="text"
-                  value={editForm.TID ?? ""}
-                  onChange={(e) => set("TID", e.target.value)}
-                  className={inputClass(editForm.TID ?? "")}
-                />
-              </PanelField>
-              <PanelField label="SD Number">
-                <input
-                  type="text"
-                  value={editForm.SDNumber ?? ""}
-                  onChange={(e) => set("SDNumber", e.target.value)}
-                  className={inputClass(editForm.SDNumber ?? "")}
-                />
-              </PanelField>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <PanelToggle
-                label="PS Job"
-                options={["Y", "N"]}
-                value={editForm.PSJob ?? ""}
-                onChange={(v) => set("PSJob", v)}
-              />
-              <PanelToggle
-                label="Welcome Letter"
-                options={["Yes", "No"]}
-                value={editForm.WelcomeLetter ?? ""}
-                onChange={(v) => set("WelcomeLetter", v)}
-              />
-            </div>
-            <PanelSegmented
-              label="T2 / T3"
-              options={["T1", "T2", "T3", "N/A"]}
-              value={editForm.T2T3 ?? ""}
-              onChange={(v) => set("T2T3", v)}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <PanelField label="Handled By">
-                <input
-                  type="text"
-                  value={editForm.By ?? ""}
-                  onChange={(e) => set("By", e.target.value)}
-                  className={inputClass(editForm.By ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Order Form URL" span2>
-                <input
-                  type="url"
-                  value={editForm.OrderFormURL ?? ""}
-                  onChange={(e) => set("OrderFormURL", e.target.value)}
-                  className={inputClass(editForm.OrderFormURL ?? "")}
-                  placeholder="https://…"
-                />
-              </PanelField>
-              <PanelField label="Case ID">
-                <input
-                  type="text"
-                  value={editForm.CaseID ?? ""}
-                  onChange={(e) => set("CaseID", e.target.value)}
-                  className={inputClass(editForm.CaseID ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Case ID URL" span2>
-                <input
-                  type="url"
-                  value={editForm.CaseIDURL ?? ""}
-                  onChange={(e) => set("CaseIDURL", e.target.value)}
-                  className={inputClass(editForm.CaseIDURL ?? "")}
-                  placeholder="https://…"
-                />
-              </PanelField>
-            </div>
-          </section>
-
-          {/* Customer */}
-          <section className="space-y-3">
-            <PanelSectionLabel title="Customer" />
-            <div className="grid grid-cols-2 gap-3">
-              <PanelField label="Customer Name" span2>
-                <input
-                  type="text"
-                  value={editForm.CustomerName ?? ""}
-                  onChange={(e) => set("CustomerName", e.target.value)}
-                  className={inputClass(editForm.CustomerName ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Contact Person">
-                <input
-                  type="text"
-                  value={editForm.ContactPerson ?? ""}
-                  onChange={(e) => set("ContactPerson", e.target.value)}
-                  className={inputClass(editForm.ContactPerson ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Contact No.">
-                <input
-                  type="text"
-                  value={editForm.ContactNo ?? ""}
-                  onChange={(e) => set("ContactNo", e.target.value)}
-                  className={inputClass(editForm.ContactNo ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Contact Email" span2>
-                <input
-                  type="email"
-                  value={editForm.ContactEmail ?? ""}
-                  onChange={(e) => set("ContactEmail", e.target.value)}
-                  className={inputClass(editForm.ContactEmail ?? "")}
-                />
-              </PanelField>
-              <PanelField label="2nd Contact No.">
-                <input
-                  type="text"
-                  value={editForm.ContactNo2 ?? ""}
-                  onChange={(e) => set("ContactNo2", e.target.value)}
-                  className={inputClass(editForm.ContactNo2 ?? "")}
-                />
-              </PanelField>
-              <PanelField label="2nd Contact Email" span2>
-                <input
-                  type="email"
-                  value={editForm.ContactEmail2 ?? ""}
-                  onChange={(e) => set("ContactEmail2", e.target.value)}
-                  className={inputClass(editForm.ContactEmail2 ?? "")}
-                />
-              </PanelField>
-              <PanelField label="Billing Address" span2>
-                <textarea
-                  value={editForm.BillingAddress ?? ""}
-                  onChange={(e) => set("BillingAddress", e.target.value)}
-                  className={`${inputClass(editForm.BillingAddress ?? "")} min-h-[70px] resize-none`}
-                />
-              </PanelField>
-            </div>
-          </section>
-
-          {/* Notes */}
-          <section className="space-y-3">
-            <PanelSectionLabel title="Notes" />
-            <PanelField label="Remark">
-              <textarea
-                value={editForm.Remark ?? ""}
-                onChange={(e) => set("Remark", e.target.value)}
-                className={`${inputClass(editForm.Remark ?? "")} min-h-[100px] resize-none`}
-              />
-            </PanelField>
-          </section>
-        </form>
-
-        {/* Panel Footer */}
-        <div
-          className="px-6 py-4 flex gap-3 shrink-0"
-          style={{ borderTop: "1px solid #dad4c8" }}
-        >
-          <button
-            type="button"
-            onClick={handleEditClose}
-            className="flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors text-sm hover:bg-[#faf9f7]"
-            style={{ border: "1px solid #dad4c8", color: "#55534e" }}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleEditSave}
-            disabled={editSaving}
-            className="flex-1 px-4 py-2.5 text-white font-medium rounded-xl transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ background: "#000" }}
-            onMouseEnter={(e) => {
-              if (!editSaving)
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "#333";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#000";
-            }}
-          >
-            {editSaving ? "Saving…" : "Save Changes"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
