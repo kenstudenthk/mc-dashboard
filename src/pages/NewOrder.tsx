@@ -216,7 +216,7 @@ const NavItem = ({
   <button
     type="button"
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors cursor-pointer ${
       active
         ? "bg-[#e8efff] text-[#094cb2]"
         : `hover:bg-[#f5f3ef] ${TERTIARY_TEXT}`
@@ -1146,6 +1146,7 @@ const NewOrder = () => {
           style={{
             position: "sticky",
             top: "1.5rem",
+            zIndex: 10,
             boxShadow:
               "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
           }}

@@ -479,6 +479,7 @@ const OrderDetails = () => {
           style={{
             position: "sticky",
             top: "1.5rem",
+            zIndex: 10,
             border: "1px solid #dad4c8",
             boxShadow:
               "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
@@ -512,7 +513,7 @@ const OrderDetails = () => {
                 type="button"
                 key={label}
                 onClick={() => setActiveSection(i)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left cursor-pointer hover:bg-[#faf9f7]"
                 style={
                   activeSection === i
                     ? { background: "#eee9df", color: "#000" }

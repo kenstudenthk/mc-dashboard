@@ -308,7 +308,6 @@ function SignInScreen({ onSuccess, onForgot, onFirstTime }: {
 // ─── Screen 2: First-time Login — Change Password ─────────────────────────────
 
 function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => void }) {
-  const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -320,7 +319,6 @@ function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => 
   async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault();
     const e: Record<string, string> = {};
-    if (!current) e.current = 'Enter your temporary password.';
     if (!next) e.next = 'Enter a new password.';
     else if (!allRulesMet) e.next = 'Password does not meet all requirements.';
     if (!confirm) e.confirm = 'Please confirm your new password.';
@@ -350,19 +348,16 @@ function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => 
       </div>
       <h2 className="text-[22px] font-extrabold text-[#1d1d1f] leading-tight mb-1.5">Set your password</h2>
       <p className="text-xs text-[#1d1d1f]/45 mb-5 leading-relaxed">
-        You're signed in with a temporary password.<br />Please set a new one to continue.
+        You're setting up your account for the first time.<br />Please set a new password to continue.
       </p>
       <div className="flex items-center gap-2 px-3 py-2 bg-[#f5f4f1] rounded-[9px] border border-[#1d1d1f]/08 mb-5">
         <Mail className="w-3.5 h-3.5 text-[#1d1d1f]/40 shrink-0" />
         <span className="text-xs text-[#1d1d1f]/55 font-mono truncate">{email || 'user@company.com'}</span>
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5" noValidate>
-        <Field label="Temporary password" type="password" placeholder="Enter temporary password"
-          value={current} onChange={v => { setCurrent(v); setErrors(e => ({ ...e, current: '' })); }}
-          error={errors.current} autoFocus />
         <Field label="New password" type="password" placeholder="Create a strong password"
           value={next} onChange={v => { setNext(v); setErrors(e => ({ ...e, next: '' })); }}
-          error={errors.next} />
+          error={errors.next} autoFocus />
         {next.length > 0 && (
           <div className="flex flex-col gap-1.5 px-3 py-2.5 bg-[#f9f8f6] rounded-[9px] border border-[#1d1d1f]/07">
             {ruleResults.map((r, i) => <PasswordRule key={i} met={r.met} label={r.label} />)}
