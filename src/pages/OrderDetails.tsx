@@ -13,6 +13,7 @@ import {
   Mail,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import CloudProviderLogo from "../components/CloudProviderLogo";
@@ -205,6 +206,42 @@ const OrderDetails = () => {
   const [expandedEmailIds, setExpandedEmailIds] = useState<Set<number>>(
     new Set(),
   );
+
+  const [isRemarkQuickEdit, setIsRemarkQuickEdit] = useState(false);
+  const [quickRemarkValue, setQuickRemarkValue] = useState("");
+  const [quickRemarkSaving, setQuickRemarkSaving] = useState(false);
+
+  const getTodayFormatted = () => {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = d.toLocaleString("en-GB", { month: "short" });
+    const year = String(d.getFullYear()).slice(2);
+    return `${day}-${month}-${year}`;
+  };
+
+  const handleQuickRemarkOpen = () => {
+    if (!order) return;
+    const today = getTodayFormatted();
+    const current = order.Remark ? order.Remark.trim() : "";
+    const newVal = current ? `${current}\n\n${today} - ` : `${today} - `;
+    setQuickRemarkValue(newVal);
+    setIsRemarkQuickEdit(true);
+  };
+
+  const handleQuickRemarkSave = async () => {
+    if (!order) return;
+    setQuickRemarkSaving(true);
+    try {
+      const updated = await orderService.update(order.id, { Remark: quickRemarkValue }, userEmail);
+      setOrderOverride(updated);
+      invalidateOrders();
+      setIsRemarkQuickEdit(false);
+    } catch {
+      alert("Failed to save remark.");
+    } finally {
+      setQuickRemarkSaving(false);
+    }
+  };
 
   const handleEditOpen = () => {
     if (!order) return;
@@ -669,19 +706,73 @@ const OrderDetails = () => {
                 className="mt-4 pt-4"
                 style={{ borderTop: "1px solid #eee9df" }}
               >
-                <dt className="label-text mb-1" style={{ color: "#9f9b93" }}>
-                  Remark
-                </dt>
+                <div className="flex items-center gap-2 mb-1">
+                  <dt className="label-text" style={{ color: "#9f9b93" }}>
+                    Remark
+                  </dt>
+                  {canEdit && !isEditMode && !isRemarkQuickEdit && (
+                    <button
+                      onClick={handleQuickRemarkOpen}
+                      className="p-1 rounded-md hover:bg-[#faf9f7] transition-colors"
+                      title="Quick Edit Remark"
+                    >
+                      <Pencil className="w-3 h-3" style={{ color: "#078a52" }} />
+                    </button>
+                  )}
+                </div>
                 <dd
                   className="text-sm"
                   style={{ color: "#000" }}
                 >
                   {isEditMode ? (
-                    <textarea
-                      value={editForm.Remark ?? ""}
-                      onChange={(e) => set("Remark", e.target.value)}
-                      className={`${inputClass(editForm.Remark ?? "")} min-h-[100px] resize-none`}
-                    />
+                    <div className="space-y-1.5">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const today = getTodayFormatted();
+                            const current = editForm.Remark ? editForm.Remark.trim() : "";
+                            const newVal = current ? `${current}\n\n${today} - ` : `${today} - `;
+                            set("Remark", newVal);
+                          }}
+                          className="text-[10px] font-semibold text-[#078a52] hover:underline"
+                        >
+                          + Add Today's Date
+                        </button>
+                      </div>
+                      <textarea
+                        value={editForm.Remark ?? ""}
+                        onChange={(e) => set("Remark", e.target.value)}
+                        className={`${inputClass(editForm.Remark ?? "")} min-h-[100px] resize-none`}
+                      />
+                    </div>
+                  ) : isRemarkQuickEdit ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={quickRemarkValue}
+                        onChange={(e) => setQuickRemarkValue(e.target.value)}
+                        autoFocus
+                        className={`${inputClass(quickRemarkValue)} min-h-[120px] resize-none font-sans`}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setIsRemarkQuickEdit(false)}
+                          disabled={quickRemarkSaving}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium border border-[#dad4c8] hover:bg-[#faf9f7] transition-colors"
+                          style={{ color: "#55534e" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleQuickRemarkSave}
+                          disabled={quickRemarkSaving}
+                          className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm transition-all disabled:opacity-50"
+                          style={{ background: "#078a52" }}
+                        >
+                          {quickRemarkSaving ? "Saving..." : "Save Remark"}
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <span className="whitespace-pre-wrap">{order.Remark || "—"}</span>
                   )}
