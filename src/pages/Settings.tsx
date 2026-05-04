@@ -96,21 +96,29 @@ const Settings = () => {
       await createUser(newEmail, newName, newRole, newStatus);
       
       // Send invitation email via Supabase Admin API
-      const { error } = await authService.inviteUser(newEmail);
+      const { error } = await authService.inviteUser(newEmail, {
+        role: newRole,
+        displayName: newName
+      });
+      
       if (error) {
         console.error("Failed to send invitation email:", error);
-        // We don't throw here so the user is still created in PA even if the email fails
+        setUsersError(`User created in SharePoint, but invitation email failed: ${error.message || "Unknown error"}`);
+        // We don't return here so the user can see the new record in the table
       }
 
       const updated = await getAllUsers();
       setUsers(updated);
-      setNewName("");
-      setNewEmail("");
-      setNewRole("User");
-      setNewStatus("Active");
-      setShowAddUser(false);
-    } catch {
-      setUsersError("Failed to add user. Please try again.");
+      
+      if (!error) {
+        setNewName("");
+        setNewEmail("");
+        setNewRole("User");
+        setNewStatus("Active");
+        setShowAddUser(false);
+      }
+    } catch (err: any) {
+      setUsersError(err.message || "Failed to add user. Please try again.");
     } finally {
       setAddingUser(false);
     }
@@ -190,15 +198,20 @@ const Settings = () => {
     }
   };
 
-  const handleResendInvitation = async (index: number, email: string) => {
+  const handleResendInvitation = async (index: number, user: SPUser) => {
     setSavingIndex(index);
+    setUsersError(null);
     try {
-      const { error } = await authService.sendPasswordResetEmail(email);
+      // If user is pending, send another invitation. Otherwise send password reset.
+      const { error } = user.status === "Pending" 
+        ? await authService.inviteUser(user.email, { role: user.role, displayName: user.displayName })
+        : await authService.sendPasswordResetEmail(user.email);
+        
       if (error) throw error;
       setResetSentIndex(index);
       setTimeout(() => setResetSentIndex(null), 3000);
-    } catch {
-      setUsersError("Failed to resend invitation. Please try again.");
+    } catch (err: any) {
+      setUsersError(`Failed to resend: ${err.message || "Please try again."}`);
     } finally {
       setSavingIndex(null);
     }
@@ -756,7 +769,7 @@ const Settings = () => {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => handleResendInvitation(i, user.email)}
+                                    onClick={() => handleResendInvitation(i, user)}
                                     disabled={savingIndex === i}
                                     className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1"
                                   >

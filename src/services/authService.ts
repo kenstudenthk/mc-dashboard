@@ -27,7 +27,7 @@ export const authService = {
     return { error };
   },
 
-  inviteUser: async (email: string): Promise<{ error: any }> => {
+  inviteUser: async (email: string, metadata?: { role?: string, displayName?: string }): Promise<{ error: any }> => {
     if (!supabaseAdmin) {
       console.warn("Supabase Admin client not initialized. Falling back to magic link for local dev.");
       // Fallback for local development if the service role key isn't present
@@ -43,7 +43,9 @@ export const authService = {
     const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${window.location.origin}/`,
       data: {
-        force_password_change: true
+        force_password_change: true,
+        role: metadata?.role,
+        full_name: metadata?.displayName
       }
     });
     return { error };

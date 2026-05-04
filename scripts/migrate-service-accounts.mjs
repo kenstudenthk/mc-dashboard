@@ -1,20 +1,23 @@
 /**
- * Service Account repair script — two independent modes:
+ * Service Account repair script — three independent modes:
  *
- *   FIX_LOOKUP=true   Fix wrong OrderID lookup values on existing SAs.
- *                     Matches SA.Title === Order.Title and updates OrderID
- *                     to the correct SPO item ID.
+ *   FIX_LOOKUP=true        Fix wrong OrderID lookup values on existing SAs.
+ *                          Matches SA.Title === Order.Title and updates OrderID
+ *                          to the correct SPO item ID.
  *
- *   FILL_MISSING=true Create SAs for orders that have none yet.
- *                     Reads account data from Excel; creates a minimal SA
- *                     (Title + OrderID) even when account fields are empty.
+ *   FILL_MISSING=true      Create SAs for orders that have none yet.
+ *                          Reads account data from Excel; creates a minimal SA
+ *                          (Title + OrderID) even when account fields are empty.
  *
- * Both modes can run together (default when neither flag is set).
+ *   FILL_EMPTY_FIELDS=true For existing SAs that have blank fields, fill them
+ *                          back from Excel data. Only sends fields that are
+ *                          currently empty in SPO AND have a value in Excel.
+ *
+ * Default (no flags set): runs FIX_LOOKUP + FILL_MISSING only.
  *
  * Required .env vars:
  *   VITE_API_SERVICE_ACCOUNTS_URL
  *   VITE_API_ORDERS_URL
- *   VITE_API_GET_PAGE_URL   (recommended — falls back to GET_ALL on ORDERS_URL)
  *   MIGRATION_USER_EMAIL
  */
 
@@ -34,9 +37,10 @@ const ORDERS_URL    = process.env.VITE_API_ORDERS_URL;
 const GET_PAGE_URL  = process.env.VITE_API_GET_PAGE_URL;
 const USER_EMAIL    = process.env.MIGRATION_USER_EMAIL || "migration@system";
 
-// If neither flag is explicitly set, run both modes.
-const RUN_FIX     = process.env.FIX_LOOKUP    !== "false";
-const RUN_FILL    = process.env.FILL_MISSING  !== "false";
+// If neither FIX/FILL flag is explicitly set, run both defaults.
+const RUN_FIX          = process.env.FIX_LOOKUP         !== "false";
+const RUN_FILL         = process.env.FILL_MISSING        !== "false";
+const RUN_FILL_EMPTY   = process.env.FILL_EMPTY_FIELDS   === "true";
 
 const DRY_RUN     = process.env.DRY_RUN === "true";
 const DELAY_MS    = Number(process.env.DELAY_MS ?? 400);
@@ -93,31 +97,28 @@ function spId(obj) {
 
 // ── Data fetchers ─────────────────────────────────────────────────────────────
 
-async function fetchAllOrders() {
-  console.log("─── Fetching all Orders from SPO…");
-  const pageUrl = GET_PAGE_URL || ORDERS_URL;
-  const items = [];
-  let offset = 0;
-  const limit = 100; // PA flow returns max 100 per page
-
-  while (true) {
-    // eslint-disable-next-line no-await-in-loop
-    const res = await fetch(pageUrl, {
+async function fetchWithTimeout(url, body, timeoutMs = 30_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "GET_PAGE", limit, offset }),
+      body: JSON.stringify(body),
+      signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`GET_PAGE failed: ${res.status}`);
-    const json = await res.json();
-    const page = extractList(json);
-    if (page.length === 0) break;
-    items.push(...page);
-    offset += page.length; // use actual returned count, not requested limit
-    if (page.length < limit) break; // last page
-    // eslint-disable-next-line no-await-in-loop
-    await sleep(200);
+    return res;
+  } finally {
+    clearTimeout(timer);
   }
+}
 
+async function fetchAllOrders() {
+  console.log("─── Fetching all Orders from SPO… (GET_ALL, timeout: 120s)");
+  const res = await fetchWithTimeout(ORDERS_URL, { action: "GET_ALL" }, 120_000);
+  if (!res.ok) throw new Error(`Orders GET_ALL failed: ${res.status}`);
+  const json = await res.json();
+  const items = extractList(json);
   console.log(`   ${items.length} orders loaded`);
   return items;
 }
@@ -176,10 +177,16 @@ async function fixLookup(orders, serviceAccounts) {
     }
 
     try {
+      // Preserve all existing SA fields so the PA flow doesn't blank them out.
+      const saFields = {};
+      for (const f of ["Provider","PrimaryAccountID","SecondaryID","AccountName","Domain","LoginEmail","Password","OtherInfo"]) {
+        const v = String(sa[f] ?? "").trim();
+        if (v) saFields[f] = v;
+      }
       await post(SA_URL, {
         action: "UPDATE",
         userEmail: USER_EMAIL,
-        data: { id: saSpId, OrderID: correctOrdId },
+        data: { id: saSpId, ...saFields, OrderID: correctOrdId },
       });
       fixed++;
       console.log(`  ✅ SA "${saTitle}" id=${saSpId}: OrderID ${currentOrdId} → ${correctOrdId}`);
@@ -253,7 +260,7 @@ async function fillMissing(orders, serviceAccounts) {
   for (const [title, orderId] of missing) {
     const row = excelByServiceNo[title];
 
-    const data = {
+    const rawData = {
       Title:            title,
       OrderID:          orderId,
       Provider:         row ? get(row, hm, "Product Subscribe") : "",
@@ -264,6 +271,10 @@ async function fillMissing(orders, serviceAccounts) {
       Password:         row ? get(row, hm, "Password") : "",
       OtherInfo:        row ? get(row, hm, "Other Account Information") : "",
     };
+    // Strip empty strings so PA flow doesn't overwrite existing SPO values with blanks.
+    const data = Object.fromEntries(
+      Object.entries(rawData).filter(([, v]) => v !== "")
+    );
 
     if (DRY_RUN) {
       created++;
@@ -288,6 +299,110 @@ async function fillMissing(orders, serviceAccounts) {
   return errors;
 }
 
+// ── Mode 3: FILL_EMPTY_FIELDS ─────────────────────────────────────────────────
+// For every existing SA, compare each field against Excel.
+// If the SPO field is blank AND Excel has a value → include it in the UPDATE.
+// Fields with existing SPO values are never touched.
+
+async function fillEmptyFields(serviceAccounts) {
+  console.log("\n━━━ FILL_EMPTY_FIELDS: Patching blank fields from Excel ━━━━━━━━━");
+  if (DRY_RUN) console.log("   [DRY RUN — no writes]\n");
+
+  const xlsxPath = path.join(__dirname, "../MCdashboard_(Final).xlsx");
+  if (!fs.existsSync(xlsxPath)) {
+    console.error(`❌ Excel file not found: ${xlsxPath}`);
+    return [];
+  }
+  const workbook = XLSX.readFile(xlsxPath, { cellDates: true });
+  const sheet    = workbook.Sheets["Orders"];
+  if (!sheet) {
+    console.error('❌ Sheet "Orders" not found in workbook.');
+    return [];
+  }
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  const hm   = buildHeaderMap(Object.keys(rows[0] ?? {}));
+  console.log(`   ${rows.length} Excel rows loaded`);
+
+  const excelByServiceNo = {};
+  for (const row of rows) {
+    const sn = get(row, hm, "Service No.", "Service No");
+    if (sn) excelByServiceNo[sn] = row;
+  }
+
+  // Field definitions: SPO field name → Excel column candidates
+  const FIELD_MAP = [
+    { field: "Provider",         cols: ["Product Subscribe"] },
+    { field: "PrimaryAccountID", cols: ["Master-Final", "Billing Account"] },
+    { field: "SecondaryID",      cols: ["Account ID"] },
+    { field: "AccountName",      cols: ["Account Name", "Account Name / Cloud Checker Name"] },
+    { field: "LoginEmail",       cols: ["Account Login Email"] },
+    { field: "Password",         cols: ["Password"] },
+    { field: "OtherInfo",        cols: ["Other Account Information"] },
+  ];
+
+  let patched   = 0;
+  let skipped   = 0;
+  let noExcel   = 0;
+  const errors  = [];
+
+  for (const sa of serviceAccounts) {
+    const saTitle = String(sa.Title ?? "").trim();
+    const saSpId  = spId(sa);
+    const row     = excelByServiceNo[saTitle];
+
+    if (!row) {
+      noExcel++;
+      continue;
+    }
+
+    // Build patch: only fields that are blank in SPO and have a value in Excel
+    const patch = {};
+    for (const { field, cols } of FIELD_MAP) {
+      const spoVal   = String(sa[field] ?? "").trim();
+      const excelVal = get(row, hm, ...cols);
+      if (!spoVal && excelVal) patch[field] = excelVal;
+    }
+
+    if (Object.keys(patch).length === 0) {
+      skipped++;
+      continue;
+    }
+
+    if (DRY_RUN) {
+      patched++;
+      console.log(`  [DRY] SA "${saTitle}" id=${saSpId} — patch: ${JSON.stringify(patch)}`);
+      continue;
+    }
+
+    try {
+      // Include all existing non-empty SA fields to protect against PA flow blanking them.
+      const existing = {};
+      for (const { field } of FIELD_MAP) {
+        const v = String(sa[field] ?? "").trim();
+        if (v) existing[field] = v;
+      }
+      await post(SA_URL, {
+        action: "UPDATE",
+        userEmail: USER_EMAIL,
+        data: { id: saSpId, ...existing, ...patch },
+      });
+      patched++;
+      console.log(`  ✅ [${patched}] "${saTitle}" id=${saSpId} — filled: ${Object.keys(patch).join(", ")}`);
+    } catch (err) {
+      errors.push({ saTitle, saSpId, patch, err: err.message });
+      console.error(`  ❌ "${saTitle}" id=${saSpId}: ${err.message}`);
+    }
+    await sleep();
+  }
+
+  console.log("\n─── FILL_EMPTY_FIELDS summary");
+  console.log(`   Patched         : ${patched}`);
+  console.log(`   Already full    : ${skipped}`);
+  console.log(`   No Excel match  : ${noExcel}`);
+  console.log(`   Errors          : ${errors.length}`);
+  return errors;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -298,19 +413,21 @@ async function main() {
     console.error(`❌ Missing env vars: ${missing.join(", ")}`);
     process.exit(1);
   }
-  if (!RUN_FIX && !RUN_FILL) {
-    console.error("❌ Both FIX_LOOKUP=false and FILL_MISSING=false — nothing to do.");
+  if (!RUN_FIX && !RUN_FILL && !RUN_FILL_EMPTY) {
+    console.error("❌ No mode enabled — set at least one of FIX_LOOKUP, FILL_MISSING, FILL_EMPTY_FIELDS.");
     process.exit(1);
   }
 
   console.log("━━━ Service Account Repair Script ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(`   FIX_LOOKUP   : ${RUN_FIX}`);
-  console.log(`   FILL_MISSING : ${RUN_FILL}`);
-  console.log(`   DRY_RUN      : ${DRY_RUN}`);
-  console.log(`   DELAY_MS     : ${DELAY_MS}ms\n`);
+  console.log(`   FIX_LOOKUP        : ${RUN_FIX}`);
+  console.log(`   FILL_MISSING      : ${RUN_FILL}`);
+  console.log(`   FILL_EMPTY_FIELDS : ${RUN_FILL_EMPTY}`);
+  console.log(`   DRY_RUN           : ${DRY_RUN}`);
+  console.log(`   DELAY_MS          : ${DELAY_MS}ms\n`);
 
-  const orders = await fetchAllOrders();
-  await sleep(1000);
+  const needsOrders = RUN_FIX || RUN_FILL;
+  const orders = needsOrders ? await fetchAllOrders() : [];
+  if (needsOrders) await sleep(1000);
   const serviceAccounts = await fetchAllServiceAccounts();
 
   const allErrors = [];
@@ -321,8 +438,12 @@ async function main() {
   }
 
   if (RUN_FILL) {
-    // Re-fetch SAs if we just fixed lookups (order doesn't change, SAs don't change count)
     const errs = await fillMissing(orders, serviceAccounts);
+    allErrors.push(...errs);
+  }
+
+  if (RUN_FILL_EMPTY) {
+    const errs = await fillEmptyFields(serviceAccounts);
     allErrors.push(...errs);
   }
 
