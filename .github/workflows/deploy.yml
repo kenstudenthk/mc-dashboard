@@ -19,6 +19,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug Secret Presence
+        run: |
+          echo "Checking if QUICK_LINKS secret is present in the workflow environment..."
+          if [ -z "$VITE_API_QUICK_LINKS_URL" ]; then
+            echo "❌ ERROR: The VITE_API_QUICK_LINKS_URL secret is empty or missing!"
+          else
+            echo "✅ SUCCESS: The VITE_API_QUICK_LINKS_URL secret contains data (Length: ${#VITE_API_QUICK_LINKS_URL})"
+          fi
+          
+          echo "Checking ORDERS secret for comparison..."
+          if [ -z "$VITE_API_ORDERS_URL" ]; then
+            echo "❌ ERROR: ORDERS secret is missing too."
+          else
+            echo "✅ SUCCESS: ORDERS secret contains data."
+          fi
+        env:
+          VITE_API_QUICK_LINKS_URL: ${{ secrets.VITE_API_QUICK_LINKS_URL }}
+          VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
+
       # IMPORTANT: When adding a new VITE_* secret to GitHub repo settings,
       # you MUST also add it here in BOTH the `run:` echo lines AND the `env:` map.
       # Setting the secret in GitHub alone is not enough — this workflow builds the
