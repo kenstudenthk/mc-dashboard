@@ -14,7 +14,6 @@ const REQUIRED_FIELDS = new Set([
   "orderType",
   "status",
   "productSubscribe",
-  "srd",
 ]);
 const isRequired = (f: string) => REQUIRED_FIELDS.has(f);
 
@@ -994,10 +993,6 @@ const NewOrder = () => {
     }
     if (!isPreProvision && !serviceNo) {
       setSubmitError("Service No. is required.");
-      return;
-    }
-    if (!srd) {
-      setSubmitError("SRD is required.");
       return;
     }
 
