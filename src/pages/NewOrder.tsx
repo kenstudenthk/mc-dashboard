@@ -243,7 +243,7 @@ const NavItem = ({
 // ─── Section panels ───────────────────────────────────────────────────────────
 interface OrderInfoProps {
   isPreProvision: boolean;
-  setIsPreProvision: (v: boolean) => void;
+  onPreProvisionToggle: (v: boolean) => void;
   serviceNo: string;
   setServiceNo: (v: string) => void;
   status: string;
@@ -268,7 +268,7 @@ interface OrderInfoProps {
 
 const OrderInfoSection = ({
   isPreProvision,
-  setIsPreProvision,
+  onPreProvisionToggle,
   serviceNo,
   setServiceNo,
   status,
@@ -305,12 +305,12 @@ const OrderInfoSection = ({
         <div className="flex-1 h-px bg-[#eee9df]" />
       </div>
       <TutorTooltip
-        text="Check this box if you are creating an account before receiving an official Service No. The Service No. will be set to 'TBC'."
+        text="Check this box if you are creating an account before receiving an official Service No. This will pre-fill many fields with 'TBC'."
         position="left"
       >
         <button
           type="button"
-          onClick={() => setIsPreProvision(!isPreProvision)}
+          onClick={() => onPreProvisionToggle(!isPreProvision)}
           className="ml-6 flex items-center gap-2.5 shrink-0"
         >
           <div
@@ -337,8 +337,7 @@ const OrderInfoSection = ({
       <InputGroup
         label="Service No."
         placeholder="e.g. CL549486"
-        disabled={isPreProvision}
-        value={isPreProvision ? "TBC" : serviceNo}
+        value={serviceNo}
         onChange={(e) => setServiceNo(e.target.value)}
       />
       <SelectGroup
@@ -942,6 +941,40 @@ const NewOrder = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  const handlePreProvisionToggle = (val: boolean) => {
+    setIsPreProvision(val);
+    if (val) {
+      // 1. Status default to "Pending for order issued"
+      setStatus("Pending for order issued");
+      // 2. Order Type default to "Pre-Pro"
+      setOrderType("Pre-Pro");
+
+      // 3. Pre-fill "TBC" for text fields
+      setServiceNo("TBC");
+      setServiceType("TBC");
+      setOasisNumber("TBC");
+      setSubName("TBC");
+      setContactPerson("TBC");
+      setContactNo("TBC");
+      setContactEmail("TBC");
+      setContactNo2("TBC");
+      setContactEmail2("TBC");
+      setBillingAddress("TBC");
+      setBillingAccount("TBC");
+      setAccountName("TBC");
+      setAccountLoginEmail("TBC");
+      setAzurePrimaryDomain("TBC");
+      setPassword("TBC");
+      setOtherAccountInfo("TBC");
+      setCxsRequestNo("TBC");
+      setTid("TBC");
+      setSdNumber("TBC");
+      setOrderFormUrl("TBC");
+
+      // Fields to leave blank: productSubscribe, companyName, accountId, by, caseId, caseIdUrl, remark
+    }
+  };
+
   const handleSave = async () => {
     if (!companyName) {
       setSubmitError("Company Name is required.");
@@ -1172,7 +1205,7 @@ const NewOrder = () => {
           {activeSection === 0 && (
             <OrderInfoSection
               isPreProvision={isPreProvision}
-              setIsPreProvision={setIsPreProvision}
+              onPreProvisionToggle={handlePreProvisionToggle}
               serviceNo={serviceNo}
               setServiceNo={setServiceNo}
               status={status}
