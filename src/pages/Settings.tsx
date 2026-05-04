@@ -191,6 +191,15 @@ const Settings = () => {
     setUsersError(null);
     try {
       await deleteUser(user.id);
+      
+      // Attempt to delete from Supabase Auth as well
+      const { error: sbError } = await authService.deleteUser(user.email);
+      if (sbError) {
+        console.error("Failed to delete user from Supabase:", sbError);
+        // We log the error but don't fail the overall operation if SharePoint deletion succeeded
+        // The user won't be able to log in to the dashboard anyway if their PA record is gone
+      }
+      
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
     } catch (err: any) {
       console.error("Delete user failed:", err);
