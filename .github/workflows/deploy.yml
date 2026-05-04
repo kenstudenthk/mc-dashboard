@@ -45,20 +45,20 @@ jobs:
       # get written to .env and bundled by Vite.
       - name: Write env vars
         run: |
-          echo "VITE_API_ORDERS_URL=$VITE_API_ORDERS_URL" >> .env
-          echo "VITE_API_CUSTOMERS_URL=$VITE_API_CUSTOMERS_URL" >> .env
-          echo "VITE_API_PERMISSIONS_URL=$VITE_API_PERMISSIONS_URL" >> .env
-          echo "VITE_API_ORDER_TIMELINE_URL=$VITE_API_ORDER_TIMELINE_URL" >> .env
-          echo "VITE_API_AUDIT_LOGS_URL=$VITE_API_AUDIT_LOGS_URL" >> .env
-          echo "VITE_API_QUICK_LINKS_URL=$VITE_API_QUICK_LINKS_URL" >> .env
-          echo "VITE_API_SERVICE_ACCOUNTS_URL=$VITE_API_SERVICE_ACCOUNTS_URL" >> .env
-          echo "VITE_API_ORDER_STEPS_URL=$VITE_API_ORDER_STEPS_URL" >> .env
-          echo "VITE_API_GET_PAGE_URL=$VITE_API_GET_PAGE_URL" >> .env
-          echo "VITE_API_EMAIL_TEMPLATES_URL=$VITE_API_EMAIL_TEMPLATES_URL" >> .env
-          echo "VITE_API_EMAIL_URL=$VITE_API_EMAIL_URL" >> .env
-          echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" >> .env
-          echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env
-          echo "VITE_API_PINNED_ORDER_URL=$VITE_API_PINNED_ORDER_URL" >> .env
+          echo "VITE_API_ORDERS_URL=$VITE_API_ORDERS_URL" >> .env.production
+          echo "VITE_API_CUSTOMERS_URL=$VITE_API_CUSTOMERS_URL" >> .env.production
+          echo "VITE_API_PERMISSIONS_URL=$VITE_API_PERMISSIONS_URL" >> .env.production
+          echo "VITE_API_ORDER_TIMELINE_URL=$VITE_API_ORDER_TIMELINE_URL" >> .env.production
+          echo "VITE_API_AUDIT_LOGS_URL=$VITE_API_AUDIT_LOGS_URL" >> .env.production
+          echo "VITE_API_QUICK_LINKS_URL=$VITE_API_QUICK_LINKS_URL" >> .env.production
+          echo "VITE_API_SERVICE_ACCOUNTS_URL=$VITE_API_SERVICE_ACCOUNTS_URL" >> .env.production
+          echo "VITE_API_ORDER_STEPS_URL=$VITE_API_ORDER_STEPS_URL" >> .env.production
+          echo "VITE_API_GET_PAGE_URL=$VITE_API_GET_PAGE_URL" >> .env.production
+          echo "VITE_API_EMAIL_TEMPLATES_URL=$VITE_API_EMAIL_TEMPLATES_URL" >> .env.production
+          echo "VITE_API_EMAIL_URL=$VITE_API_EMAIL_URL" >> .env.production
+          echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" >> .env.production
+          echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env.production
+          echo "VITE_API_PINNED_ORDER_URL=$VITE_API_PINNED_ORDER_URL" >> .env.production
         env:
           VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
           VITE_API_CUSTOMERS_URL: ${{ secrets.VITE_API_CUSTOMERS_URL }}
