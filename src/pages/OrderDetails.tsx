@@ -345,7 +345,7 @@ const OrderDetails = () => {
                   lineHeight: "1.1",
                 }}
               >
-                Order Detail
+                {order.Title}
               </h1>
               <span
                 className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
@@ -356,7 +356,7 @@ const OrderDetails = () => {
             </div>
             <div className="text-sm mt-1" style={{ color: "#9f9b93" }}>
               <p>SRD: {formatDate(order.SRD)}</p>
-              <p>ID: {order.Title}</p>
+              <p>ID: {id}</p>
             </div>
           </div>
         </div>

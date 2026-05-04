@@ -27,6 +27,9 @@ const TopNav = ({ onMenuOpen }: TopNavProps) => {
       if (path === "orders" && paths.length > 1 && paths[1] !== "new") {
         label = "Order Registry";
       }
+      if (index === 1 && paths[0] === "orders" && path !== "new") {
+        label = "Order Detail";
+      }
       breadcrumbs.push({ label, path: currentPath });
     });
 
