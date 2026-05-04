@@ -297,8 +297,8 @@ export const EmailComposePanel: React.FC<EmailComposePanelProps> = ({
         }`}
       >
         <div
-          className={`w-full max-w-5xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out pointer-events-auto ${
-            isOpen ? "scale-100" : "scale-95"
+          className={`w-full max-w-5xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+            isOpen ? "scale-100 pointer-events-auto" : "scale-95 pointer-events-none"
           }`}
         >
           {/* Header */}
