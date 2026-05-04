@@ -280,19 +280,17 @@ const QuickLinks = () => {
               API not connected
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1.5 max-w-xs leading-relaxed">
-              Set{" "}
+              The environment variable{" "}
               <code className="font-mono bg-[var(--color-border-light)] px-1 py-0.5 rounded text-[10px]">
                 VITE_API_QUICK_LINKS_URL
               </code>{" "}
-              in{" "}
+              is missing.
+              <br />
+              Check{" "}
               <code className="font-mono bg-[var(--color-border-light)] px-1 py-0.5 rounded text-[10px]">
                 .env.local
               </code>{" "}
-              and add the secret to{" "}
-              <code className="font-mono bg-[var(--color-border-light)] px-1 py-0.5 rounded text-[10px]">
-                deploy.yml
-              </code>
-              .
+              for development or <strong>GitHub Secrets</strong> for production.
             </p>
           </div>
         </div>

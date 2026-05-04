@@ -39,9 +39,7 @@ function withId(data: unknown): unknown {
 
 async function call<T>(body: object): Promise<T> {
   if (!BASE_URL) {
-    throw new Error(
-      "Quick Links API URL is not configured. Set VITE_API_QUICK_LINKS_URL in .env.local.",
-    );
+    throw new Error("Quick Links API URL is not configured.");
   }
   const res = await fetch(BASE_URL, {
     method: "POST",
