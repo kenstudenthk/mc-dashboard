@@ -345,7 +345,7 @@ const OrderDetails = () => {
                   lineHeight: "1.1",
                 }}
               >
-                {order.Title}
+                Order Detail
               </h1>
               <span
                 className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
@@ -354,9 +354,10 @@ const OrderDetails = () => {
                 {order.Status}
               </span>
             </div>
-            <p className="text-sm mt-1" style={{ color: "#9f9b93" }}>
-              SRD: {formatDate(order.SRD)}
-            </p>
+            <div className="text-sm mt-1" style={{ color: "#9f9b93" }}>
+              <p>SRD: {formatDate(order.SRD)}</p>
+              <p>ID: {order.Title}</p>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
