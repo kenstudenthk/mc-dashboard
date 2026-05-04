@@ -7,7 +7,7 @@
 [![Vite](https://img.shields.io/badge/vite-%236.2.0-purple.svg)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/tailwindcss-%234.1.14-38bdf8.svg)](https://tailwindcss.com/)
 
-A modern order management dashboard built with React 19, TypeScript, and Vite. Designed for teams to manage orders, customers, and reports in one place.
+A modern order management dashboard built with React 19, TypeScript, and Vite. Designed for teams to manage orders, customers, and reports in one places.
 
 ---
 
