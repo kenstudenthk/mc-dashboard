@@ -114,4 +114,18 @@ export async function deleteUser(id: number): Promise<void> {
     }),
   });
   if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
+  
+  // Try to parse JSON to catch logical errors returned by the flow
+  try {
+    const json = await res.json();
+    if (json && typeof json === 'object' && json.success === false) {
+      throw new Error(json.error?.message || "Flow returned success: false");
+    }
+  } catch (e) {
+    // If it's not JSON, or we failed to parse, and res.ok was true, we assume success.
+    // Re-throw if it's the error we just created
+    if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
+      throw e;
+    }
+  }
 }

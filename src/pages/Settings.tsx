@@ -188,11 +188,13 @@ const Settings = () => {
     }
 
     setSavingIndex(index);
+    setUsersError(null);
     try {
       await deleteUser(user.id);
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
-    } catch {
-      setUsersError("Failed to delete user. Please try again.");
+    } catch (err: any) {
+      console.error("Delete user failed:", err);
+      setUsersError(`Failed to delete user: ${err.message || "Please try again."}`);
     } finally {
       setSavingIndex(null);
     }
