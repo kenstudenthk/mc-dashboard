@@ -10,6 +10,7 @@ import {
   Download, TrendingUp, Cloud, FileText,
   CheckCircle, Filter, AlertCircle, Mail, RefreshCw,
 } from 'lucide-react';
+import { TutorTooltip } from '../components/TutorTooltip';
 import { orderService, type Order } from '../services/orderService';
 import { normalizeCloudProvider } from '../constants/cloudProviders';
 
