@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
 import CustomerCombobox from "../components/CustomerCombobox";
 import { orderService } from "../services/orderService";
@@ -893,6 +893,7 @@ const ProvisioningSection = ({
 // ─── Page Component ───────────────────────────────────────────────────────────
 const NewOrder = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { userEmail } = usePermission();
 
   const [activeSection, setActiveSection] = useState<number>(0);
@@ -940,6 +941,28 @@ const NewOrder = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  useEffect(() => {
+    const customerIdParam = searchParams.get("customerId");
+    if (!customerIdParam) return;
+
+    const id = Number(customerIdParam);
+    if (!Number.isFinite(id)) return;
+
+    customerService
+      .findById(id)
+      .then((customer) => {
+        setCustomerId(customer.id);
+        setCompanyName(customer.Company || customer.Title || "");
+        setContactPerson(customer.ContactPerson || customer.Title || "");
+        setContactNo(customer.Phone || "");
+        setContactEmail(customer.Email || "");
+        setBillingAddress(customer.BillingAddress || "");
+      })
+      .catch(() => {
+        setCustomerId(id);
+      });
+  }, [searchParams]);
+
   const handlePreProvisionToggle = (val: boolean) => {
     setIsPreProvision(val);
     if (val) {
@@ -971,6 +994,29 @@ const NewOrder = () => {
       setOrderFormUrl("TBC");
 
       // Fields to leave blank: productSubscribe, companyName, accountId, by, caseId, caseIdUrl, remark
+    } else {
+      setServiceNo("");
+      setStatus("");
+      setOrderType("");
+      setServiceType("");
+      setOasisNumber("");
+      setSubName("");
+      setContactPerson("");
+      setContactNo("");
+      setContactEmail("");
+      setContactNo2("");
+      setContactEmail2("");
+      setBillingAddress("");
+      setBillingAccount("");
+      setAccountName("");
+      setAccountLoginEmail("");
+      setAzurePrimaryDomain("");
+      setPassword("");
+      setOtherAccountInfo("");
+      setCxsRequestNo("");
+      setTid("");
+      setSdNumber("");
+      setOrderFormUrl("");
     }
   };
 
@@ -1009,8 +1055,9 @@ const NewOrder = () => {
           {
             Title: companyName,
             Company: companyName,
-            Email: "",
-            Phone: "",
+            Email: contactEmail || "",
+            Phone: contactNo || "",
+            ContactPerson: contactPerson || undefined,
             Status: "Active",
             Tier: "Standard",
           },
@@ -1057,19 +1104,10 @@ const NewOrder = () => {
       );
 
       if (productSubscribe && order.id) {
-        const otherInfo = [
-          productSubscribe === "Azure" && azurePrimaryDomain
-            ? `Domain: ${azurePrimaryDomain}`
-            : null,
-          otherAccountInfo || null,
-        ]
-          .filter(Boolean)
-          .join("\n");
-
         await serviceAccountService.create(
           {
-            Title: `${title} - ${cloudProvider}`,
-            OrderID: order.id,
+            Title: title,
+            OrderIDId: order.id,
             Provider: cloudProvider,
             PrimaryAccountID: accountId || undefined,
             SecondaryID: billingAccount || undefined,
@@ -1077,7 +1115,7 @@ const NewOrder = () => {
             Domain: azurePrimaryDomain || undefined,
             LoginEmail: accountLoginEmail || undefined,
             Password: password || undefined,
-            OtherInfo: otherInfo || undefined,
+            OtherInfo: otherAccountInfo || undefined,
           },
           userEmail,
         );
