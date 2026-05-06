@@ -30,11 +30,11 @@ const CustomerCombobox = ({ label = "Company Name", value, onChange }: Props) =>
     value.trim() === ""
       ? customers
       : customers.filter((c) =>
-          c.Company.toLowerCase().includes(value.toLowerCase()),
+          (c.Company ?? "").toLowerCase().includes(value.toLowerCase()),
         );
 
   const handleSelect = (customer: Customer) => {
-    onChange(customer.Company, customer.id);
+    onChange(customer.Company ?? "", customer.id);
     setOpen(false);
   };
 
