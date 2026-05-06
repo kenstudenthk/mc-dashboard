@@ -6,6 +6,7 @@ export interface Order {
   Title: string;
   CustomerID?: number;
   CustomerName: string;
+  PreviousName?: string;
   OrderType: string;
   Status: string;
   SRD: string;
@@ -45,6 +46,7 @@ export interface CreateOrderInput {
   Title: string;
   CustomerID?: number;
   CustomerName: string;
+  PreviousName?: string;
   OrderType: string;
   Status: string;
   SRD: string;
@@ -78,6 +80,72 @@ export interface CreateOrderInput {
   CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
+}
+
+const ORDER_STRING_FIELDS = new Set([
+  "Title",
+  "CustomerName",
+  "PreviousName",
+  "OrderType",
+  "Status",
+  "SRD",
+  "CloudProvider",
+  "AccountID",
+  "ServiceType",
+  "OasisNumber",
+  "OrderReceiveDate",
+  "CxSCompleteDate",
+  "ContactPerson",
+  "ContactPerson2",
+  "ContactNo",
+  "ContactEmail",
+  "ContactNo2",
+  "ContactEmail2",
+  "BillingAddress",
+  "BillingAccount",
+  "AccountName",
+  "AccountLoginEmail",
+  "Password",
+  "OtherAccountInfo",
+  "CxSRequestNo",
+  "TID",
+  "SDNumber",
+  "PSJob",
+  "T2T3",
+  "WelcomeLetter",
+  "By",
+  "OrderFormURL",
+  "CaseID",
+  "CaseIDURL",
+  "Remark",
+  "SubName",
+]);
+
+function sanitizeUpdateData(
+  data: Partial<CreateOrderInput>,
+): Partial<CreateOrderInput> {
+  const sanitized: Record<string, unknown> = {};
+
+  Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
+    if (key === "CustomerID") {
+      if (value != null && value !== "") sanitized.CustomerID = Number(value);
+      return;
+    }
+
+    if (key === "Amount") {
+      sanitized.Amount = value == null || value === "" ? 0 : Number(value);
+      return;
+    }
+
+    if (ORDER_STRING_FIELDS.has(key)) {
+      sanitized[key] = value == null ? "" : String(value);
+      return;
+    }
+
+    if (value !== undefined) sanitized[key] = value;
+  });
+
+  return sanitized as Partial<CreateOrderInput>;
 }
 
 function normalizeChoiceFields<T>(data: T): T {
@@ -212,9 +280,7 @@ export const orderService = {
     data: Partial<CreateOrderInput>,
     userEmail: string,
   ): Promise<Order> => {
-    const sanitized: Partial<CreateOrderInput> = { ...data };
-    if (sanitized.CustomerID !== undefined)
-      sanitized.CustomerID = Number(sanitized.CustomerID);
+    const sanitized = sanitizeUpdateData(data);
     return call<Order>({
       action: "UPDATE",
       data: { id, ...sanitized },

@@ -14,7 +14,8 @@ import {
   Clock,
   ArrowRight,
   X,
-  MessageCircle
+  MessageCircle,
+  Globe
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 

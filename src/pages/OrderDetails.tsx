@@ -269,6 +269,7 @@ const OrderDetails = () => {
       CaseIDURL: order.CaseIDURL ?? "",
       CustomerID: order.CustomerID,
       CustomerName: order.CustomerName,
+      PreviousName: order.PreviousName ?? "",
       ContactPerson: order.ContactPerson ?? "",
       ContactNo: order.ContactNo ?? "",
       ContactEmail: order.ContactEmail ?? "",
@@ -812,6 +813,11 @@ const OrderDetails = () => {
                     <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>
                       ID #{order.CustomerID}
                     </p>
+                    {order.PreviousName && (
+                      <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>
+                        Previous Name: {order.PreviousName}
+                      </p>
+                    )}
                   </>
                 )}
                 <dl>
@@ -825,6 +831,18 @@ const OrderDetails = () => {
                       />
                     </InfoField>
                   )}
+                  <InfoField
+                    label="Previous Name"
+                    value={order.PreviousName}
+                    isEdit={isEditMode}
+                  >
+                    <input
+                      type="text"
+                      value={editForm.PreviousName ?? ""}
+                      onChange={(e) => set("PreviousName", e.target.value)}
+                      className={inputClass(editForm.PreviousName ?? "")}
+                    />
+                  </InfoField>
                   <InfoField
                     label="Contact Person"
                     value={order.ContactPerson}

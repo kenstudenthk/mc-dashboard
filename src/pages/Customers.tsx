@@ -24,6 +24,7 @@ const EMPTY_FORM: CreateCustomerInput = {
   Email: "",
   Phone: "",
   Company: "",
+  PreviousName: "",
   Status: "Active",
   Tier: "Standard",
   SpecialNotes: "",
@@ -71,16 +72,20 @@ const Customers = () => {
     }
   };
 
-  const filtered = customers.filter((c) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      (c.Title ?? "").toLowerCase().includes(q) ||
-      (c.Email ?? "").toLowerCase().includes(q) ||
-      (c.Phone ?? "").includes(q) ||
-      (c.Company ?? "").toLowerCase().includes(q)
-    );
-  });
+  const filtered = [...customers]
+    .sort((a, b) => b.id - a.id)
+    .filter((c) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        String(c.id).includes(q) ||
+        (c.Title ?? "").toLowerCase().includes(q) ||
+        (c.PreviousName ?? "").toLowerCase().includes(q) ||
+        (c.Email ?? "").toLowerCase().includes(q) ||
+        (c.Phone ?? "").includes(q) ||
+        (c.Company ?? "").toLowerCase().includes(q)
+      );
+    });
 
   return (
     <div className="space-y-6">
@@ -210,9 +215,11 @@ const Customers = () => {
                                     customer.Company ||
                                     `Customer #${customer.id}`}
                                 </Link>
-                                <div className="text-xs text-[#1d1d1f]/40">
-                                  #{customer.id}
-                                </div>
+                                {customer.PreviousName && (
+                                  <div className="mt-0.5 text-xs text-[#1d1d1f]/40">
+                                    Previous Name: {customer.PreviousName}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <span
@@ -237,7 +244,10 @@ const Customers = () => {
                             </div>
                           </div>
 
-                          <div className="flex justify-end pt-1">
+                          <div className="flex items-end justify-between gap-3 pt-1">
+                            <span className="text-[10px] leading-none text-[#1d1d1f]/35">
+                              ID #{customer.id}
+                            </span>
                             <Link
                               to={`/customers/${customer.id}`}
                               className="px-3 py-1.5 text-xs font-medium text-[#0071e3] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5"
@@ -266,7 +276,7 @@ const Customers = () => {
                           position="right"
                           componentName="Customers.Table"
                         >
-                          <div>
+                          <div className="flex min-h-10 flex-col justify-between gap-1">
                             <Link
                               to={`/customers/${customer.id}`}
                               className="text-sm font-medium text-[#0071e3] hover:underline"
@@ -275,8 +285,13 @@ const Customers = () => {
                                 customer.Company ||
                                 `Customer #${customer.id}`}
                             </Link>
-                            <div className="text-xs text-[#1d1d1f]/35">
-                              #{customer.id}
+                            {customer.PreviousName && (
+                              <div className="text-xs text-[#1d1d1f]/40">
+                                Previous Name: {customer.PreviousName}
+                              </div>
+                            )}
+                            <div className="text-[10px] leading-none text-[#1d1d1f]/35">
+                              ID #{customer.id}
                             </div>
                           </div>
                         </TutorTooltip>
@@ -377,6 +392,17 @@ const Customers = () => {
                     placeholder="Company name"
                   />
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="label-text text-[#1d1d1f]/45">
+                  Previous Name
+                </label>
+                <input
+                  className={inputClass}
+                  value={form.PreviousName ?? ""}
+                  onChange={(e) => set("PreviousName", e.target.value)}
+                  placeholder="Previous company name"
+                />
               </div>
               <div className="space-y-1.5">
                 <label className="label-text text-[#1d1d1f]/45">Email</label>

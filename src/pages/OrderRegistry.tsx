@@ -15,6 +15,9 @@ import {
   Clock,
   CheckCircle2,
   PencilLine,
+  MessageSquareText,
+  X,
+  Check,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
@@ -78,6 +81,9 @@ function TableSkeleton() {
           <td className="px-3 py-3">
             <div className="h-5 bg-gray-200 rounded-full w-20" />
           </td>
+          <td className="px-3 py-3">
+            <div className="h-7 bg-gray-100 rounded-lg w-8 ml-auto" />
+          </td>
           <td className="px-3 py-3" />
         </tr>
       ))}
@@ -119,6 +125,7 @@ const buildCustomerMap = (customers: Customer[]): Map<string, number> => {
 };
 
 type SortKey =
+  | "id"
   | "Title"
   | "CustomerName"
   | "CloudProvider"
@@ -140,10 +147,14 @@ const OrderRegistry = () => {
   const [statusDropdownId, setStatusDropdownId] = useState<number | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [pinnedIds, setPinnedIds] = useState<Set<number>>(new Set());
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [activeRemarkId, setActiveRemarkId] = useState<number | null>(null);
+  const [editingRemarkId, setEditingRemarkId] = useState<number | null>(null);
+  const [remarkDraft, setRemarkDraft] = useState("");
+  const [savingRemarkId, setSavingRemarkId] = useState<number | null>(null);
 
   const { userEmail } = usePermission();
   const {
@@ -182,6 +193,16 @@ const OrderRegistry = () => {
   }, [statusDropdownId]);
 
   useEffect(() => {
+    if (activeRemarkId === null) return;
+    const handler = () => {
+      setActiveRemarkId(null);
+      setEditingRemarkId(null);
+    };
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [activeRemarkId]);
+
+  useEffect(() => {
     if (!userEmail) return;
     pinnedOrderService
       .getPinned(userEmail)
@@ -200,6 +221,114 @@ const OrderRegistry = () => {
     } finally {
       setUpdatingStatusId(null);
     }
+  };
+
+  const handleRemarkOpen = (order: Order) => {
+    const isOpen = activeRemarkId === order.id;
+    setStatusDropdownId(null);
+    setActiveRemarkId(isOpen ? null : order.id);
+    setEditingRemarkId(null);
+    setRemarkDraft(order.Remark ?? "");
+  };
+
+  const handleRemarkSave = async (order: Order) => {
+    setSavingRemarkId(order.id);
+    try {
+      await orderService.update(order.id, { Remark: remarkDraft }, userEmail);
+      invalidateOrders();
+      setEditingRemarkId(null);
+      setActiveRemarkId(null);
+    } finally {
+      setSavingRemarkId(null);
+    }
+  };
+
+  const renderRemarkPopover = (
+    order: Order,
+    align: "left" | "right" = "right",
+  ) => {
+    const isEditing = editingRemarkId === order.id;
+    const isSaving = savingRemarkId === order.id;
+    const remark = order.Remark?.trim();
+
+    return (
+      <div
+        className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-[#1d1d1f]/10 bg-white shadow-[0_18px_45px_rgba(29,29,31,0.18)]`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-[#1d1d1f]/08 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#1d1d1f]/40">
+            Remarks
+          </span>
+          <div className="flex items-center gap-1">
+            {!isEditing && (
+              <button
+                type="button"
+                title="Edit remark"
+                onClick={() => {
+                  setEditingRemarkId(order.id);
+                  setRemarkDraft(order.Remark ?? "");
+                }}
+                className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#0071e3]"
+              >
+                <PencilLine className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button
+              type="button"
+              title="Close remarks"
+              onClick={() => {
+                setActiveRemarkId(null);
+                setEditingRemarkId(null);
+              }}
+              className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#1d1d1f]"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        <div className="p-3">
+          {isEditing ? (
+            <div className="space-y-2">
+              <textarea
+                value={remarkDraft}
+                onChange={(e) => setRemarkDraft(e.target.value)}
+                rows={5}
+                className="w-full resize-none rounded-lg border border-[#1d1d1f]/10 bg-[#faf9f7] px-3 py-2 text-sm text-[#1d1d1f]/75 outline-none transition-all focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/15"
+                placeholder="Add remarks..."
+                autoFocus
+              />
+              <div className="flex items-center justify-end gap-1.5">
+                <button
+                  type="button"
+                  title="Cancel edit"
+                  onClick={() => {
+                    setEditingRemarkId(null);
+                    setRemarkDraft(order.Remark ?? "");
+                  }}
+                  className="rounded-lg border border-[#1d1d1f]/10 bg-white p-1.5 text-[#1d1d1f]/45 transition-colors hover:bg-[#f5f5f7]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Save remark"
+                  disabled={isSaving}
+                  onClick={() => handleRemarkSave(order)}
+                  className="rounded-lg bg-[#0071e3] p-1.5 text-white transition-colors hover:bg-[#005bb5] disabled:opacity-50"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="max-h-48 overflow-y-auto whitespace-pre-wrap text-sm leading-5 text-[#1d1d1f]/70">
+              {remark || "No remarks yet."}
+            </p>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const handlePinToggle = async (orderId: number) => {
@@ -240,7 +369,6 @@ const OrderRegistry = () => {
     .map((order) => order.AccountID);
 
   const filteredOrders = [...allOrders]
-    .sort((a, b) => b.id - a.id)
     .filter((order) => {
       if (activeTab === "Pending") {
         if (["Completed", "Cancelled"].includes(order.Status)) return false;
@@ -273,7 +401,9 @@ const OrderRegistry = () => {
       return true;
     })
     .sort((a, b) => {
-      if (!sortKey) return 0;
+      if (sortKey === "id") {
+        return sortDir === "asc" ? a.id - b.id : b.id - a.id;
+      }
       const aVal = (a[sortKey] ?? "") as string;
       const bVal = (b[sortKey] ?? "") as string;
       const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
@@ -657,6 +787,9 @@ const OrderRegistry = () => {
                     </TutorTooltip>
                   </th>
                   <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
+                    Remarks
+                  </th>
+                  <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
@@ -677,7 +810,7 @@ const OrderRegistry = () => {
                           key={`card-${order.id}`}
                           className="md:hidden border-b border-[#1d1d1f]/04"
                         >
-                          <td colSpan={10} className="px-4 py-3">
+                          <td colSpan={11} className="px-4 py-3">
                             <div
                               className={`rounded-xl border p-3 gap-2 flex flex-col ${
                                 isTerminated
@@ -763,16 +896,42 @@ const OrderRegistry = () => {
                                     {formatDate(order.SRD)}
                                   </span>
                                 </div>
-                                <Link
-                                  to={`/orders/${order.id}`}
-                                  className={`p-1.5 rounded-lg flex-shrink-0 ${
-                                    isTerminated
-                                      ? "text-red-400 bg-red-50"
-                                      : "text-[#1d1d1f]/35 bg-[#f5f5f7]"
-                                  }`}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Link>
+                                <div className="flex items-center gap-1.5">
+                                  <div
+                                    className="relative"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <button
+                                      type="button"
+                                      title="View remarks"
+                                      onClick={() => handleRemarkOpen(order)}
+                                      className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${
+                                        order.Remark?.trim()
+                                          ? "bg-amber-50 text-amber-700"
+                                          : isTerminated
+                                            ? "bg-red-50 text-red-400"
+                                            : "bg-[#f5f5f7] text-[#1d1d1f]/35"
+                                      }`}
+                                    >
+                                      <MessageSquareText className="w-4 h-4" />
+                                    </button>
+                                    {activeRemarkId === order.id &&
+                                      renderRemarkPopover(order, "right")}
+                                  </div>
+                                  <Link
+                                    to={`/orders/${order.id}`}
+                                    className={`p-1.5 rounded-lg flex-shrink-0 ${
+                                      isTerminated
+                                        ? "text-red-400 bg-red-50"
+                                        : "text-[#1d1d1f]/35 bg-[#f5f5f7]"
+                                    }`}
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Link>
+                                </div>
+                              </div>
+                              <div className="mt-1 text-[10px] leading-none text-[#1d1d1f]/35">
+                                ID #{order.id}
                               </div>
                             </div>
                           </td>
@@ -815,9 +974,14 @@ const OrderRegistry = () => {
                               isTerminated ? "text-red-600" : "text-[#0071e3]"
                             }`}
                           >
-                            <Link to={`/orders/${order.id}`}>
-                              {order.Title}
-                            </Link>
+                            <div className="flex min-h-9 flex-col justify-between gap-1">
+                              <Link to={`/orders/${order.id}`}>
+                                {order.Title}
+                              </Link>
+                              <span className="text-[10px] font-normal leading-none text-[#1d1d1f]/35">
+                                ID #{order.id}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-3 py-3 text-sm font-medium min-w-[200px]">
                             {customerMap.get(
@@ -920,6 +1084,29 @@ const OrderRegistry = () => {
                               {order.Status}
                             </span>
                           </td>
+                          <td
+                            className="px-3 py-3 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="relative inline-flex">
+                              <button
+                                type="button"
+                                title="View remarks"
+                                onClick={() => handleRemarkOpen(order)}
+                                className={`rounded-lg p-1.5 transition-colors ${
+                                  order.Remark?.trim()
+                                    ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                    : isTerminated
+                                      ? "text-red-400 hover:bg-red-50 hover:text-red-600"
+                                      : "text-[#1d1d1f]/35 hover:bg-[#f5f5f7] hover:text-[#0071e3]"
+                                }`}
+                              >
+                                <MessageSquareText className="h-4 w-4" />
+                              </button>
+                              {activeRemarkId === order.id &&
+                                renderRemarkPopover(order)}
+                            </div>
+                          </td>
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1006,7 +1193,7 @@ const OrderRegistry = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={11}
                       className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
                     >
                       No orders found matching your filters.

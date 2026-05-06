@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { usePermission } from '../contexts/PermissionContext';
 import { feedbackService, FeedbackItem } from '../services/feedbackService';
 import { Flag, AlertCircle } from 'lucide-react';
+import { TutorTooltip } from '../components/TutorTooltip';
 
 const STATUS_COLORS: Record<FeedbackItem['status'], string> = {
   'Open': 'bg-blue-100 text-blue-700',
