@@ -1103,22 +1103,34 @@ const NewOrder = () => {
         userEmail,
       );
 
-      if (productSubscribe && order.id) {
-        await serviceAccountService.create(
-          {
-            Title: title,
-            OrderIDId: order.id,
-            Provider: cloudProvider,
-            PrimaryAccountID: accountId || undefined,
-            SecondaryID: billingAccount || undefined,
-            AccountName: accountName || undefined,
-            Domain: azurePrimaryDomain || undefined,
-            LoginEmail: accountLoginEmail || undefined,
-            Password: password || undefined,
-            OtherInfo: otherAccountInfo || undefined,
-          },
-          userEmail,
-        );
+      if (productSubscribe) {
+        if (orderType === "Termination") {
+          if (accountId) {
+            const existing = await serviceAccountService.findByPrimaryAccountId(accountId);
+            await Promise.all(
+              existing.map((sa) =>
+                serviceAccountService.update(sa.id, { AccountStatus: "Terminated" }, userEmail),
+              ),
+            );
+          }
+        } else if (order.id) {
+          await serviceAccountService.create(
+            {
+              Title: title,
+              OrderIDId: order.id,
+              Provider: cloudProvider,
+              PrimaryAccountID: accountId || undefined,
+              SecondaryID: billingAccount || undefined,
+              AccountName: accountName || undefined,
+              Domain: azurePrimaryDomain || undefined,
+              LoginEmail: accountLoginEmail || undefined,
+              Password: password || undefined,
+              OtherInfo: otherAccountInfo || undefined,
+              AccountStatus: "Active",
+            },
+            userEmail,
+          );
+        }
       }
 
       setSubmitSuccess(true);

@@ -12,6 +12,7 @@ export interface ServiceAccount {
   LoginEmail?: string;
   Password?: string;
   OtherInfo?: string;
+  AccountStatus?: "Active" | "Terminated";
 }
 
 export interface CreateServiceAccountInput {
@@ -26,6 +27,7 @@ export interface CreateServiceAccountInput {
   LoginEmail?: string;
   Password?: string;
   OtherInfo?: string;
+  AccountStatus?: "Active" | "Terminated";
 }
 
 function withId(data: unknown): unknown {
@@ -69,6 +71,11 @@ export const serviceAccountService = {
 
   findByOrderId: async (orderId: number) => {
     const result = await call<unknown>({ action: "GET_BY_ORDER", data: { OrderID: orderId } });
+    return Array.isArray(result) ? (result as ServiceAccount[]) : [];
+  },
+
+  findByPrimaryAccountId: async (primaryAccountId: string) => {
+    const result = await call<unknown>({ action: "GET_BY_ACCOUNT_ID", data: { PrimaryAccountID: primaryAccountId } });
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
 
