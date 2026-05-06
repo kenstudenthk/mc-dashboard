@@ -4,6 +4,9 @@ import {
   ArrowLeft,
   Mail,
   Phone,
+  MapPin,
+  UserRound,
+  History,
   Edit,
   ShoppingBag,
   DollarSign,
@@ -16,10 +19,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
-import { Customer } from "../services/customerService";
+import { customerService, Customer } from "../services/customerService";
 import { Order } from "../services/orderService";
 import { normalizeCloudProvider } from "../constants/cloudProviders";
-import { useCustomerById, useOrders } from "../services/useOrdersQuery";
+import { usePermission } from "../contexts/PermissionContext";
+import { useCustomerById, useInvalidateCustomers, useOrders } from "../services/useOrdersQuery";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -47,32 +51,98 @@ const PROVIDER_COLORS: Record<string, string> = {
 
 const CustomerProfile = () => {
   const { id } = useParams<{ id: string }>();
+  const { userEmail } = usePermission();
 
   const { data: customer, isLoading: loading, isError } = useCustomerById(
     id && !isNaN(Number(id)) ? Number(id) : undefined,
   );
+  const invalidateCustomers = useInvalidateCustomers();
   const { data: allOrders } = useOrders();
   const orders: Order[] =
     allOrders?.filter((o) => Number(o.CustomerID) === customer?.id) ?? [];
   const error = isError ? "Failed to load customer details." : null;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ email: "", phone: "" });
+  const [formData, setFormData] = useState({
+    Email: "",
+    Phone: "",
+    PreviousName: "",
+    ContactPerson: "",
+    BillingAddress: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesData, setNotesData] = useState("");
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
 
   // Initialise form fields once customer data arrives from cache.
   useEffect(() => {
     if (customer) {
-      setFormData({ email: customer.Email, phone: customer.Phone });
+      setFormData({
+        Email: customer.Email ?? "",
+        Phone: customer.Phone ?? "",
+        PreviousName: customer.PreviousName ?? "",
+        ContactPerson: customer.ContactPerson ?? "",
+        BillingAddress: customer.BillingAddress ?? "",
+      });
       setNotesData(customer.SpecialNotes || "");
     }
   }, [customer]);
 
-  const handleSave = () => setIsEditing(false);
-  const handleSaveNotes = () => setIsEditingNotes(false);
+  const handleCancel = () => {
+    if (customer) {
+      setFormData({
+        Email: customer.Email ?? "",
+        Phone: customer.Phone ?? "",
+        PreviousName: customer.PreviousName ?? "",
+        ContactPerson: customer.ContactPerson ?? "",
+        BillingAddress: customer.BillingAddress ?? "",
+      });
+    }
+    setSaveError(null);
+    setIsEditing(false);
+  };
+
+  const set = (field: keyof typeof formData, value: string) =>
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
+  const handleSave = async () => {
+    if (!customer) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await customerService.update(customer.id, formData, userEmail);
+      invalidateCustomers();
+      setIsEditing(false);
+    } catch {
+      setSaveError("Failed to save customer details. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!customer) return;
+    setIsSavingNotes(true);
+    setNotesError(null);
+    try {
+      await customerService.update(
+        customer.id,
+        { SpecialNotes: notesData },
+        userEmail,
+      );
+      invalidateCustomers();
+      setIsEditingNotes(false);
+    } catch {
+      setNotesError("Failed to save notes. Please try again.");
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -148,7 +218,8 @@ const CustomerProfile = () => {
           {isEditing ? (
             <>
               <button
-                onClick={() => setIsEditing(false)}
+                onClick={handleCancel}
+                disabled={isSaving}
                 className="p-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg hover:bg-white transition-colors text-[#1d1d1f]/50"
                 title="Cancel"
               >
@@ -156,7 +227,8 @@ const CustomerProfile = () => {
               </button>
               <button
                 onClick={handleSave}
-                className="p-2 bg-[#0071e3] text-white rounded-lg hover:bg-[#0071e3]/90 transition-colors"
+                disabled={isSaving}
+                className="p-2 bg-[#0071e3] text-white rounded-lg hover:bg-[#0071e3]/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 title="Save Changes"
               >
                 <Save className="w-4 h-4" />
@@ -212,21 +284,24 @@ const CustomerProfile = () => {
             </div>
 
             <div className="space-y-4">
+              {saveError && (
+                <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {saveError}
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-[#1d1d1f]/30 mt-0.5" />
                 <div className="w-full">
                   {isEditing ? (
                     <input
                       type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
+                      value={formData.Email}
+                      onChange={(e) => set("Email", e.target.value)}
                       className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
                     />
                   ) : (
                     <div className="text-sm font-medium text-[#1d1d1f]">
-                      {formData.email || "—"}
+                      {formData.Email || "—"}
                     </div>
                   )}
                   <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
@@ -240,19 +315,75 @@ const CustomerProfile = () => {
                   {isEditing ? (
                     <input
                       type="tel"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
+                      value={formData.Phone}
+                      onChange={(e) => set("Phone", e.target.value)}
                       className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
                     />
                   ) : (
                     <div className="text-sm font-medium text-[#1d1d1f]">
-                      {formData.phone || "—"}
+                      {formData.Phone || "—"}
                     </div>
                   )}
                   <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
                     Phone Number
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <UserRound className="w-4 h-4 text-[#1d1d1f]/30 mt-0.5" />
+                <div className="w-full">
+                  {isEditing ? (
+                    <input
+                      value={formData.ContactPerson}
+                      onChange={(e) => set("ContactPerson", e.target.value)}
+                      className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                    />
+                  ) : (
+                    <div className="text-sm font-medium text-[#1d1d1f]">
+                      {formData.ContactPerson || "—"}
+                    </div>
+                  )}
+                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
+                    Contact Person
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <History className="w-4 h-4 text-[#1d1d1f]/30 mt-0.5" />
+                <div className="w-full">
+                  {isEditing ? (
+                    <input
+                      value={formData.PreviousName}
+                      onChange={(e) => set("PreviousName", e.target.value)}
+                      className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                    />
+                  ) : (
+                    <div className="text-sm font-medium text-[#1d1d1f]">
+                      {formData.PreviousName || "—"}
+                    </div>
+                  )}
+                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
+                    Previous Name
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 text-[#1d1d1f]/30 mt-0.5" />
+                <div className="w-full">
+                  {isEditing ? (
+                    <textarea
+                      value={formData.BillingAddress}
+                      onChange={(e) => set("BillingAddress", e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 resize-y"
+                    />
+                  ) : (
+                    <div className="text-sm font-medium text-[#1d1d1f] whitespace-pre-wrap">
+                      {formData.BillingAddress || "—"}
+                    </div>
+                  )}
+                  <div className="text-xs text-[#1d1d1f]/35 mt-0.5">
+                    Billing Address
                   </div>
                 </div>
               </div>
@@ -363,7 +494,12 @@ const CustomerProfile = () => {
                   {isEditingNotes ? (
                     <>
                       <button
-                        onClick={() => setIsEditingNotes(false)}
+                        onClick={() => {
+                          setNotesData(customer.SpecialNotes || "");
+                          setNotesError(null);
+                          setIsEditingNotes(false);
+                        }}
+                        disabled={isSavingNotes}
                         className="p-1.5 text-[#1d1d1f]/35 hover:text-[#1d1d1f]/60 transition-colors"
                         title="Cancel"
                       >
@@ -371,10 +507,11 @@ const CustomerProfile = () => {
                       </button>
                       <button
                         onClick={handleSaveNotes}
-                        className="px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-lg hover:bg-amber-600 transition-colors"
+                        disabled={isSavingNotes}
+                        className="px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         title="Save Notes"
                       >
-                        Save Notes
+                        {isSavingNotes ? "Saving…" : "Save Notes"}
                       </button>
                     </>
                   ) : (
@@ -390,6 +527,11 @@ const CustomerProfile = () => {
               </div>
 
               <div className="bg-amber-50/50 rounded-lg p-4 min-h-[120px]">
+                {notesError && (
+                  <div className="mb-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
+                    {notesError}
+                  </div>
+                )}
                 {isEditingNotes ? (
                   <textarea
                     value={notesData}

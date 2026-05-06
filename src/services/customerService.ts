@@ -7,6 +7,8 @@ export interface Customer {
   Phone?: string;
   Company?: string;
   PreviousName?: string;
+  ContactPerson?: string;
+  BillingAddress?: string;
   Status: "Active" | "Inactive";
   Tier?: "Standard" | "Premium" | "Enterprise";
   SpecialNotes?: string;
@@ -18,6 +20,8 @@ export interface CreateCustomerInput {
   Phone: string;
   Company: string;
   PreviousName?: string;
+  ContactPerson?: string;
+  BillingAddress?: string;
   Status: "Active" | "Inactive";
   Tier: "Standard" | "Premium" | "Enterprise";
   SpecialNotes?: string;
