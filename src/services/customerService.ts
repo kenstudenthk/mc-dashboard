@@ -6,6 +6,7 @@ export interface Customer {
   Email: string;
   Phone?: string;
   Company?: string;
+  PreviousName?: string;
   Status: "Active" | "Inactive";
   Tier?: "Standard" | "Premium" | "Enterprise";
   SpecialNotes?: string;
@@ -16,6 +17,7 @@ export interface CreateCustomerInput {
   Email: string;
   Phone: string;
   Company: string;
+  PreviousName?: string;
   Status: "Active" | "Inactive";
   Tier: "Standard" | "Premium" | "Enterprise";
   SpecialNotes?: string;

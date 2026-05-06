@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Save, ChevronDown } from "lucide-react";
-import { Order, orderService } from "../../services/orderService";
+import {
+  CreateOrderInput,
+  Order,
+  orderService,
+} from "../../services/orderService";
 import { useInvalidateOrders } from "../../services/useOrdersQuery";
 import { usePermission } from "../../contexts/PermissionContext";
 import { EditableCell } from "./EditableCell";
@@ -92,6 +96,81 @@ const TAB_DEFS: TabDef[] = [
 
 const PAGE_SIZE = 20;
 
+const ORDER_UPDATE_FIELDS = [
+  "Title",
+  "CustomerID",
+  "CustomerName",
+  "PreviousName",
+  "OrderType",
+  "Status",
+  "SRD",
+  "CloudProvider",
+  "Amount",
+  "AccountID",
+  "ServiceType",
+  "OasisNumber",
+  "OrderReceiveDate",
+  "CxSCompleteDate",
+  "ContactPerson",
+  "ContactNo",
+  "ContactEmail",
+  "ContactNo2",
+  "ContactEmail2",
+  "BillingAddress",
+  "BillingAccount",
+  "AccountName",
+  "AccountLoginEmail",
+  "OtherAccountInfo",
+  "CxSRequestNo",
+  "TID",
+  "SDNumber",
+  "PSJob",
+  "T2T3",
+  "WelcomeLetter",
+  "By",
+  "OrderFormURL",
+  "CaseID",
+  "CaseIDURL",
+  "Remark",
+  "SubName",
+] as const satisfies readonly (keyof CreateOrderInput)[];
+
+const DATE_FIELDS_FOR_UPDATE = new Set<keyof CreateOrderInput>([
+  "SRD",
+  "OrderReceiveDate",
+  "CxSCompleteDate",
+]);
+
+const buildFullUpdatePayload = (
+  order: Order,
+  patch: Partial<Order>,
+): Partial<CreateOrderInput> => {
+  const merged = { ...order, ...patch };
+  return ORDER_UPDATE_FIELDS.reduce<Partial<CreateOrderInput>>((payload, key) => {
+    const value = merged[key];
+    if (key === "CustomerID") {
+      if (value != null && value !== "") {
+        payload.CustomerID = Number(value);
+      }
+      return payload;
+    }
+
+    if (key === "Amount") {
+      payload.Amount = value == null || value === "" ? 0 : Number(value);
+      return payload;
+    }
+
+    payload[key] = (
+      value == null
+        ? ""
+        : DATE_FIELDS_FOR_UPDATE.has(key) && typeof value === "string"
+          ? value.slice(0, 10)
+          : value
+    ) as never;
+    return payload;
+  }, {});
+};
+
 interface Props {
   orders: Order[];
   onExit: () => void;
@@ -111,6 +190,7 @@ export function DataEditTable({ orders, onExit }: Props) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [columnFilters, setColumnFilters] = useState<Record<string, Set<string>>>({});
   const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const currentTab =
     TAB_DEFS.find((t) => t.key === activeTab) ?? TAB_DEFS[0];
@@ -162,17 +242,26 @@ export function DataEditTable({ orders, onExit }: Props) {
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveError(null);
     try {
       for (const [id, patch] of dirtyMap) {
+        const order = orders.find((item) => item.id === id);
+        if (!order) continue;
         // eslint-disable-next-line no-await-in-loop
         await orderService.update(
           id,
-          patch as Parameters<typeof orderService.update>[1],
+          buildFullUpdatePayload(order, patch),
           userEmail,
         );
       }
       invalidateOrders();
       onExit();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown update error";
+      setSaveError(
+        `Failed to save changes (${message}). Please check the Power Automate flow run history.`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -180,6 +269,7 @@ export function DataEditTable({ orders, onExit }: Props) {
 
   const handleCancel = () => {
     setDirtyMap(new Map());
+    setSaveError(null);
     onExit();
   };
 
@@ -204,6 +294,11 @@ export function DataEditTable({ orders, onExit }: Props) {
           <span className="ml-auto text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full font-medium">
             {dirtyMap.size} row{dirtyMap.size !== 1 ? "s" : ""} modified
           </span>
+        )}
+        {saveError && (
+          <div className="basis-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {saveError}
+          </div>
         )}
       </div>
 

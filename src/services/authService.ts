@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 interface AuthIdentity {
   email: string;
@@ -63,7 +64,8 @@ export const authService = {
       
       if (listError) return { error: listError };
 
-      const user = users.find(u => u.email === email);
+      const authUsers = users as User[];
+      const user = authUsers.find(u => u.email === email);
       
       if (!user) {
         // User not found in Supabase, which is fine if we're just syncing deletions
