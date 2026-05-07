@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink, Mail, X, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Settings, HelpCircle, LogOut, BarChart3, ChevronLeft, ChevronRight, ClipboardList, ExternalLink, Mail, X, MessageSquare, BriefcaseBusiness } from 'lucide-react';
 import { usePermission } from '../contexts/PermissionContext';
 import { TutorTooltip } from './TutorTooltip';
 
@@ -17,6 +17,7 @@ const Sidebar = ({ isDrawerOpen = false, onClose }: SidebarProps) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: FileText, label: 'Order Registry', path: '/orders' },
     { icon: Users, label: 'Customers', path: '/customers' },
+    { icon: BriefcaseBusiness, label: 'Services', path: '/services' },
     { icon: BarChart3, label: 'Reports', path: '/reports' },
     { icon: ExternalLink, label: 'Useful Links', path: '/quick-links' },
   ];

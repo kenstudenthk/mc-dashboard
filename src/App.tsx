@@ -12,6 +12,8 @@ import OrderDetails from './pages/OrderDetails';
 import NewOrder from './pages/NewOrder';
 import Customers from './pages/Customers';
 import CustomerProfile from './pages/CustomerProfile';
+import ServiceCatalog from './pages/ServiceCatalog';
+import ServiceDetails from './pages/ServiceDetails';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
@@ -63,6 +65,8 @@ function AppContent() {
             <Route path="/orders/:id" element={<OrderDetails />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/customers/:id" element={<CustomerProfile />} />
+            <Route path="/services" element={<ServiceCatalog />} />
+            <Route path="/services/:id" element={<ServiceDetails />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/quick-links" element={<QuickLinks />} />
             <Route path="/audit-log" element={<AuditLog />} />

@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   BarChart3,
   Bell,
+  BriefcaseBusiness,
   ChevronDown,
   ClipboardList,
   ExternalLink,
@@ -54,6 +55,12 @@ const primaryNavItems: NavItem[] = [
     label: "Customers",
     path: "/customers",
     description: "Customer records and profiles",
+  },
+  {
+    icon: BriefcaseBusiness,
+    label: "Services",
+    path: "/services",
+    description: "Provider service account pages",
   },
   {
     icon: BarChart3,
