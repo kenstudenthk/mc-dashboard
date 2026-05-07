@@ -1135,7 +1135,16 @@ const NewOrder = () => {
       );
 
       if (orderType === "Termination" && saId) {
-        await serviceAccountService.update(saId, { AccountStatus: "Terminated" }, userEmail);
+        await serviceAccountService.update(saId, {
+          AccountStatus: "Terminated",
+          ...(billingAccount && { PrimaryAccountID: billingAccount }),
+          ...(accountId && { SecondaryID: accountId }),
+          ...(accountName && { AccountName: accountName }),
+          ...(azurePrimaryDomain && { Domain: azurePrimaryDomain }),
+          ...(accountLoginEmail && { LoginEmail: accountLoginEmail }),
+          ...(password && { Password: password }),
+          ...(otherAccountInfo && { OtherInfo: otherAccountInfo }),
+        }, userEmail);
       }
 
       setSubmitSuccess(true);
