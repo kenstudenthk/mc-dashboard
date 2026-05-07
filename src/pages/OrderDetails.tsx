@@ -281,12 +281,13 @@ const OrderDetails = () => {
       Remark: order.Remark ?? "",
     });
     setSaEditForm({
-      PrimaryAccountID: serviceAccount?.PrimaryAccountID ?? "",
-      SecondaryID: serviceAccount?.SecondaryID ?? "",
-      AccountName: serviceAccount?.AccountName ?? "",
-      Domain: serviceAccount?.Domain ?? "",
-      LoginEmail: serviceAccount?.LoginEmail ?? "",
+      PrimaryAccountID: serviceAccount?.PrimaryAccountID ?? order.SA_PrimaryAccountID ?? "",
+      SecondaryID: serviceAccount?.SecondaryID ?? order.SA_SecondaryID ?? "",
+      AccountName: serviceAccount?.AccountName ?? order.SA_AccountName ?? "",
+      Domain: serviceAccount?.Domain ?? order.SA_Domain ?? "",
+      LoginEmail: serviceAccount?.LoginEmail ?? order.SA_LoginEmail ?? "",
       OtherInfo: serviceAccount?.OtherInfo ?? "",
+      Password: serviceAccount?.Password ?? order.SA_Password ?? "",
     });
     setEditError(null);
     setIsEditMode(true);
@@ -303,11 +304,24 @@ const OrderDetails = () => {
     setEditSaving(true);
     setEditError(null);
     try {
+      const saId = serviceAccount?.id ?? order.SA_Id ?? null;
+      const hasSaData = !!(saEditForm.SecondaryID || saEditForm.AccountName || saEditForm.LoginEmail);
       const [updated] = await Promise.all([
         orderService.update(order.id, editForm, userEmail),
-        serviceAccount
-          ? serviceAccountService.update(serviceAccount.id, saEditForm, userEmail)
-          : Promise.resolve(null),
+        saId
+          ? serviceAccountService.update(saId, saEditForm, userEmail)
+          : hasSaData
+            ? serviceAccountService.create(
+                {
+                  Title: order.Title,
+                  OrderIDId: order.id,
+                  Provider: normalizeCloudProvider(order.CloudProvider ?? ""),
+                  ...saEditForm,
+                  AccountStatus: "Active",
+                },
+                userEmail,
+              )
+            : Promise.resolve(null),
       ]);
       setOrderOverride(updated);
       invalidateOrders();
@@ -985,8 +999,8 @@ const OrderDetails = () => {
                     </InfoField>
                     <InfoField
                       label={saLabels.primaryAccount}
-                      value={serviceAccount?.PrimaryAccountID}
-                      isEdit={isEditMode && !!serviceAccount}
+                      value={serviceAccount?.PrimaryAccountID ?? order.SA_PrimaryAccountID}
+                      isEdit={isEditMode}
                     >
                       <input
                         type="text"
@@ -997,8 +1011,8 @@ const OrderDetails = () => {
                     </InfoField>
                     <InfoField
                       label={saLabels.accountId}
-                      value={serviceAccount?.SecondaryID}
-                      isEdit={isEditMode && !!serviceAccount}
+                      value={serviceAccount?.SecondaryID ?? order.SA_SecondaryID}
+                      isEdit={isEditMode}
                     >
                       <input
                         type="text"
@@ -1011,8 +1025,8 @@ const OrderDetails = () => {
                   <dl>
                     <InfoField
                       label={saLabels.accountName}
-                      value={serviceAccount?.AccountName}
-                      isEdit={isEditMode && !!serviceAccount}
+                      value={serviceAccount?.AccountName ?? order.SA_AccountName}
+                      isEdit={isEditMode}
                     >
                       <input
                         type="text"
@@ -1023,8 +1037,8 @@ const OrderDetails = () => {
                     </InfoField>
                     <InfoField
                       label="Domain"
-                      value={serviceAccount?.Domain}
-                      isEdit={isEditMode && !!serviceAccount}
+                      value={serviceAccount?.Domain ?? order.SA_Domain}
+                      isEdit={isEditMode}
                     >
                       <input
                         type="text"
@@ -1035,8 +1049,8 @@ const OrderDetails = () => {
                     </InfoField>
                     <InfoField
                       label={saLabels.loginEmail}
-                      value={serviceAccount?.LoginEmail}
-                      isEdit={isEditMode && !!serviceAccount}
+                      value={serviceAccount?.LoginEmail ?? order.SA_LoginEmail}
+                      isEdit={isEditMode}
                     >
                       <input
                         type="text"
@@ -1046,9 +1060,21 @@ const OrderDetails = () => {
                       />
                     </InfoField>
                     <InfoField
+                      label="Password"
+                      value={serviceAccount?.Password ?? order.SA_Password}
+                      isEdit={isEditMode}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.Password ?? ""}
+                        onChange={(e) => setSa("Password", e.target.value)}
+                        className={inputClass(saEditForm.Password ?? "")}
+                      />
+                    </InfoField>
+                    <InfoField
                       label="Other Account Information"
                       value={serviceAccount?.OtherInfo}
-                      isEdit={isEditMode && !!serviceAccount}
+                      isEdit={isEditMode}
                     >
                       <input
                         type="text"
