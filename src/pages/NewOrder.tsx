@@ -1066,6 +1066,32 @@ const NewOrder = () => {
         resolvedCustomerId = newCustomer.id;
       }
 
+      // Resolve SA item ID before creating the Order so SecondaryIDId can be set.
+      let saId: number | undefined;
+      if (productSubscribe && orderType !== "Termination" && accountId) {
+        const existingSAs = await serviceAccountService.findBySecondaryId(accountId);
+        if (existingSAs.length > 0) {
+          saId = existingSAs[0].id;
+        } else {
+          const newSa = await serviceAccountService.create(
+            {
+              Title: title,
+              Provider: cloudProvider,
+              PrimaryAccountID: billingAccount || undefined,
+              SecondaryID: accountId || undefined,
+              AccountName: accountName || undefined,
+              Domain: azurePrimaryDomain || undefined,
+              LoginEmail: accountLoginEmail || undefined,
+              Password: password || undefined,
+              OtherInfo: otherAccountInfo || undefined,
+              AccountStatus: "Active",
+            },
+            userEmail,
+          );
+          saId = newSa.id;
+        }
+      }
+
       const order = await orderService.create(
         {
           Title: title,
@@ -1077,6 +1103,7 @@ const NewOrder = () => {
           CloudProvider: cloudProvider,
           Amount: parseFloat(amount) || 0,
           AccountID: accountId || undefined,
+          SecondaryIDId: saId,
           ServiceType: serviceType || undefined,
           OasisNumber: oasisNumber || undefined,
           OrderReceiveDate: orderReceiveDate || undefined,
@@ -1103,34 +1130,13 @@ const NewOrder = () => {
         userEmail,
       );
 
-      if (productSubscribe) {
-        if (orderType === "Termination") {
-          if (accountId) {
-            const existing = await serviceAccountService.findBySecondaryId(accountId);
-            await Promise.all(
-              existing.map((sa) =>
-                serviceAccountService.update(sa.id, { AccountStatus: "Terminated" }, userEmail),
-              ),
-            );
-          }
-        } else if (order.id) {
-          await serviceAccountService.create(
-            {
-              Title: title,
-              OrderIDId: order.id,
-              Provider: cloudProvider,
-              PrimaryAccountID: accountId || undefined,
-              SecondaryID: billingAccount || undefined,
-              AccountName: accountName || undefined,
-              Domain: azurePrimaryDomain || undefined,
-              LoginEmail: accountLoginEmail || undefined,
-              Password: password || undefined,
-              OtherInfo: otherAccountInfo || undefined,
-              AccountStatus: "Active",
-            },
-            userEmail,
-          );
-        }
+      if (productSubscribe && orderType === "Termination" && accountId) {
+        const existing = await serviceAccountService.findBySecondaryId(accountId);
+        await Promise.all(
+          existing.map((sa) =>
+            serviceAccountService.update(sa.id, { AccountStatus: "Terminated" }, userEmail),
+          ),
+        );
       }
 
       setSubmitSuccess(true);
