@@ -1,13 +1,13 @@
 /**
  * Service Account repair script — three independent modes:
  *
- *   FIX_LOOKUP=true        Fix wrong OrderID lookup values on existing SAs.
- *                          Matches SA.Title === Order.Title and updates OrderID
- *                          to the correct SPO item ID.
+ *   FIX_LOOKUP=true        Fix wrong CustomerID lookup values on existing SAs.
+ *                          Matches SA.Title === Order.Title and updates CustomerIDId
+ *                          to the correct SPO Customer item ID from that Order.
  *
  *   FILL_MISSING=true      Create SAs for orders that have none yet.
  *                          Reads account data from Excel; creates a minimal SA
- *                          (Title + OrderID) even when account fields are empty.
+ *                          (Title + CustomerIDId) even when account fields are empty.
  *
  *   FILL_EMPTY_FIELDS=true For existing SAs that have blank fields, fill them
  *                          back from Excel data. Only sends fields that are
@@ -133,18 +133,19 @@ async function fetchAllServiceAccounts() {
 
 // ── Mode 1: FIX_LOOKUP ────────────────────────────────────────────────────────
 // For each SA, find the Order whose Title matches SA.Title.
-// If SA.OrderIDId !== order.ID → UPDATE SA.OrderID to the correct ID.
+// Reads the Order's CustomerIDId and updates SA.CustomerIDId if it differs.
 
 async function fixLookup(orders, serviceAccounts) {
-  console.log("\n━━━ FIX_LOOKUP: Correcting OrderID lookup values ━━━━━━━━━━━━━━━");
+  console.log("\n━━━ FIX_LOOKUP: Correcting CustomerID lookup values on SAs ━━━━━━━");
   if (DRY_RUN) console.log("   [DRY RUN — no writes]\n");
 
-  // Build title → SP item ID from orders
+  // Build title → { orderId, customerId } from orders
+  // SP returns CustomerIDId as the raw lookup integer field.
   const orderByTitle = {};
   for (const o of orders) {
-    const title = String(o.Title ?? "").trim();
-    const id    = spId(o);
-    if (title && id) orderByTitle[title] = id;
+    const title      = String(o.Title ?? "").trim();
+    const customerId = Number(o.CustomerIDId ?? o.CustomerID ?? 0);
+    if (title && customerId) orderByTitle[title] = customerId;
   }
 
   let fixed   = 0;
@@ -153,31 +154,29 @@ async function fixLookup(orders, serviceAccounts) {
   const errors = [];
 
   for (const sa of serviceAccounts) {
-    const saTitle      = String(sa.Title ?? "").trim();
-    const saSpId       = spId(sa);
-    // SP returns lookup ID as OrderIDId on the raw item; our service normalises it to OrderID.
-    const currentOrdId = Number(sa.OrderIDId ?? sa.OrderID ?? 0);
-    const correctOrdId = orderByTitle[saTitle];
+    const saTitle          = String(sa.Title ?? "").trim();
+    const saSpId           = spId(sa);
+    const currentCustomerId = Number(sa.CustomerIDId ?? sa.CustomerID ?? 0);
+    const correctCustomerId = orderByTitle[saTitle];
 
-    if (!correctOrdId) {
+    if (!correctCustomerId) {
       noMatch++;
-      console.warn(`  ⚠️  No matching Order for SA "${saTitle}" (SA id=${saSpId})`);
+      console.warn(`  ⚠️  No matching Order (with CustomerID) for SA "${saTitle}" (SA id=${saSpId})`);
       continue;
     }
 
-    if (currentOrdId === correctOrdId) {
+    if (currentCustomerId === correctCustomerId) {
       already++;
       continue;
     }
 
     if (DRY_RUN) {
       fixed++;
-      console.log(`  [DRY] SA "${saTitle}" id=${saSpId}: OrderID ${currentOrdId} → ${correctOrdId}`);
+      console.log(`  [DRY] SA "${saTitle}" id=${saSpId}: CustomerID ${currentCustomerId} → ${correctCustomerId}`);
       continue;
     }
 
     try {
-      // Preserve all existing SA fields so the PA flow doesn't blank them out.
       const saFields = {};
       for (const f of ["Provider","PrimaryAccountID","SecondaryID","AccountName","Domain","LoginEmail","Password","OtherInfo"]) {
         const v = String(sa[f] ?? "").trim();
@@ -186,10 +185,10 @@ async function fixLookup(orders, serviceAccounts) {
       await post(SA_URL, {
         action: "UPDATE",
         userEmail: USER_EMAIL,
-        data: { id: saSpId, ...saFields, OrderID: correctOrdId },
+        data: { id: saSpId, ...saFields, CustomerIDId: correctCustomerId },
       });
       fixed++;
-      console.log(`  ✅ SA "${saTitle}" id=${saSpId}: OrderID ${currentOrdId} → ${correctOrdId}`);
+      console.log(`  ✅ SA "${saTitle}" id=${saSpId}: CustomerID ${currentCustomerId} → ${correctCustomerId}`);
     } catch (err) {
       errors.push({ saTitle, saSpId, err: err.message });
       console.error(`  ❌ SA "${saTitle}" id=${saSpId}: ${err.message}`);
@@ -236,12 +235,13 @@ async function fillMissing(orders, serviceAccounts) {
     if (sn) excelByServiceNo[sn] = row;
   }
 
-  // Build SPO maps
+  // Build SPO map: title → { customerId }
+  // SP returns CustomerIDId as the raw lookup integer field.
   const orderByTitle = {};
   for (const o of orders) {
-    const title = String(o.Title ?? "").trim();
-    const id    = spId(o);
-    if (title && id) orderByTitle[title] = id;
+    const title      = String(o.Title ?? "").trim();
+    const customerId = Number(o.CustomerIDId ?? o.CustomerID ?? 0) || null;
+    if (title) orderByTitle[title] = { customerId };
   }
 
   const existingSaTitles = new Set(
@@ -257,12 +257,12 @@ async function fillMissing(orders, serviceAccounts) {
   let created = 0;
   const errors = [];
 
-  for (const [title, orderId] of missing) {
+  for (const [title, { customerId }] of missing) {
     const row = excelByServiceNo[title];
 
     const rawData = {
       Title:            title,
-      OrderID:          orderId,
+      ...(customerId ? { CustomerIDId: customerId } : {}),
       Provider:         row ? get(row, hm, "Product Subscribe") : "",
       PrimaryAccountID: row ? get(row, hm, "Master-Final", "Billing Account") : "",
       SecondaryID:      row ? get(row, hm, "Account ID") : "",
@@ -278,16 +278,16 @@ async function fillMissing(orders, serviceAccounts) {
 
     if (DRY_RUN) {
       created++;
-      console.log(`  [DRY] Would CREATE SA "${title}" → OrderID ${orderId}`);
+      console.log(`  [DRY] Would CREATE SA "${title}" → CustomerIDId ${customerId ?? "(none)"}`);
       continue;
     }
 
     try {
       await post(SA_URL, { action: "CREATE", userEmail: USER_EMAIL, data });
       created++;
-      console.log(`  ✅ [${created}] "${title}" → OrderID ${orderId}`);
+      console.log(`  ✅ [${created}] "${title}" → CustomerIDId ${customerId ?? "(none)"}`);
     } catch (err) {
-      errors.push({ title, orderId, err: err.message });
+      errors.push({ title, customerId, err: err.message });
       console.error(`  ❌ "${title}": ${err.message}`);
     }
     await sleep();

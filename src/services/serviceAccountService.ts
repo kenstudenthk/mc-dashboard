@@ -3,7 +3,7 @@ const BASE_URL = import.meta.env.VITE_API_SERVICE_ACCOUNTS_URL as string;
 export interface ServiceAccount {
   id: number;
   Title: string;
-  OrderID: number;
+  CustomerID?: number;
   Provider: string;
   PrimaryAccountID?: string;
   SecondaryID?: string;
@@ -17,8 +17,7 @@ export interface ServiceAccount {
 
 export interface CreateServiceAccountInput {
   Title: string;
-  OrderID?: number;
-  OrderIDId?: number;
+  CustomerIDId?: number;
   Provider: string;
   PrimaryAccountID?: string;
   SecondaryID?: string;
@@ -36,8 +35,8 @@ function withId(data: unknown): unknown {
     const obj = data as Record<string, unknown>;
     const result: Record<string, unknown> = { ...obj };
     if ("ID" in obj) result.id = obj.ID;
-    if ("OrderIDId" in obj && obj.OrderIDId != null)
-      result.OrderID = obj.OrderIDId;
+    if ("CustomerIDId" in obj && obj.CustomerIDId != null)
+      result.CustomerID = obj.CustomerIDId;
     return result;
   }
   return data;
@@ -66,11 +65,6 @@ export const serviceAccountService = {
 
   findAll: async (): Promise<ServiceAccount[]> => {
     const result = await call<unknown>({ action: "GET_ALL" });
-    return Array.isArray(result) ? (result as ServiceAccount[]) : [];
-  },
-
-  findByOrderId: async (orderId: number) => {
-    const result = await call<unknown>({ action: "GET_BY_ORDER", data: { OrderID: orderId } });
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
 
