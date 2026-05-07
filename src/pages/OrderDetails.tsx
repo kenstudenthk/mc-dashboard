@@ -34,6 +34,7 @@ import {
 import {
   serviceAccountService,
   ServiceAccount,
+  CreateServiceAccountInput,
 } from "../services/serviceAccountService";
 import { orderStepsService, OrderStep } from "../services/orderStepsService";
 import { emailService, EmailLog } from "../services/emailService";
@@ -198,6 +199,7 @@ const OrderDetails = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editForm, setEditForm] = useState<Partial<CreateOrderInput>>({});
+  const [saEditForm, setSaEditForm] = useState<Partial<CreateServiceAccountInput>>({});
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -278,6 +280,14 @@ const OrderDetails = () => {
       BillingAddress: order.BillingAddress ?? "",
       Remark: order.Remark ?? "",
     });
+    setSaEditForm({
+      PrimaryAccountID: serviceAccount?.PrimaryAccountID ?? "",
+      SecondaryID: serviceAccount?.SecondaryID ?? "",
+      AccountName: serviceAccount?.AccountName ?? "",
+      Domain: serviceAccount?.Domain ?? "",
+      LoginEmail: serviceAccount?.LoginEmail ?? "",
+      OtherInfo: serviceAccount?.OtherInfo ?? "",
+    });
     setEditError(null);
     setIsEditMode(true);
   };
@@ -293,7 +303,12 @@ const OrderDetails = () => {
     setEditSaving(true);
     setEditError(null);
     try {
-      const updated = await orderService.update(order.id, editForm, userEmail);
+      const [updated] = await Promise.all([
+        orderService.update(order.id, editForm, userEmail),
+        serviceAccount
+          ? serviceAccountService.update(serviceAccount.id, saEditForm, userEmail)
+          : Promise.resolve(null),
+      ]);
       setOrderOverride(updated);
       invalidateOrders();
       handleEditClose();
@@ -306,6 +321,9 @@ const OrderDetails = () => {
 
   const set = (field: keyof CreateOrderInput, value: string | number) =>
     setEditForm((prev) => ({ ...prev, [field]: value }));
+
+  const setSa = (field: keyof CreateServiceAccountInput, value: string) =>
+    setSaEditForm((prev) => ({ ...prev, [field]: value }));
 
   const refreshEmailLogs = useCallback(() => {
     if (!order?.Title) return;
@@ -968,26 +986,77 @@ const OrderDetails = () => {
                     <InfoField
                       label={saLabels.primaryAccount}
                       value={serviceAccount?.PrimaryAccountID}
-                    />
+                      isEdit={isEditMode && !!serviceAccount}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.PrimaryAccountID ?? ""}
+                        onChange={(e) => setSa("PrimaryAccountID", e.target.value)}
+                        className={inputClass(saEditForm.PrimaryAccountID ?? "")}
+                      />
+                    </InfoField>
                     <InfoField
                       label={saLabels.accountId}
                       value={serviceAccount?.SecondaryID}
-                    />
+                      isEdit={isEditMode && !!serviceAccount}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.SecondaryID ?? ""}
+                        onChange={(e) => setSa("SecondaryID", e.target.value)}
+                        className={inputClass(saEditForm.SecondaryID ?? "")}
+                      />
+                    </InfoField>
                   </dl>
                   <dl>
                     <InfoField
                       label={saLabels.accountName}
                       value={serviceAccount?.AccountName}
-                    />
-                    <InfoField label="Domain" value={serviceAccount?.Domain} />
+                      isEdit={isEditMode && !!serviceAccount}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.AccountName ?? ""}
+                        onChange={(e) => setSa("AccountName", e.target.value)}
+                        className={inputClass(saEditForm.AccountName ?? "")}
+                      />
+                    </InfoField>
+                    <InfoField
+                      label="Domain"
+                      value={serviceAccount?.Domain}
+                      isEdit={isEditMode && !!serviceAccount}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.Domain ?? ""}
+                        onChange={(e) => setSa("Domain", e.target.value)}
+                        className={inputClass(saEditForm.Domain ?? "")}
+                      />
+                    </InfoField>
                     <InfoField
                       label={saLabels.loginEmail}
                       value={serviceAccount?.LoginEmail}
-                    />
+                      isEdit={isEditMode && !!serviceAccount}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.LoginEmail ?? ""}
+                        onChange={(e) => setSa("LoginEmail", e.target.value)}
+                        className={inputClass(saEditForm.LoginEmail ?? "")}
+                      />
+                    </InfoField>
                     <InfoField
                       label="Other Account Information"
                       value={serviceAccount?.OtherInfo}
-                    />
+                      isEdit={isEditMode && !!serviceAccount}
+                    >
+                      <input
+                        type="text"
+                        value={saEditForm.OtherInfo ?? ""}
+                        onChange={(e) => setSa("OtherInfo", e.target.value)}
+                        className={inputClass(saEditForm.OtherInfo ?? "")}
+                      />
+                    </InfoField>
                   </dl>
                 </div>
               </div>
