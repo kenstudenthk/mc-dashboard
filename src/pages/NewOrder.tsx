@@ -1080,6 +1080,7 @@ const NewOrder = () => {
         const newSa = await serviceAccountService.create(
           {
             Title: title,
+            CustomerIDId: resolvedCustomerId ?? undefined,
             Provider: cloudProvider,
             PrimaryAccountID: billingAccount || undefined,
             SecondaryID: accountId || undefined,

@@ -314,7 +314,7 @@ const OrderDetails = () => {
             ? serviceAccountService.create(
                 {
                   Title: order.Title,
-                  OrderIDId: order.id,
+                  CustomerIDId: order.CustomerID ?? undefined,
                   Provider: normalizeCloudProvider(order.CloudProvider ?? ""),
                   ...saEditForm,
                   AccountStatus: "Active",
@@ -351,7 +351,9 @@ const OrderDetails = () => {
     if (!order?.id) return;
     Promise.allSettled([
       orderTimelineService.getByOrder(order.id),
-      serviceAccountService.findByOrderId(order.id),
+      order.AccountID
+        ? serviceAccountService.findBySecondaryId(order.AccountID)
+        : Promise.resolve([]),
       orderStepsService.getByOrderId(order.id),
     ]).then(([eventsResult, accountsResult, stepsResult]) => {
       if (eventsResult.status === "fulfilled") setTimeline(eventsResult.value);
