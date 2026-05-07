@@ -74,8 +74,8 @@ export const serviceAccountService = {
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
 
-  findByPrimaryAccountId: async (primaryAccountId: string) => {
-    const result = await call<unknown>({ action: "GET_BY_ACCOUNT_ID", data: { PrimaryAccountID: primaryAccountId } });
+  findBySecondaryId: async (secondaryId: string) => {
+    const result = await call<unknown>({ action: "GET_BY_ACCOUNT_ID", data: { SecondaryID: secondaryId } });
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
 

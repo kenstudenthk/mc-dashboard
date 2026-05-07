@@ -1106,7 +1106,7 @@ const NewOrder = () => {
       if (productSubscribe) {
         if (orderType === "Termination") {
           if (accountId) {
-            const existing = await serviceAccountService.findByPrimaryAccountId(accountId);
+            const existing = await serviceAccountService.findBySecondaryId(accountId);
             await Promise.all(
               existing.map((sa) =>
                 serviceAccountService.update(sa.id, { AccountStatus: "Terminated" }, userEmail),
