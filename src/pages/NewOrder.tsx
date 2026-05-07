@@ -3,6 +3,7 @@ import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
 import CustomerCombobox from "../components/CustomerCombobox";
+import ServiceAccountCombobox from "../components/ServiceAccountCombobox";
 import { orderService } from "../services/orderService";
 import { customerService } from "../services/customerService";
 import { serviceAccountService } from "../services/serviceAccountService";
@@ -535,7 +536,7 @@ interface CloudServiceProps {
   billingAccount: string;
   setBillingAccount: (v: string) => void;
   accountId: string;
-  setAccountId: (v: string) => void;
+  onServiceAccountSelect: (id: string, sa: import("../services/serviceAccountService").ServiceAccount | null) => void;
   accountName: string;
   setAccountName: (v: string) => void;
   accountLoginEmail: string;
@@ -555,7 +556,7 @@ const CloudServiceSection = ({
   billingAccount,
   setBillingAccount,
   accountId,
-  setAccountId,
+  onServiceAccountSelect,
   accountName,
   setAccountName,
   accountLoginEmail,
@@ -605,11 +606,12 @@ const CloudServiceSection = ({
             value={billingAccount}
             onChange={(e) => setBillingAccount(e.target.value)}
           />
-          <InputGroup
+          <ServiceAccountCombobox
             label="Account ID / Root ID"
             placeholder="e.g. 74430167128"
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            provider="AWS"
+            onChange={onServiceAccountSelect}
           />
           <InputGroup
             label="Account Name / Cloud Checker Name"
@@ -628,11 +630,12 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Alibaba" && (
         <>
-          <InputGroup
+          <ServiceAccountCombobox
             label="UID"
             placeholder="e.g. 5.04886E+15"
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            provider="Alibaba"
+            onChange={onServiceAccountSelect}
           />
           <InputGroup
             label="Admin Email"
@@ -645,11 +648,12 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Azure" && (
         <>
-          <InputGroup
+          <ServiceAccountCombobox
             label="Tenant ID"
             placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194"
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            provider="Azure"
+            onChange={onServiceAccountSelect}
           />
           <InputGroup
             label="Azure Subscription ID"
@@ -674,11 +678,12 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Huawei" && (
         <>
-          <InputGroup
+          <ServiceAccountCombobox
             label="Huawei ID"
             placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573"
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            provider="Huawei"
+            onChange={onServiceAccountSelect}
           />
           <InputGroup
             label="Login Email"
@@ -691,11 +696,12 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "GCP" && (
         <>
-          <InputGroup
+          <ServiceAccountCombobox
             label="Billing Account ID"
             placeholder="e.g. 013933-F2938A-CC207B"
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            provider="GCP"
+            onChange={onServiceAccountSelect}
           />
           <InputGroup
             label="Admin Email"
@@ -708,11 +714,12 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Tencent" && (
         <>
-          <InputGroup
+          <ServiceAccountCombobox
             label="Tenant ID"
             placeholder="e.g. 200019722598"
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            provider="Tencent"
+            onChange={onServiceAccountSelect}
           />
           <InputGroup
             label="Login Email"
@@ -910,6 +917,7 @@ const NewOrder = () => {
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [accountId, setAccountId] = useState("");
+  const [selectedSaId, setSelectedSaId] = useState<number | null>(null);
   const [serviceType, setServiceType] = useState("");
   const [oasisNumber, setOasisNumber] = useState("");
   const [contactPerson, setContactPerson] = useState("");
@@ -1066,30 +1074,25 @@ const NewOrder = () => {
         resolvedCustomerId = newCustomer.id;
       }
 
-      // Resolve SA item ID before creating the Order so SecondaryIDId can be set.
-      let saId: number | undefined;
-      if (productSubscribe && orderType !== "Termination" && accountId) {
-        const existingSAs = await serviceAccountService.findBySecondaryId(accountId);
-        if (existingSAs.length > 0) {
-          saId = existingSAs[0].id;
-        } else {
-          const newSa = await serviceAccountService.create(
-            {
-              Title: title,
-              Provider: cloudProvider,
-              PrimaryAccountID: billingAccount || undefined,
-              SecondaryID: accountId || undefined,
-              AccountName: accountName || undefined,
-              Domain: azurePrimaryDomain || undefined,
-              LoginEmail: accountLoginEmail || undefined,
-              Password: password || undefined,
-              OtherInfo: otherAccountInfo || undefined,
-              AccountStatus: "Active",
-            },
-            userEmail,
-          );
-          saId = newSa.id;
-        }
+      // Resolve SA: user may have selected an existing one (selectedSaId) or typed a new ID.
+      let saId: number | undefined = selectedSaId ?? undefined;
+      if (!saId && productSubscribe && accountId) {
+        const newSa = await serviceAccountService.create(
+          {
+            Title: title,
+            Provider: cloudProvider,
+            PrimaryAccountID: billingAccount || undefined,
+            SecondaryID: accountId || undefined,
+            AccountName: accountName || undefined,
+            Domain: azurePrimaryDomain || undefined,
+            LoginEmail: accountLoginEmail || undefined,
+            Password: password || undefined,
+            OtherInfo: otherAccountInfo || undefined,
+            AccountStatus: "Active",
+          },
+          userEmail,
+        );
+        saId = newSa.id;
       }
 
       const order = await orderService.create(
@@ -1130,13 +1133,8 @@ const NewOrder = () => {
         userEmail,
       );
 
-      if (productSubscribe && orderType === "Termination" && accountId) {
-        const existing = await serviceAccountService.findBySecondaryId(accountId);
-        await Promise.all(
-          existing.map((sa) =>
-            serviceAccountService.update(sa.id, { AccountStatus: "Terminated" }, userEmail),
-          ),
-        );
+      if (orderType === "Termination" && saId) {
+        await serviceAccountService.update(saId, { AccountStatus: "Terminated" }, userEmail);
       }
 
       setSubmitSuccess(true);
@@ -1149,12 +1147,26 @@ const NewOrder = () => {
 
   const resetCloudAccountFields = () => {
     setAccountId("");
+    setSelectedSaId(null);
     setBillingAccount("");
     setAccountName("");
     setAccountLoginEmail("");
     setAzurePrimaryDomain("");
     setPassword("");
     setOtherAccountInfo("");
+  };
+
+  const handleServiceAccountSelect = (id: string, sa: import("../services/serviceAccountService").ServiceAccount | null) => {
+    setAccountId(id);
+    setSelectedSaId(sa ? sa.id : null);
+    if (sa) {
+      setBillingAccount(sa.PrimaryAccountID ?? "");
+      setAccountName(sa.AccountName ?? "");
+      setAccountLoginEmail(sa.LoginEmail ?? "");
+      setAzurePrimaryDomain(sa.Domain ?? "");
+      setPassword(sa.Password ?? "");
+      setOtherAccountInfo(sa.OtherInfo ?? "");
+    }
   };
 
   const sectionComplete = [
@@ -1306,7 +1318,7 @@ const NewOrder = () => {
               billingAccount={billingAccount}
               setBillingAccount={setBillingAccount}
               accountId={accountId}
-              setAccountId={setAccountId}
+              onServiceAccountSelect={handleServiceAccountSelect}
               accountName={accountName}
               setAccountName={setAccountName}
               accountLoginEmail={accountLoginEmail}
