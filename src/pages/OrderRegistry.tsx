@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Plus,
   Filter,
@@ -116,6 +116,14 @@ const STATUS_OPTIONS = [
   "Cancelled",
 ];
 
+const ORDER_TYPE_OPTIONS = [
+  "New Install",
+  "Misc Change",
+  "Contract Renewal",
+  "Termination",
+  "Pre-Pro",
+];
+
 const buildCustomerMap = (customers: Customer[]): Map<string, number> => {
   const map = new Map<string, number>();
   customers.forEach((c) => {
@@ -137,10 +145,14 @@ type SortKey =
 type SortDir = "asc" | "desc";
 
 const OrderRegistry = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [providerFilter, setProviderFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [orderTypeFilter, setOrderTypeFilter] = useState("All");
+  const [srdFrom, setSrdFrom] = useState("");
+  const [srdTo, setSrdTo] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -171,6 +183,8 @@ const OrderRegistry = () => {
   const customerMap = buildCustomerMap(
     Array.isArray(customersData) ? customersData : [],
   );
+  const customerFilterId = searchParams.get("customerId");
+  const customerFilterName = searchParams.get("customer");
 
   const loading = ordersLoading || customersLoading;
 
@@ -182,7 +196,17 @@ const OrderRegistry = () => {
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, providerFilter, statusFilter, searchQuery]);
+  }, [
+    activeTab,
+    providerFilter,
+    statusFilter,
+    orderTypeFilter,
+    srdFrom,
+    srdTo,
+    searchQuery,
+    customerFilterId,
+    customerFilterName,
+  ]);
 
   // Close status dropdown on outside click
   useEffect(() => {
@@ -364,6 +388,31 @@ const OrderRegistry = () => {
     new Set(allOrders.map((o) => o.Status).filter(Boolean)),
   ).sort();
 
+  const activeFilterCount = [
+    providerFilter !== "All",
+    statusFilter !== "All",
+    orderTypeFilter !== "All",
+    Boolean(srdFrom),
+    Boolean(srdTo),
+    Boolean(customerFilterId || customerFilterName),
+  ].filter(Boolean).length;
+
+  const clearCustomerFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("customerId");
+    next.delete("customer");
+    setSearchParams(next);
+  };
+
+  const clearAllFilters = () => {
+    setProviderFilter("All");
+    setStatusFilter("All");
+    setOrderTypeFilter("All");
+    setSrdFrom("");
+    setSrdTo("");
+    clearCustomerFilter();
+  };
+
   const terminatedAccountIds = allOrders
     .filter((order) => order.OrderType === "Termination" && order.AccountID)
     .map((order) => order.AccountID);
@@ -387,13 +436,46 @@ const OrderRegistry = () => {
         return false;
       }
 
+      if (orderTypeFilter !== "All" && order.OrderType !== orderTypeFilter) {
+        return false;
+      }
+
+      if (srdFrom && (!order.SRD || order.SRD < srdFrom)) {
+        return false;
+      }
+
+      if (srdTo && (!order.SRD || order.SRD > srdTo)) {
+        return false;
+      }
+
+      if (customerFilterId && Number(order.CustomerID) !== Number(customerFilterId)) {
+        return false;
+      }
+
+      if (
+        !customerFilterId &&
+        customerFilterName &&
+        (order.CustomerName ?? "").toLowerCase() !==
+          customerFilterName.toLowerCase()
+      ) {
+        return false;
+      }
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (
-          !(order.Title ?? "").toLowerCase().includes(query) &&
-          !(order.CustomerName ?? "").toLowerCase().includes(query) &&
-          !(order.AccountID && order.AccountID.toLowerCase().includes(query))
-        ) {
+        const haystack = [
+          order.Title,
+          order.CustomerName,
+          order.AccountID,
+          order.CaseID,
+          order.CloudProvider,
+          order.OrderType,
+          order.Status,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(query)) {
           return false;
         }
       }
@@ -424,10 +506,17 @@ const OrderRegistry = () => {
     filteredOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredOrders.length);
 
-  const pendingCount = allOrders.filter(
+  // Apply customer filter before computing tab counts so tab badges reflect the current customer scope
+  const customerScopedOrders = allOrders.filter((o) => {
+    if (customerFilterId) return Number(o.CustomerID) === Number(customerFilterId);
+    if (customerFilterName)
+      return (o.CustomerName ?? "").toLowerCase() === customerFilterName.toLowerCase();
+    return true;
+  });
+  const pendingCount = customerScopedOrders.filter(
     (o) => !["Completed", "Cancelled"].includes(o.Status),
   ).length;
-  const completedCount = allOrders.filter(
+  const completedCount = customerScopedOrders.filter(
     (o) => o.Status === "Completed",
   ).length;
 
@@ -502,58 +591,71 @@ const OrderRegistry = () => {
       {isEditMode ? (
         <DataEditTable orders={allOrders} onExit={() => setIsEditMode(false)} />
       ) : (
-        <div className="card overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="relative flex flex-col flex-1 min-h-0 pt-2">
           {/* Row 1: Tabs + New Order */}
-          <div className="bg-[#f4f6f8] flex items-center justify-between px-4 py-3">
+          <div className="flex items-end justify-between gap-3 px-2">
             <TutorTooltip
               text="Use these tabs to quickly filter between All orders, Pending orders, and Completed orders."
               position="bottom"
               wrapperClass="flex-1 sm:flex-none"
             >
-              <div className="flex items-center gap-1 bg-black/[0.08] rounded-full p-1">
+              <div className="flex min-w-0 items-end gap-1 overflow-x-auto">
                 {(
                   [
                     {
                       key: "All",
                       label: "All Orders",
-                      count: allOrders.length,
+                      count: customerScopedOrders.length,
                       Icon: LayoutList,
+                      accent: "bg-[#fbbd41]",
+                      tilt: "-rotate-[0.6deg]",
                     },
                     {
                       key: "Pending",
                       label: "Pending",
                       count: pendingCount,
                       Icon: Clock,
+                      accent: "bg-[#3bd3fd]",
+                      tilt: "rotate-[0.5deg]",
                     },
                     {
                       key: "Completed",
                       label: "Completed",
                       count: completedCount,
                       Icon: CheckCircle2,
+                      accent: "bg-[#84e7a5]",
+                      tilt: "-rotate-[0.4deg]",
                     },
                   ] as {
                     key: string;
                     label: string;
                     count: number;
                     Icon: React.ElementType;
+                    accent: string;
+                    tilt: string;
                   }[]
-                ).map(({ key, label, count, Icon }) => (
+                ).map(({ key, label, count, Icon, accent, tilt }) => (
                   <button
                     key={key}
                     onClick={() => setActiveTab(key)}
-                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                    className={`group relative flex origin-bottom items-center gap-2 overflow-hidden rounded-t-[1.35rem] border px-4 text-sm font-semibold transition-all duration-300 ease-out whitespace-nowrap ${
                       activeTab === key
-                        ? "bg-black text-white shadow-sm"
-                        : "bg-transparent text-black/60 hover:bg-black/[0.06] hover:text-black"
+                        ? "z-20 -mb-px -translate-y-2 scale-[1.03] border-[#dad4c8] border-b-white bg-white py-3.5 text-black shadow-[rgba(0,0,0,0.12)_0px_-1px_1px_inset,rgba(0,0,0,0.08)_0px_8px_18px]"
+                        : `z-10 translate-y-1 ${tilt} border-[#dad4c8] bg-[#eee9df] py-2.5 text-[#55534e] shadow-[rgba(0,0,0,0.05)_0px_2px_0px] hover:-translate-y-1 hover:rotate-0 hover:bg-[#f5f3ef] hover:text-black`
                     }`}
                   >
+                    <span
+                      className={`absolute inset-x-0 top-0 h-1 ${accent} transition-all duration-300 ${
+                        activeTab === key ? "opacity-100" : "opacity-70"
+                      }`}
+                    />
                     <Icon className="w-3.5 h-3.5" />
                     {label}
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold transition-transform duration-300 group-hover:scale-110 ${
                         activeTab === key
-                          ? "bg-white/20 text-white"
-                          : "bg-black/[0.08] text-black/50"
+                          ? "bg-black text-white"
+                          : "bg-black/[0.08] text-[#55534e]"
                       }`}
                     >
                       {count}
@@ -569,7 +671,7 @@ const OrderRegistry = () => {
             >
               <Link
                 to="/orders/new"
-                className="px-4 py-1.5 rounded-lg font-medium text-sm border border-[#094cb2] text-[#094cb2] hover:bg-[#094cb2] hover:text-white transition-all flex items-center gap-1.5"
+                className="mb-2 flex items-center gap-1.5 rounded-xl border border-black bg-black px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#333]"
               >
                 <Plus className="w-3.5 h-3.5" />
                 New Order
@@ -577,8 +679,10 @@ const OrderRegistry = () => {
             </TutorTooltip>
           </div>
 
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl rounded-tr-2xl border border-[#dad4c8] bg-white shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]">
+
           {/* Row 2: Search */}
-          <div className="px-4 py-2 border-b border-[#1d1d1f]/08 bg-white">
+          <div className="border-b border-[#dad4c8] bg-white px-4 py-3">
             <TutorTooltip
               text="Search for a specific order by typing the Service No, Customer Name, or Account ID. Click the filter icon on the right to show additional filters."
               position="bottom"
@@ -588,7 +692,7 @@ const OrderRegistry = () => {
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
                 <input
                   type="text"
-                  placeholder="Search by Service No, Account ID, Customer..."
+                  placeholder="Search service no., customer, account, case, provider, type, or status..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-9 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
@@ -596,20 +700,25 @@ const OrderRegistry = () => {
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   title="Toggle filters"
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
                     showFilters
                       ? "text-[#0071e3]"
                       : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-[#0071e3]/08"
                   }`}
                 >
                   <Filter className="w-3.5 h-3.5" />
+                  {activeFilterCount > 0 && (
+                    <span className="rounded-full bg-black px-1.5 py-0.5 text-[10px] leading-none text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
                 </button>
               </div>
             </TutorTooltip>
           </div>
 
           {showFilters && (
-            <div className="p-4 border-b border-[#1d1d1f]/06 bg-white flex gap-4 items-center">
+            <div className="flex flex-wrap items-end gap-3 border-b border-[#dad4c8] bg-[#faf9f7] p-4">
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-[#1d1d1f]/60">
                   Provider:
@@ -644,13 +753,118 @@ const OrderRegistry = () => {
                   ))}
                 </select>
               </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-[#1d1d1f]/60">
+                  Order Type:
+                </label>
+                <select
+                  value={orderTypeFilter}
+                  onChange={(e) => setOrderTypeFilter(e.target.value)}
+                  className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                >
+                  <option value="All">All Types</option>
+                  {ORDER_TYPE_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-[#1d1d1f]/60">
+                  SRD:
+                </label>
+                <input
+                  type="date"
+                  value={srdFrom}
+                  onChange={(e) => setSrdFrom(e.target.value)}
+                  className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                />
+                <span className="text-xs text-[#1d1d1f]/35">to</span>
+                <input
+                  type="date"
+                  value={srdTo}
+                  onChange={(e) => setSrdTo(e.target.value)}
+                  className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                />
+              </div>
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="ml-auto rounded-lg border border-[#dad4c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#55534e] hover:bg-[#f5f5f7]"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          )}
+
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap items-center gap-2 border-b border-[#1d1d1f]/06 bg-white px-4 py-2 text-xs">
+              <span className="font-semibold text-[#9f9b93]">
+                {filteredOrders.length} results
+              </span>
+              {customerFilterName && (
+                <button
+                  type="button"
+                  onClick={clearCustomerFilter}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                >
+                  Customer: {customerFilterName}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {providerFilter !== "All" && (
+                <button
+                  type="button"
+                  onClick={() => setProviderFilter("All")}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                >
+                  Provider: {providerFilter}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {statusFilter !== "All" && (
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("All")}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                >
+                  Status: {statusFilter}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {orderTypeFilter !== "All" && (
+                <button
+                  type="button"
+                  onClick={() => setOrderTypeFilter("All")}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                >
+                  Type: {orderTypeFilter}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {(srdFrom || srdTo) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSrdFrom("");
+                    setSrdTo("");
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                >
+                  SRD: {srdFrom || "Any"} - {srdTo || "Any"}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
           )}
 
           <div className="overflow-x-auto flex-1 overflow-y-auto">
             <table className="w-full text-left">
-              <thead className="hidden md:table-header-group">
-                <tr className="border-b-2 border-[#1d1d1f]/10 bg-[#e8e8eb]">
+              <thead className="sticky top-0 z-10 hidden md:table-header-group">
+                <tr className="h-11 border-b border-[#dad4c8] bg-[#f5f3ef]">
                   <th className="w-6 p-0" />
                   <th className="px-3 py-3">
                     <TutorTooltip
@@ -660,7 +874,7 @@ const OrderRegistry = () => {
                       componentName="OrderRegistry.Table.Header"
                     >
                       <button
-                        className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                        className="flex w-full cursor-pointer select-none items-center text-left text-xs font-semibold text-[#55534e] transition-colors hover:text-black"
                         onClick={() => handleSort("Title")}
                       >
                         Service No.
@@ -966,7 +1180,7 @@ const OrderRegistry = () => {
                             {pinnedIds.has(order.id) ? (
                               <Pin className="w-3.5 h-3.5 fill-current text-red-500 rotate-90 mx-auto" />
                             ) : (
-                              <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/20 rotate-90 mx-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/25 rotate-90 mx-auto transition-opacity" />
                             )}
                           </td>
                           <td
@@ -1109,7 +1323,7 @@ const OrderRegistry = () => {
                           </td>
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end gap-1.5">
-                              <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-1.5 opacity-100 transition-opacity">
                                 <Link
                                   to={`/orders/${order.id}`}
                                   className={`p-1.5 rounded-lg transition-colors ${
@@ -1269,6 +1483,7 @@ const OrderRegistry = () => {
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 

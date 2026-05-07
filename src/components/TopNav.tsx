@@ -36,6 +36,33 @@ type NavGroup = {
   items: NavItem[];
 };
 
+const primaryNavItems: NavItem[] = [
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    path: "/",
+    description: "Live activity and priority work",
+  },
+  {
+    icon: FileText,
+    label: "Order Registry",
+    path: "/orders",
+    description: "Orders, status, and delivery details",
+  },
+  {
+    icon: Users,
+    label: "Customers",
+    path: "/customers",
+    description: "Customer records and profiles",
+  },
+  {
+    icon: BarChart3,
+    label: "Reports",
+    path: "/reports",
+    description: "Performance and operational reporting",
+  },
+];
+
 const isRouteActive = (pathname: string, path: string) => {
   if (path === "/") return pathname === "/";
   return pathname === path || pathname.startsWith(`${path}/`);
@@ -55,39 +82,9 @@ const TopNav = () => {
   const navGroups = useMemo<NavGroup[]>(() => {
     const groups: NavGroup[] = [
       {
-        label: "Overview",
-        accent: "bg-[#fbbd41]",
-        items: [
-          {
-            icon: LayoutDashboard,
-            label: "Dashboard",
-            path: "/",
-            description: "Live activity and priority work",
-          },
-          {
-            icon: BarChart3,
-            label: "Reports",
-            path: "/reports",
-            description: "Performance and operational reporting",
-          },
-        ],
-      },
-      {
         label: "Work",
         accent: "bg-[#84e7a5]",
         items: [
-          {
-            icon: FileText,
-            label: "Order Registry",
-            path: "/orders",
-            description: "Orders, status, and delivery details",
-          },
-          {
-            icon: Users,
-            label: "Customers",
-            path: "/customers",
-            description: "Customer records and profiles",
-          },
           {
             icon: ExternalLink,
             label: "Useful Links",
@@ -149,9 +146,10 @@ const TopNav = () => {
     return groups;
   }, [hasPermission]);
 
-  const currentItem = navGroups
-    .flatMap((group) => group.items)
-    .find((item) => isRouteActive(location.pathname, item.path));
+  const currentItem = [
+    ...primaryNavItems,
+    ...navGroups.flatMap((group) => group.items),
+  ].find((item) => isRouteActive(location.pathname, item.path));
   const currentPageLabel = isRouteActive(location.pathname, "/settings")
     ? "Settings"
     : currentItem?.label ?? "Dashboard";
@@ -216,7 +214,29 @@ const TopNav = () => {
             className="hidden flex-1 justify-center lg:flex"
             aria-label="Primary navigation"
           >
-            <div className="flex items-center gap-1 rounded-full border border-[#dad4c8] bg-white/80 p-1 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
+            <div className="flex items-center gap-1 rounded-2xl border border-[#dad4c8] bg-white/80 p-1.5 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
+              {primaryNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = isRouteActive(location.pathname, item.path);
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={`relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
+                      isActive
+                        ? "bg-[#000] text-white shadow-[rgb(0,0,0)_-3px_3px_0px_0px]"
+                        : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                    {isActive && (
+                      <span className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-[#fbbd41]" />
+                    )}
+                  </NavLink>
+                );
+              })}
               {navGroups.map((group) => {
                 const isActive = group.items.some((item) =>
                   isRouteActive(location.pathname, item.path),
@@ -441,6 +461,33 @@ const TopNav = () => {
             aria-label="Mobile navigation"
           >
             <div className="grid gap-3">
+              <section className="rounded-3xl border border-[#dad4c8] bg-white/80 p-3">
+                <div className="mb-2 flex items-center gap-2 px-1">
+                  <span className="h-2 w-2 rounded-full bg-[#fbbd41]" />
+                  <span className="label-text text-[#9f9b93]">Main</span>
+                </div>
+                <div className="grid gap-1 sm:grid-cols-2">
+                  {primaryNavItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
+                            isActive
+                              ? "bg-[#000] text-white"
+                              : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
+                          }`
+                        }
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {item.label}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </section>
               {navGroups.map((group) => (
                 <section
                   key={group.label}

@@ -255,7 +255,7 @@ const CustomerProfile = () => {
             componentName="CustomerProfile.NewOrderButton"
           >
             <Link
-              to="/orders/new"
+              to={`/orders/new?customerId=${customer.id}`}
               className="gradient-cta px-5 py-2 rounded-lg font-medium text-sm shadow-sm inline-flex items-center"
             >
               New Order
@@ -572,10 +572,12 @@ const CustomerProfile = () => {
                   Projects &amp; Orders
                 </h2>
                 <Link
-                  to="/orders"
+                  to={`/orders?customerId=${customer.id}&customer=${encodeURIComponent(
+                    customer.Title || customer.Company || `Customer #${customer.id}`,
+                  )}`}
                   className="text-xs font-medium text-[#0071e3] hover:underline"
                 >
-                  View All
+                  View All Orders
                 </Link>
               </div>
 
