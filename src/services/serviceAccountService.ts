@@ -68,7 +68,12 @@ export const serviceAccountService = {
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
 
-  findBySecondaryId: async (secondaryId: string) => {
+  findByCustomerId: async (customerId: number): Promise<ServiceAccount[]> => {
+    const result = await call<unknown>({ action: "GET_BY_CUSTOMER", data: { CustomerID: customerId } });
+    return Array.isArray(result) ? (result as ServiceAccount[]) : [];
+  },
+
+  findBySecondaryId: async (secondaryId: string): Promise<ServiceAccount[]> => {
     const result = await call<unknown>({ action: "GET_BY_ACCOUNT_ID", data: { SecondaryID: secondaryId } });
     return Array.isArray(result) ? (result as ServiceAccount[]) : [];
   },
