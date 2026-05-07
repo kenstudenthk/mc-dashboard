@@ -1,17 +1,19 @@
 /**
- * Service Account repair script — three independent modes:
+ * Service Account migration script — three independent modes:
  *
  *   FIX_LOOKUP=true        Fix wrong CustomerID lookup values on existing SAs.
  *                          Matches SA.Title === Order.Title and updates CustomerIDId
  *                          to the correct SPO Customer item ID from that Order.
  *
- *   FILL_MISSING=true      Create SAs for orders that have none yet.
- *                          Reads account data from Excel; creates a minimal SA
- *                          (Title + CustomerIDId) even when account fields are empty.
+ *   FILL_MISSING=true      Create one SA per unique cloud account (deduped by
+ *                          SecondaryID / Account ID). Title = SecondaryID.
+ *                          CustomerIDId is taken from the first matching SPO order.
+ *                          Rows with no Account ID are skipped.
  *
  *   FILL_EMPTY_FIELDS=true For existing SAs that have blank fields, fill them
- *                          back from Excel data. Only sends fields that are
- *                          currently empty in SPO AND have a value in Excel.
+ *                          back from Excel data (matched by SA.SecondaryID).
+ *                          Only sends fields that are currently empty in SPO
+ *                          AND have a value in Excel.
  *
  * Default (no flags set): runs FIX_LOOKUP + FILL_MISSING only.
  *
@@ -205,11 +207,12 @@ async function fixLookup(orders, serviceAccounts) {
 }
 
 // ── Mode 2: FILL_MISSING ──────────────────────────────────────────────────────
-// For every order in SPO that has no SA yet, create one.
-// Account data comes from the Excel file when available.
+// One SA record per unique cloud account (deduped by SecondaryID / Account ID).
+// Rows with the same Account ID are collapsed into a single SA.
+// Title = SecondaryID.  CustomerIDId is taken from the first matching SPO order.
 
 async function fillMissing(orders, serviceAccounts) {
-  console.log("\n━━━ FILL_MISSING: Creating missing Service Accounts ━━━━━━━━━━━━");
+  console.log("\n━━━ FILL_MISSING: Creating missing Service Accounts (1 per account) ━━");
   if (DRY_RUN) console.log("   [DRY RUN — no writes]\n");
 
   // Load Excel
@@ -228,48 +231,64 @@ async function fillMissing(orders, serviceAccounts) {
   const hm   = buildHeaderMap(Object.keys(rows[0] ?? {}));
   console.log(`   ${rows.length} Excel rows loaded`);
 
-  // Build Excel lookup: service number → row data
-  const excelByServiceNo = {};
-  for (const row of rows) {
-    const sn = get(row, hm, "Service No.", "Service No");
-    if (sn) excelByServiceNo[sn] = row;
-  }
-
-  // Build SPO map: title → { customerId }
-  // SP returns CustomerIDId as the raw lookup integer field.
-  const orderByTitle = {};
+  // Build SPO order lookup: service number → customerId
+  const customerByServiceNo = {};
   for (const o of orders) {
     const title      = String(o.Title ?? "").trim();
     const customerId = Number(o.CustomerIDId ?? o.CustomerID ?? 0) || null;
-    if (title) orderByTitle[title] = { customerId };
+    if (title && customerId) customerByServiceNo[title] = customerId;
   }
 
-  const existingSaTitles = new Set(
-    serviceAccounts.map((sa) => String(sa.Title ?? "").trim())
+  // Build set of SecondaryIDs already in SPO (for dedup check)
+  const existingSecondaryIds = new Set(
+    serviceAccounts
+      .map((sa) => String(sa.SecondaryID ?? "").trim())
+      .filter(Boolean)
   );
 
-  // Find orders with no SA
-  const missing = Object.entries(orderByTitle).filter(
-    ([title]) => !existingSaTitles.has(title)
+  // Deduplicate Excel rows by SecondaryID → keep first representative row
+  // and collect all service numbers so we can look up CustomerIDId.
+  const accountMap = new Map(); // SecondaryID → { row, serviceNumbers[] }
+  for (const row of rows) {
+    const sid = get(row, hm, "Account ID");
+    if (!sid) continue; // rows without an Account ID cannot form a unique SA
+    const sn = get(row, hm, "Service No.", "Service No");
+    if (!accountMap.has(sid)) {
+      accountMap.set(sid, { row, serviceNumbers: [] });
+    }
+    if (sn) accountMap.get(sid).serviceNumbers.push(sn);
+  }
+  console.log(`   Unique Account IDs in Excel : ${accountMap.size}`);
+
+  const toCreate = [...accountMap.entries()].filter(
+    ([sid]) => !existingSecondaryIds.has(sid)
   );
-  console.log(`   Orders with no SA: ${missing.length}\n`);
+  console.log(`   Already in SPO              : ${accountMap.size - toCreate.length}`);
+  console.log(`   To create                   : ${toCreate.length}\n`);
 
   let created = 0;
   const errors = [];
 
-  for (const [title, { customerId }] of missing) {
-    const row = excelByServiceNo[title];
+  for (const [sid, { row, serviceNumbers }] of toCreate) {
+    // Resolve CustomerIDId from the first matching SPO order
+    let customerId = null;
+    for (const sn of serviceNumbers) {
+      if (customerByServiceNo[sn]) {
+        customerId = customerByServiceNo[sn];
+        break;
+      }
+    }
 
     const rawData = {
-      Title:            title,
+      Title:            sid,
       ...(customerId ? { CustomerIDId: customerId } : {}),
-      Provider:         row ? get(row, hm, "Product Subscribe") : "",
-      PrimaryAccountID: row ? get(row, hm, "Master-Final", "Billing Account") : "",
-      SecondaryID:      row ? get(row, hm, "Account ID") : "",
-      AccountName:      row ? get(row, hm, "Account Name", "Account Name / Cloud Checker Name") : "",
-      LoginEmail:       row ? get(row, hm, "Account Login Email") : "",
-      Password:         row ? get(row, hm, "Password") : "",
-      OtherInfo:        row ? get(row, hm, "Other Account Information") : "",
+      Provider:         get(row, hm, "Product Subscribe"),
+      PrimaryAccountID: get(row, hm, "Master-Final", "Billing Account"),
+      SecondaryID:      sid,
+      AccountName:      get(row, hm, "Account Name", "Account Name / Cloud Checker Name"),
+      LoginEmail:       get(row, hm, "Account Login Email"),
+      Password:         get(row, hm, "Password"),
+      OtherInfo:        get(row, hm, "Other Account Information"),
     };
     // Strip empty strings so PA flow doesn't overwrite existing SPO values with blanks.
     const data = Object.fromEntries(
@@ -278,17 +297,17 @@ async function fillMissing(orders, serviceAccounts) {
 
     if (DRY_RUN) {
       created++;
-      console.log(`  [DRY] Would CREATE SA "${title}" → CustomerIDId ${customerId ?? "(none)"}`);
+      console.log(`  [DRY] Would CREATE SA "${sid}" → CustomerIDId ${customerId ?? "(none)"}`);
       continue;
     }
 
     try {
       await post(SA_URL, { action: "CREATE", userEmail: USER_EMAIL, data });
       created++;
-      console.log(`  ✅ [${created}] "${title}" → CustomerIDId ${customerId ?? "(none)"}`);
+      console.log(`  ✅ [${created}] "${sid}" → CustomerIDId ${customerId ?? "(none)"}`);
     } catch (err) {
-      errors.push({ title, customerId, err: err.message });
-      console.error(`  ❌ "${title}": ${err.message}`);
+      errors.push({ sid, customerId, err: err.message });
+      console.error(`  ❌ "${sid}": ${err.message}`);
     }
     await sleep();
   }
@@ -303,6 +322,7 @@ async function fillMissing(orders, serviceAccounts) {
 // For every existing SA, compare each field against Excel.
 // If the SPO field is blank AND Excel has a value → include it in the UPDATE.
 // Fields with existing SPO values are never touched.
+// Matches SA ↔ Excel by SecondaryID (Account ID).
 
 async function fillEmptyFields(serviceAccounts) {
   console.log("\n━━━ FILL_EMPTY_FIELDS: Patching blank fields from Excel ━━━━━━━━━");
@@ -323,10 +343,11 @@ async function fillEmptyFields(serviceAccounts) {
   const hm   = buildHeaderMap(Object.keys(rows[0] ?? {}));
   console.log(`   ${rows.length} Excel rows loaded`);
 
-  const excelByServiceNo = {};
+  // Build Excel lookup by SecondaryID (Account ID) — first row wins for dedup.
+  const excelBySecondaryId = {};
   for (const row of rows) {
-    const sn = get(row, hm, "Service No.", "Service No");
-    if (sn) excelByServiceNo[sn] = row;
+    const sid = get(row, hm, "Account ID");
+    if (sid && !excelBySecondaryId[sid]) excelBySecondaryId[sid] = row;
   }
 
   // Field definitions: SPO field name → Excel column candidates
@@ -348,7 +369,8 @@ async function fillEmptyFields(serviceAccounts) {
   for (const sa of serviceAccounts) {
     const saTitle = String(sa.Title ?? "").trim();
     const saSpId  = spId(sa);
-    const row     = excelByServiceNo[saTitle];
+    const sid     = String(sa.SecondaryID ?? "").trim();
+    const row     = (sid && excelBySecondaryId[sid]) ?? null;
 
     if (!row) {
       noExcel++;
@@ -370,7 +392,7 @@ async function fillEmptyFields(serviceAccounts) {
 
     if (DRY_RUN) {
       patched++;
-      console.log(`  [DRY] SA "${saTitle}" id=${saSpId} — patch: ${JSON.stringify(patch)}`);
+      console.log(`  [DRY] SA "${saTitle}" (${sid}) id=${saSpId} — patch: ${JSON.stringify(patch)}`);
       continue;
     }
 
@@ -387,10 +409,10 @@ async function fillEmptyFields(serviceAccounts) {
         data: { id: saSpId, ...existing, ...patch },
       });
       patched++;
-      console.log(`  ✅ [${patched}] "${saTitle}" id=${saSpId} — filled: ${Object.keys(patch).join(", ")}`);
+      console.log(`  ✅ [${patched}] "${saTitle}" (${sid}) id=${saSpId} — filled: ${Object.keys(patch).join(", ")}`);
     } catch (err) {
-      errors.push({ saTitle, saSpId, patch, err: err.message });
-      console.error(`  ❌ "${saTitle}" id=${saSpId}: ${err.message}`);
+      errors.push({ saTitle, sid, saSpId, patch, err: err.message });
+      console.error(`  ❌ "${saTitle}" (${sid}) id=${saSpId}: ${err.message}`);
     }
     await sleep();
   }
