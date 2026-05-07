@@ -146,29 +146,32 @@ const buildFullUpdatePayload = (
   patch: Partial<Order>,
 ): Partial<CreateOrderInput> => {
   const merged = { ...order, ...patch };
-  return ORDER_UPDATE_FIELDS.reduce<Partial<CreateOrderInput>>((payload, key) => {
-    const value = merged[key];
-    if (key === "CustomerID") {
-      if (value != null && value !== "") {
-        payload.CustomerID = Number(value);
+  return ORDER_UPDATE_FIELDS.reduce<Partial<CreateOrderInput>>(
+    (payload, key) => {
+      const value = merged[key];
+      if (key === "CustomerID") {
+        if (value != null && value !== "") {
+          payload.CustomerID = Number(value);
+        }
+        return payload;
       }
-      return payload;
-    }
 
-    if (key === "Amount") {
-      payload.Amount = value == null || value === "" ? 0 : Number(value);
-      return payload;
-    }
+      if (key === "Amount") {
+        payload.Amount = value == null || value === "" ? 0 : Number(value);
+        return payload;
+      }
 
-    payload[key] = (
-      value == null
-        ? ""
-        : DATE_FIELDS_FOR_UPDATE.has(key) && typeof value === "string"
-          ? value.slice(0, 10)
-          : value
-    ) as never;
-    return payload;
-  }, {});
+      payload[key] = (
+        value == null
+          ? ""
+          : DATE_FIELDS_FOR_UPDATE.has(key) && typeof value === "string"
+            ? value.slice(0, 10)
+            : value
+      ) as never;
+      return payload;
+    },
+    {},
+  );
 };
 
 interface Props {
@@ -188,12 +191,13 @@ export function DataEditTable({ orders, onExit }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<keyof Order | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [columnFilters, setColumnFilters] = useState<Record<string, Set<string>>>({});
+  const [columnFilters, setColumnFilters] = useState<
+    Record<string, Set<string>>
+  >({});
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const currentTab =
-    TAB_DEFS.find((t) => t.key === activeTab) ?? TAB_DEFS[0];
+  const currentTab = TAB_DEFS.find((t) => t.key === activeTab) ?? TAB_DEFS[0];
 
   const handleCellChange = (
     orderId: number,
@@ -244,16 +248,17 @@ export function DataEditTable({ orders, onExit }: Props) {
     setIsSaving(true);
     setSaveError(null);
     try {
-      for (const [id, patch] of dirtyMap) {
-        const order = orders.find((item) => item.id === id);
-        if (!order) continue;
-        // eslint-disable-next-line no-await-in-loop
-        await orderService.update(
-          id,
-          buildFullUpdatePayload(order, patch),
-          userEmail,
-        );
-      }
+      await Promise.all(
+        [...dirtyMap].map(([id, patch]) => {
+          const order = orders.find((item) => item.id === id);
+          if (!order) return Promise.resolve();
+          return orderService.update(
+            id,
+            buildFullUpdatePayload(order, patch),
+            userEmail,
+          );
+        }),
+      );
       invalidateOrders();
       onExit();
     } catch (error) {

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { serviceAccountService, ServiceAccount } from "../services/serviceAccountService";
+import {
+  serviceAccountService,
+  ServiceAccount,
+} from "../services/serviceAccountService";
 import { Search, CheckCircle, PlusCircle, X } from "lucide-react";
 
 interface Props {
@@ -12,32 +15,40 @@ interface Props {
 
 type CheckResult = "found" | "new" | null;
 
-const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange }: Props) => {
+const ServiceAccountCombobox = ({
+  label,
+  placeholder,
+  value,
+  provider,
+  onChange,
+}: Props) => {
   const [accounts, setAccounts] = useState<ServiceAccount[]>([]);
   const [open, setOpen] = useState(false);
   const [checkResult, setCheckResult] = useState<CheckResult>(null);
-  const [checkedAccount, setCheckedAccount] = useState<ServiceAccount | null>(null);
+  const [checkedAccount, setCheckedAccount] = useState<ServiceAccount | null>(
+    null,
+  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    serviceAccountService.findAll().then(setAccounts).catch(() => {});
+    serviceAccountService
+      .findAll()
+      .then(setAccounts)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  // Reset check result when value is manually changed
-  useEffect(() => {
-    setCheckResult(null);
-    setCheckedAccount(null);
-  }, [value]);
 
   const filtered = accounts.filter((sa) => {
     const matchesProvider = !provider || sa.Provider === provider;
@@ -57,6 +68,8 @@ const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value, null);
+    setCheckResult(null);
+    setCheckedAccount(null);
     setOpen(true);
   };
 
@@ -67,7 +80,7 @@ const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange 
     const match = accounts.find(
       (sa) =>
         (!provider || sa.Provider === provider) &&
-        (sa.SecondaryID ?? "").toLowerCase() === trimmed.toLowerCase()
+        (sa.SecondaryID ?? "").toLowerCase() === trimmed.toLowerCase(),
     );
 
     if (match) {
@@ -81,9 +94,7 @@ const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange 
   };
 
   const handleUseAccount = () => {
-    if (checkedAccount) {
-      onChange(checkedAccount.SecondaryID ?? "", checkedAccount);
-    }
+    if (checkedAccount) handleSelect(checkedAccount);
   };
 
   const handleDismissResult = () => {
@@ -114,7 +125,9 @@ const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange 
                 >
                   <span className="font-medium">{sa.SecondaryID}</span>
                   {sa.AccountName && (
-                    <span className="text-xs text-[#1d1d1f]/40">{sa.AccountName}</span>
+                    <span className="text-xs text-[#1d1d1f]/40">
+                      {sa.AccountName}
+                    </span>
                   )}
                 </li>
               ))}
@@ -139,15 +152,24 @@ const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange 
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-semibold text-green-800">Existing Account Found</p>
+                <p className="text-xs font-semibold text-green-800">
+                  Existing Account Found
+                </p>
                 <p className="text-xs text-green-700 mt-0.5">
-                  <span className="font-medium">{checkedAccount.SecondaryID}</span>
+                  <span className="font-medium">
+                    {checkedAccount.SecondaryID}
+                  </span>
                   {checkedAccount.AccountName && (
-                    <span className="text-green-600"> · {checkedAccount.AccountName}</span>
+                    <span className="text-green-600">
+                      {" "}
+                      · {checkedAccount.AccountName}
+                    </span>
                   )}
                 </p>
                 {checkedAccount.LoginEmail && (
-                  <p className="text-xs text-green-600 mt-0.5">{checkedAccount.LoginEmail}</p>
+                  <p className="text-xs text-green-600 mt-0.5">
+                    {checkedAccount.LoginEmail}
+                  </p>
                 )}
                 {checkedAccount.PrimaryAccountID && (
                   <p className="text-xs text-green-600 mt-0.5">
@@ -183,9 +205,13 @@ const ServiceAccountCombobox = ({ label, placeholder, value, provider, onChange 
             <div className="flex items-center gap-2">
               <PlusCircle className="w-4 h-4 text-blue-600 shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-blue-800">New Account</p>
+                <p className="text-xs font-semibold text-blue-800">
+                  New Account
+                </p>
                 <p className="text-xs text-blue-600 mt-0.5">
-                  No existing account found for <span className="font-medium">{value}</span>. A new service account will be created on save.
+                  No existing account found for{" "}
+                  <span className="font-medium">{value}</span>. A new service
+                  account will be created on save.
                 </p>
               </div>
             </div>
