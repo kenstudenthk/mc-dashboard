@@ -89,6 +89,7 @@ export interface CreateOrderInput {
   CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
+  SecondaryIDId?: number;
 }
 
 const ORDER_STRING_FIELDS = new Set([

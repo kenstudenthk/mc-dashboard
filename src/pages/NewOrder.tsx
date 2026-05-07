@@ -1066,6 +1066,28 @@ const NewOrder = () => {
         resolvedCustomerId = newCustomer.id;
       }
 
+      // For non-Termination orders, create SA first so we can pass SecondaryIDId
+      // to the Order (SP lookup requires the SA item ID, not the display value).
+      let newSaId: number | undefined;
+      if (productSubscribe && orderType !== "Termination") {
+        const newSa = await serviceAccountService.create(
+          {
+            Title: title,
+            Provider: cloudProvider,
+            PrimaryAccountID: accountId || undefined,
+            SecondaryID: billingAccount || undefined,
+            AccountName: accountName || undefined,
+            Domain: azurePrimaryDomain || undefined,
+            LoginEmail: accountLoginEmail || undefined,
+            Password: password || undefined,
+            OtherInfo: otherAccountInfo || undefined,
+            AccountStatus: "Active",
+          },
+          userEmail,
+        );
+        newSaId = newSa.id;
+      }
+
       const order = await orderService.create(
         {
           Title: title,
@@ -1077,6 +1099,7 @@ const NewOrder = () => {
           CloudProvider: cloudProvider,
           Amount: parseFloat(amount) || 0,
           AccountID: accountId || undefined,
+          SecondaryIDId: newSaId,
           ServiceType: serviceType || undefined,
           OasisNumber: oasisNumber || undefined,
           OrderReceiveDate: orderReceiveDate || undefined,
@@ -1113,23 +1136,9 @@ const NewOrder = () => {
               ),
             );
           }
-        } else if (order.id) {
-          await serviceAccountService.create(
-            {
-              Title: title,
-              OrderIDId: order.id,
-              Provider: cloudProvider,
-              PrimaryAccountID: accountId || undefined,
-              SecondaryID: billingAccount || undefined,
-              AccountName: accountName || undefined,
-              Domain: azurePrimaryDomain || undefined,
-              LoginEmail: accountLoginEmail || undefined,
-              Password: password || undefined,
-              OtherInfo: otherAccountInfo || undefined,
-              AccountStatus: "Active",
-            },
-            userEmail,
-          );
+        } else if (newSaId && order.id) {
+          // Back-fill OrderIDId on the SA now that we have the Order's item ID.
+          await serviceAccountService.update(newSaId, { OrderIDId: order.id }, userEmail);
         }
       }
 
