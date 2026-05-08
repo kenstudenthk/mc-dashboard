@@ -23,6 +23,12 @@
 
 - After writing code, **list what could break** and suggest tests to cover those cases.
 
+## Before Pushing
+
+- **Always run `npm run build` before any `git push`.**
+- If the build fails, fix all TypeScript/compile errors before pushing.
+- Never push code that fails to build.
+
 ## When Something Is Wrong
 
 - When the user says something is wrong, **ask clarifying questions before rewriting** — do not immediately start changing code.

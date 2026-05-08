@@ -7,7 +7,9 @@
       "PowerShell(npm run lint *)",
       "Bash(npx tsc --noEmit *)",
       "PowerShell(npx tsc --noEmit *)",
-      "mcp__github__pull_request_read"
+      "mcp__github__pull_request_read",
+      "Bash(npm run build)",
+      "PowerShell(npm run build)"
     ]
   }
 }
