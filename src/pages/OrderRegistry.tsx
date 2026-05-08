@@ -714,7 +714,7 @@ const OrderRegistry = () => {
               position="bottom"
               wrapperClass="flex-1 sm:flex-none"
             >
-              <div className="flex min-w-0 items-end gap-1 overflow-x-auto">
+              <div className="flex min-w-0 items-end gap-1 overflow-x-auto pt-2">
                 {(
                   [
                     {
