@@ -310,12 +310,12 @@ async function main() {
   // ── end PATCH MODE ──────────────────────────────────────────────────────────
 
   const skipped = []; // { row, reason }
-  const customerMap = {}; // companyName → SPO customer ID
-  const orderIdMap = {}; // row index → SPO order ID
+  const customerMap = {};       // companyName → SPO customer ID
+  const serviceAccountMap = {}; // accountId   → SPO service account ID
 
   let customersCreated = 0;
-  let ordersCreated = 0;
   let saCreated = 0;
+  let ordersCreated = 0;
 
   // ── PASS 1: Customers ────────────────────────────────────────────────────
   console.log("━━━ PASS 1: Customers ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -360,14 +360,65 @@ async function main() {
     await sleep();
   }
 
-  // ── PASS 2: Orders ───────────────────────────────────────────────────────
-  console.log("\n━━━ PASS 2: Orders ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  // ── PASS 2: Service Accounts ─────────────────────────────────────────────
+  console.log("\n━━━ PASS 2: Service Accounts ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+  const seenAccounts = new Set();
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowNo = i + 2;
+    const loginEmail = get(row, hm, "Account Login Email");
+    const accountName = get(row, hm, "Account Name", "Account Name / Cloud Checker Name");
+
+    // Skip rows with no service account data
+    if (!loginEmail && !accountName) continue;
+
+    const accountId = get(row, hm, "Account ID");
+    if (accountId) {
+      if (seenAccounts.has(accountId)) continue;
+      seenAccounts.add(accountId);
+    }
+
+    const company = get(row, hm, "Standardized Company Name", "Company Name");
+
+    try {
+      const result = await post(SA_URL, {
+        action: "CREATE",
+        userEmail: USER_EMAIL,
+        data: {
+          Title: accountId || `SA-Row${rowNo}`,
+          CustomerID: customerMap[company.toLowerCase()] ?? null,
+          Provider: get(row, hm, "Product Subscribe"),
+          PrimaryAccountID: get(row, hm, "Master-Final"),
+          SecondaryID: accountId,
+          AccountName: accountName,
+          LoginEmail: loginEmail,
+          Password: get(row, hm, "Password"),
+          OtherInfo: get(row, hm, "Other Account Information"),
+          AccountStatus: "Active",
+        },
+      });
+      const id = extractId(result);
+      if (accountId) serviceAccountMap[accountId] = id;
+      saCreated++;
+      console.log(`  ✅ [${saCreated}] ${accountId || `SA-Row${rowNo}`} → ID ${id}`);
+    } catch (err) {
+      console.error(`  ❌ ServiceAccount failed (row ${rowNo}): ${err.message}`);
+      skipped.push({ row: rowNo, reason: `ServiceAccount: ${err.message}` });
+    }
+    await sleep();
+  }
+
+  // ── PASS 3: Orders ───────────────────────────────────────────────────────
+  console.log("\n━━━ PASS 3: Orders ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNo = i + 2;
     const serviceNo = get(row, hm, "Service No.", "Service No");
     const company = get(row, hm, "Standardized Company Name", "Company Name");
+    const accountId = get(row, hm, "Account ID");
 
     if (!serviceNo) {
       skipped.push({ row: rowNo, reason: "Empty Service No. — skipped order" });
@@ -381,6 +432,7 @@ async function main() {
         data: {
           Title: serviceNo,
           CustomerID: customerMap[company.toLowerCase()] ?? null,
+          SecondaryID: serviceAccountMap[accountId] ?? null,
           CustomerName: company,
           Status: get(row, hm, "Status") || "Active",
           OrderType: get(row, hm, "Order Type"),
@@ -408,7 +460,7 @@ async function main() {
           WelcomeLetter: get(row, hm, "Welcome Letter (Yes / No)", "Welcome Letter"),
           By: get(row, hm, "By"),
           OrderFormURL: get(row, hm, "Order Form"),
-          AccountID: get(row, hm, "Account ID"),
+          AccountID: accountId,
           AccountName: get(row, hm, "Account Name", "Account Name / Cloud Checker Name"),
           BillingAccount: get(row, hm, "Master-Final", "Billing Account"),
           AccountLoginEmail: get(row, hm, "Account Login Email"),
@@ -416,54 +468,11 @@ async function main() {
         },
       });
       const id = extractId(result);
-      orderIdMap[i] = id;
       ordersCreated++;
       console.log(`  ✅ [${ordersCreated}] ${serviceNo} → ID ${id}`);
     } catch (err) {
       console.error(`  ❌ Order failed (row ${rowNo}): ${serviceNo} — ${err.message}`);
       skipped.push({ row: rowNo, reason: `Order: ${err.message}` });
-    }
-    await sleep();
-  }
-
-  // ── PASS 3: Service Accounts ─────────────────────────────────────────────
-  console.log("\n━━━ PASS 3: Service Accounts ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const rowNo = i + 2;
-    const loginEmail = get(row, hm, "Account Login Email");
-    const accountName = get(row, hm, "Account Name");
-
-    // Skip rows with no service account data
-    if (!loginEmail && !accountName) continue;
-
-    const orderId = orderIdMap[i];
-    if (!orderId) continue; // order wasn't created — skip SA too
-
-    const serviceNo = get(row, hm, "Service No.", "Service No");
-
-    try {
-      await post(SA_URL, {
-        action: "CREATE",
-        userEmail: USER_EMAIL,
-        data: {
-          Title: serviceNo || `SA-Row${rowNo}`,
-          OrderID: orderId,
-          Provider: get(row, hm, "Product Subscribe"),
-          PrimaryAccountID: get(row, hm, "Master-Final"),
-          SecondaryID: get(row, hm, "Account ID"),
-          AccountName: accountName,
-          LoginEmail: loginEmail,
-          Password: get(row, hm, "Password"),
-          OtherInfo: get(row, hm, "Other Account Information"),
-        },
-      });
-      saCreated++;
-      console.log(`  ✅ [${saCreated}] row ${rowNo} → Order ID ${orderId}`);
-    } catch (err) {
-      console.error(`  ❌ ServiceAccount failed (row ${rowNo}): ${err.message}`);
-      skipped.push({ row: rowNo, reason: `ServiceAccount: ${err.message}` });
     }
     await sleep();
   }
