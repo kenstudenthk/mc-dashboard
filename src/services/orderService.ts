@@ -90,7 +90,7 @@ export interface CreateOrderInput {
   CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
-  SecondaryIDId?: number;
+  SAId?: number;
 }
 
 const ORDER_STRING_FIELDS = new Set([
@@ -191,24 +191,27 @@ function withId(data: unknown): unknown {
     // Prefer the raw lookup ID over the normalised choice value
     if ("CustomerIDId" in obj && obj.CustomerIDId != null)
       result.CustomerID = obj.CustomerIDId;
-    // SecondaryID lookup column on Orders list (links to ServiceAccounts)
-    if ("SecondaryIDId" in obj && obj.SecondaryIDId != null) {
-      result.SA_Id = obj.SecondaryIDId;
-      result.SA_SecondaryID = extractLookupValue(obj.SecondaryID);
+    // SA lookup column on Orders list (links to ServiceAccounts)
+    if ("SAId" in obj && obj.SAId != null) {
+      result.SA_Id = obj.SAId;
     }
-    // Extra columns pulled through from the SecondaryID lookup (SP internal name uses _x003a_ for ":")
-    if ("SecondaryID_x003a_PrimaryAccountID" in obj)
-      result.SA_PrimaryAccountID = extractLookupValue(obj["SecondaryID_x003a_PrimaryAccountID"]);
-    if ("SecondaryID_x003a_AccountName" in obj)
-      result.SA_AccountName = extractLookupValue(obj["SecondaryID_x003a_AccountName"]);
-    if ("SecondaryID_x003a_Domain" in obj)
-      result.SA_Domain = extractLookupValue(obj["SecondaryID_x003a_Domain"]);
-    if ("SecondaryID_x003a_LoginEmail" in obj)
-      result.SA_LoginEmail = extractLookupValue(obj["SecondaryID_x003a_LoginEmail"]);
-    if ("SecondaryID_x003a_Password" in obj)
-      result.SA_Password = extractLookupValue(obj["SecondaryID_x003a_Password"]);
-    if ("SecondaryID_x003a_AccountStatus" in obj)
-      result.SA_AccountStatus = extractLookupValue(obj["SecondaryID_x003a_AccountStatus"]);
+    // Extra columns pulled through from the SA lookup (SP internal name uses _x003a_ for ":" and _x0020_ for " ")
+    if ("SA_x003a__x0020_SecondaryID" in obj)
+      result.SA_SecondaryID = extractLookupValue(obj["SA_x003a__x0020_SecondaryID"]);
+    if ("SA_x003a__x0020_PrimaryAccountID" in obj)
+      result.SA_PrimaryAccountID = extractLookupValue(obj["SA_x003a__x0020_PrimaryAccountID"]);
+    if ("SA_x003a__x0020_AccountName" in obj)
+      result.SA_AccountName = extractLookupValue(obj["SA_x003a__x0020_AccountName"]);
+    if ("SA_x003a__x0020_Domain" in obj)
+      result.SA_Domain = extractLookupValue(obj["SA_x003a__x0020_Domain"]);
+    if ("SA_x003a__x0020_LoginEmail" in obj)
+      result.SA_LoginEmail = extractLookupValue(obj["SA_x003a__x0020_LoginEmail"]);
+    if ("SA_x003a__x0020_Password" in obj)
+      result.SA_Password = extractLookupValue(obj["SA_x003a__x0020_Password"]);
+    if ("SA_x003a__x0020_AccountStatus" in obj)
+      result.SA_AccountStatus = extractLookupValue(obj["SA_x003a__x0020_AccountStatus"]);
+    if ("SA_x003a__x0020_OtherAccountInfo" in obj)
+      result.SA_OtherAccountInfo = extractLookupValue(obj["SA_x003a__x0020_OtherAccountInfo"]);
     if ("LoginEmail" in obj) result.AccountLoginEmail = obj.LoginEmail;
     if ("PrimaryID" in obj) result.BillingAccount = obj.PrimaryID;
     if ("OtherInfo" in obj) result.OtherAccountInfo = obj.OtherInfo;

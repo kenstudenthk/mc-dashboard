@@ -11,7 +11,7 @@ export interface ServiceAccount {
   Domain?: string;
   LoginEmail?: string;
   Password?: string;
-  OtherInfo?: string;
+  OtherAccountInfo?: string;
   AccountStatus?: "Active" | "Terminated";
 }
 
@@ -25,7 +25,7 @@ export interface CreateServiceAccountInput {
   Domain?: string;
   LoginEmail?: string;
   Password?: string;
-  OtherInfo?: string;
+  OtherAccountInfo?: string;
   AccountStatus?: "Active" | "Terminated";
 }
 

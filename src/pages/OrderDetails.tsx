@@ -286,7 +286,7 @@ const OrderDetails = () => {
       AccountName: serviceAccount?.AccountName ?? order.SA_AccountName ?? "",
       Domain: serviceAccount?.Domain ?? order.SA_Domain ?? "",
       LoginEmail: serviceAccount?.LoginEmail ?? order.SA_LoginEmail ?? "",
-      OtherInfo: serviceAccount?.OtherInfo ?? "",
+      OtherAccountInfo: serviceAccount?.OtherAccountInfo ?? "",
       Password: serviceAccount?.Password ?? order.SA_Password ?? "",
     });
     setEditError(null);
@@ -1075,14 +1075,14 @@ const OrderDetails = () => {
                     </InfoField>
                     <InfoField
                       label="Other Account Information"
-                      value={serviceAccount?.OtherInfo}
+                      value={serviceAccount?.OtherAccountInfo ?? order.SA_OtherAccountInfo}
                       isEdit={isEditMode}
                     >
                       <input
                         type="text"
-                        value={saEditForm.OtherInfo ?? ""}
-                        onChange={(e) => setSa("OtherInfo", e.target.value)}
-                        className={inputClass(saEditForm.OtherInfo ?? "")}
+                        value={saEditForm.OtherAccountInfo ?? ""}
+                        onChange={(e) => setSa("OtherAccountInfo", e.target.value)}
+                        className={inputClass(saEditForm.OtherAccountInfo ?? "")}
                       />
                     </InfoField>
                   </dl>

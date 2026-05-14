@@ -1088,7 +1088,7 @@ const NewOrder = () => {
             Domain: azurePrimaryDomain || undefined,
             LoginEmail: accountLoginEmail || undefined,
             Password: password || undefined,
-            OtherInfo: otherAccountInfo || undefined,
+            OtherAccountInfo: otherAccountInfo || undefined,
             AccountStatus: "Active",
           },
           userEmail,
@@ -1107,7 +1107,7 @@ const NewOrder = () => {
           CloudProvider: cloudProvider,
           Amount: parseFloat(amount) || 0,
           AccountID: accountId || undefined,
-          SecondaryIDId: saId,
+          SAId: saId,
           ServiceType: serviceType || undefined,
           OasisNumber: oasisNumber || undefined,
           OrderReceiveDate: orderReceiveDate || undefined,
@@ -1143,7 +1143,7 @@ const NewOrder = () => {
           ...(azurePrimaryDomain && { Domain: azurePrimaryDomain }),
           ...(accountLoginEmail && { LoginEmail: accountLoginEmail }),
           ...(password && { Password: password }),
-          ...(otherAccountInfo && { OtherInfo: otherAccountInfo }),
+          ...(otherAccountInfo && { OtherAccountInfo: otherAccountInfo }),
         }, userEmail);
       }
 
@@ -1175,7 +1175,7 @@ const NewOrder = () => {
       setAccountLoginEmail(sa.LoginEmail ?? "");
       setAzurePrimaryDomain(sa.Domain ?? "");
       setPassword(sa.Password ?? "");
-      setOtherAccountInfo(sa.OtherInfo ?? "");
+      setOtherAccountInfo(sa.OtherAccountInfo ?? "");
     }
   };
 
