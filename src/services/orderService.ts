@@ -40,7 +40,7 @@ export interface Order {
   CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
-  // Lookup extra columns from the SecondaryID lookup column on Orders list
+  // Lookup extra columns from the SA lookup column on Orders list
   SA_Id?: number;
   SA_SecondaryID?: string;
   SA_PrimaryAccountID?: string;
@@ -49,6 +49,7 @@ export interface Order {
   SA_LoginEmail?: string;
   SA_Password?: string;
   SA_AccountStatus?: string;
+  SA_OtherAccountInfo?: string;
 }
 
 export interface CreateOrderInput {

@@ -395,7 +395,7 @@ async function main() {
           AccountName: accountName,
           LoginEmail: loginEmail,
           Password: get(row, hm, "Password"),
-          OtherInfo: get(row, hm, "Other Account Information"),
+          OtherAccountInfo: get(row, hm, "Other Account Information"),
           AccountStatus: "Active",
         },
       });
