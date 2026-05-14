@@ -432,7 +432,7 @@ async function main() {
         data: {
           Title: serviceNo,
           CustomerID: customerMap[company.toLowerCase()] ?? null,
-          SecondaryID: serviceAccountMap[accountId] ?? null,
+          SA: serviceAccountMap[accountId] ?? null,
           CustomerName: company,
           Status: get(row, hm, "Status") || "Active",
           OrderType: get(row, hm, "Order Type"),
