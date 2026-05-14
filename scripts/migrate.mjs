@@ -32,6 +32,7 @@ const MAX_ROWS = process.env.MAX_ROWS ? Number(process.env.MAX_ROWS) : null;
 const START_ROW = process.env.START_ROW ? Number(process.env.START_ROW) : 2;
 // PATCH_MISSING=true: skip all CREATE passes, only fill missing fields on existing SPO records.
 const PATCH_MISSING = process.env.PATCH_MISSING === "true";
+const RETRY_SKIPPED = process.env.RETRY_SKIPPED === "true";
 const GET_PAGE_URL = process.env.VITE_API_GET_PAGE_URL;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -86,22 +87,29 @@ function formatDate(val) {
   return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
 }
 
-/** POST to a PA endpoint, return the created item */
-async function post(url, body) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
+/** POST to a PA endpoint with automatic retry on transient errors (502/503/504) */
+async function post(url, body, maxAttempts = 4) {
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.success === false) throw new Error(json.error?.message ?? "API error");
+      return json?.data ?? json;
+    }
     const text = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+    lastErr = new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+    const transient = [502, 503, 504].includes(res.status);
+    if (!transient || attempt === maxAttempts) break;
+    const delay = 1000 * 2 ** (attempt - 1); // 1s → 2s → 4s
+    console.warn(`    ↻ Transient ${res.status} — retry ${attempt}/${maxAttempts - 1} in ${delay / 1000}s…`);
+    await sleep(delay);
   }
-  const json = await res.json();
-  if (json?.success === false) throw new Error(json.error?.message ?? "API error");
-  // Normalise: return the data object regardless of envelope shape
-  const data = json?.data ?? json;
-  return data;
+  throw lastErr;
 }
 
 /** Delay to avoid PA flow throttling (default 400 ms between calls) */
@@ -317,6 +325,56 @@ async function main() {
   let saCreated = 0;
   let ordersCreated = 0;
 
+  // ── RETRY_SKIPPED: load row filter + pre-seed maps from existing SPO data ──
+  let retryRowNums = null;
+  if (RETRY_SKIPPED) {
+    const logPath = path.join(__dirname, "skipped.log");
+    if (!fs.existsSync(logPath)) {
+      console.error("❌ skipped.log not found — nothing to retry.");
+      process.exit(1);
+    }
+    const lines = fs.readFileSync(logPath, "utf8").split("\n").filter(Boolean);
+    retryRowNums = new Set(
+      lines.map((l) => { const m = l.match(/^Row (\d+):/); return m ? Number(m[1]) : null; })
+           .filter(Boolean),
+    );
+    console.log(`🔁 RETRY MODE: ${retryRowNums.size} rows to retry from skipped.log\n`);
+
+    const extractList = (raw) => {
+      const d = raw?.success === true ? (raw.data ?? raw) : raw;
+      if (Array.isArray(d)) return d;
+      if (Array.isArray(d?.value)) return d.value;
+      if (Array.isArray(d?.d?.results)) return d.d.results;
+      return [];
+    };
+
+    console.log("─── Pre-fetching existing customers…");
+    try {
+      const items = extractList(await post(CUSTOMERS_URL, { action: "GET_ALL" }));
+      for (const c of items) {
+        const id = Number(c.ID ?? c.id ?? 0);
+        const title = String(c.Title ?? c.Company ?? "").toLowerCase();
+        if (id && title) customerMap[title] = id;
+      }
+      console.log(`   ${items.length} customers loaded\n`);
+    } catch (err) {
+      console.warn(`   ⚠️  Could not pre-fetch customers: ${err.message}\n`);
+    }
+
+    console.log("─── Pre-fetching existing service accounts…");
+    try {
+      const items = extractList(await post(SA_URL, { action: "GET_ALL" }));
+      for (const sa of items) {
+        const id = Number(sa.ID ?? sa.id ?? 0);
+        const title = String(sa.Title ?? sa.SecondaryID ?? "");
+        if (id && title) serviceAccountMap[title] = id;
+      }
+      console.log(`   ${items.length} service accounts loaded\n`);
+    } catch (err) {
+      console.warn(`   ⚠️  Could not pre-fetch service accounts: ${err.message}\n`);
+    }
+  }
+
   // ── PASS 1: Customers ────────────────────────────────────────────────────
   console.log("━━━ PASS 1: Customers ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   const seenCompanies = new Set();
@@ -324,6 +382,7 @@ async function main() {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNo = i + 2; // Excel row number (1 = header)
+    if (retryRowNums && !retryRowNums.has(rowNo)) continue;
     const company = get(row, hm, "Standardized Company Name", "Company Name");
 
     if (!company) {
@@ -368,6 +427,7 @@ async function main() {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNo = i + 2;
+    if (retryRowNums && !retryRowNums.has(rowNo)) continue;
     const loginEmail = get(row, hm, "Account Login Email");
     const accountName = get(row, hm, "Account Name", "Account Name / Cloud Checker Name");
 
@@ -416,6 +476,7 @@ async function main() {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNo = i + 2;
+    if (retryRowNums && !retryRowNums.has(rowNo)) continue;
     const serviceNo = get(row, hm, "Service No.", "Service No");
     const company = get(row, hm, "Standardized Company Name", "Company Name");
     const accountId = get(row, hm, "Account ID");
@@ -484,14 +545,15 @@ async function main() {
   console.log(`✅ Service Accounts created:${saCreated}`);
   console.log(`⚠️  Rows skipped:           ${skipped.length}`);
 
+  const logPath = path.join(__dirname, "skipped.log");
   if (skipped.length > 0) {
-    const logPath = path.join(__dirname, "skipped.log");
-    const lines = skipped
-      .map((s) => `Row ${s.row}: ${s.reason}`)
-      .join("\n");
+    const lines = skipped.map((s) => `Row ${s.row}: ${s.reason}`).join("\n");
     fs.writeFileSync(logPath, lines + "\n");
     console.log(`\n📄 Skipped rows → ${logPath}`);
-    console.log("   Review and handle manually.");
+    console.log("   Re-run with RETRY_SKIPPED=true to retry these rows.");
+  } else if (RETRY_SKIPPED && fs.existsSync(logPath)) {
+    fs.unlinkSync(logPath);
+    console.log("\n✅ All retried rows succeeded — skipped.log cleared.");
   }
 }
 
