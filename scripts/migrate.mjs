@@ -320,6 +320,7 @@ async function main() {
   const skipped = []; // { row, reason }
   const customerMap = {};       // companyName → SPO customer ID
   const serviceAccountMap = {}; // accountId   → SPO service account ID
+  const rowSAMap = {};           // rowNo       → SPO service account ID (rows with no accountId)
 
   let customersCreated = 0;
   let saCreated = 0;
@@ -431,14 +432,13 @@ async function main() {
     const loginEmail = get(row, hm, "Account Login Email");
     const accountName = get(row, hm, "Account Name", "Account Name / Cloud Checker Name");
 
-    // Skip rows with no service account data
-    if (!loginEmail && !accountName) continue;
-
     const accountId = get(row, hm, "Account ID");
-    if (accountId) {
-      if (seenAccounts.has(accountId)) continue;
-      seenAccounts.add(accountId);
+    if (accountId && seenAccounts.has(accountId)) {
+      // Already created this SA — record its ID for this row so Pass 3 can link it
+      rowSAMap[rowNo] = serviceAccountMap[accountId];
+      continue;
     }
+    if (accountId) seenAccounts.add(accountId);
 
     const company = get(row, hm, "Standardized Company Name", "Company Name");
 
@@ -461,6 +461,7 @@ async function main() {
       });
       const id = extractId(result);
       if (accountId) serviceAccountMap[accountId] = id;
+      rowSAMap[rowNo] = id;
       saCreated++;
       console.log(`  ✅ [${saCreated}] ${accountId || `SA-Row${rowNo}`} → ID ${id}`);
     } catch (err) {
@@ -493,7 +494,7 @@ async function main() {
         data: {
           Title: serviceNo,
           CustomerID: customerMap[company.toLowerCase()] ?? null,
-          SA: serviceAccountMap[accountId] ?? null,
+          ...(serviceAccountMap[accountId] ?? rowSAMap[rowNo]) != null ? { SA: serviceAccountMap[accountId] ?? rowSAMap[rowNo] } : {},
           CustomerName: company,
           Status: get(row, hm, "Status") || "Active",
           OrderType: get(row, hm, "Order Type"),
