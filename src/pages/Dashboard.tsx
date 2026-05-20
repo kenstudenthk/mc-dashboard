@@ -196,7 +196,7 @@ const Dashboard = () => {
                 Incomplete Orders
               </h2>
               <Link
-                to="/orders"
+                to="/orders?tab=Pending"
                 className="text-xs font-medium text-[#0071e3] hover:underline"
               >
                 View All
@@ -245,19 +245,19 @@ const Dashboard = () => {
                           <td colSpan={4} className="py-3">
                             <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2">
                               <div className="flex justify-between items-start gap-2">
-                                <Link to={`/orders/${order.Title}`} className="text-sm font-semibold text-[#0071e3] hover:underline truncate">
+                                <Link to={`/orders/${order.id}`} className="text-sm font-semibold text-[#0071e3] hover:underline truncate">
                                   {order.Title}
                                 </Link>
                                 <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}>
                                   {order.Status}
                                 </span>
                               </div>
-                              <div className="text-xs text-[#1d1d1f]/70 truncate">
+                              <Link to={`/orders/${order.id}`} className="text-xs text-[#1d1d1f]/70 hover:underline truncate">
                                 {order.CustomerName}
-                              </div>
+                              </Link>
                               <div className="text-xs text-[#1d1d1f]/45 flex justify-between items-center mt-1 pt-2 border-t border-[#1d1d1f]/04">
                                 <span>SRD: {formatDate(order.SRD)}</span>
-                                <Link to={`/orders/${order.Title}`} className="text-[#0071e3] font-medium">View →</Link>
+                                <Link to={`/orders/${order.id}`} className="text-[#0071e3] font-medium">View →</Link>
                               </div>
                             </div>
                           </td>
@@ -268,12 +268,14 @@ const Dashboard = () => {
                           className="hidden md:table-row border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
                         >
                         <td className="py-3 text-xs font-semibold text-[#0071e3] hover:underline">
-                          <Link to={`/orders/${order.Title}`}>
+                          <Link to={`/orders/${order.id}`}>
                             {order.Title}
                           </Link>
                         </td>
                         <td className="py-3 text-xs text-[#1d1d1f]/70 truncate max-w-[130px]">
-                          {order.CustomerName}
+                          <Link to={`/orders/${order.id}`} className="hover:underline hover:text-[#0071e3] transition-colors">
+                            {order.CustomerName}
+                          </Link>
                         </td>
                         <td className="py-3">
                           <span
@@ -306,6 +308,12 @@ const Dashboard = () => {
                 <Calendar className="w-4 h-4 text-[#0071e3]" />
                 SRD Today
               </h2>
+              <Link
+                to="/orders?srdToday=true"
+                className="text-xs font-medium text-[#0071e3] hover:underline"
+              >
+                View All
+              </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -349,7 +357,7 @@ const Dashboard = () => {
                           <td colSpan={3} className="py-3">
                             <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2">
                               <div className="flex justify-between items-start gap-2">
-                                <Link to={`/orders/${order.Title}`} className="text-sm font-semibold text-[#0071e3] hover:underline truncate">
+                                <Link to={`/orders/${order.id}`} className="text-sm font-semibold text-[#0071e3] hover:underline truncate">
                                   {order.Title}
                                 </Link>
                                 <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(order.Status)}`}>
@@ -357,8 +365,8 @@ const Dashboard = () => {
                                 </span>
                               </div>
                               <div className="text-xs text-[#1d1d1f]/70 truncate flex justify-between items-center mt-1">
-                                <span>{order.CustomerName}</span>
-                                <Link to={`/orders/${order.Title}`} className="text-[#0071e3] font-medium text-[10px]">View →</Link>
+                                <Link to={`/orders/${order.id}`} className="hover:underline hover:text-[#0071e3] transition-colors">{order.CustomerName}</Link>
+                                <Link to={`/orders/${order.id}`} className="text-[#0071e3] font-medium text-[10px]">View →</Link>
                               </div>
                             </div>
                           </td>
@@ -369,12 +377,14 @@ const Dashboard = () => {
                           className="hidden md:table-row border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
                         >
                         <td className="py-3 text-xs font-semibold text-[#0071e3] hover:underline">
-                          <Link to={`/orders/${order.Title}`}>
+                          <Link to={`/orders/${order.id}`}>
                             {order.Title}
                           </Link>
                         </td>
                         <td className="py-3 text-xs text-[#1d1d1f]/70 truncate max-w-[130px]">
-                          {order.CustomerName}
+                          <Link to={`/orders/${order.id}`} className="hover:underline hover:text-[#0071e3] transition-colors">
+                            {order.CustomerName}
+                          </Link>
                         </td>
                         <td className="py-3">
                           <span
@@ -402,9 +412,12 @@ const Dashboard = () => {
                 <Cloud className="w-4 h-4 text-purple-500" />
                 Pre-Provision Orders
               </h2>
-              <span className="text-[10px] label-text text-[#1d1d1f]/30">
-                Awaiting Service No.
-              </span>
+              <Link
+                to="/orders?orderType=Pre-Pro"
+                className="text-xs font-medium text-[#0071e3] hover:underline"
+              >
+                View All
+              </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -449,9 +462,9 @@ const Dashboard = () => {
                           <td colSpan={4} className="py-3">
                             <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-2">
                               <div className="flex justify-between items-start gap-2">
-                                <span className="text-sm font-semibold text-[#1d1d1f] truncate">
+                                <Link to={`/orders/${order.id}`} className="text-sm font-semibold text-[#1d1d1f] hover:underline hover:text-[#0071e3] transition-colors truncate">
                                   {order.CustomerName}
-                                </span>
+                                </Link>
                                 <span className="text-xs font-medium text-[#1d1d1f]/60 whitespace-nowrap bg-[#f5f5f7] px-2 py-0.5 rounded">
                                   {normalizeCloudProvider(order.CloudProvider ?? "")}
                                 </span>
@@ -459,7 +472,7 @@ const Dashboard = () => {
                               <div className="text-xs text-[#1d1d1f]/45 flex justify-between items-center mt-1 pt-2 border-t border-[#1d1d1f]/04">
                                 <span>SRD: {formatDate(order.SRD)}</span>
                                 <Link
-                                  to={`/orders/${order.Title}`}
+                                  to={`/orders/${order.id}`}
                                   className="text-[#0071e3] hover:text-[#0071e3]/70 transition-colors inline-flex p-1 bg-blue-50 rounded-lg"
                                 >
                                   <Eye className="w-4 h-4" />
@@ -474,7 +487,9 @@ const Dashboard = () => {
                           className="hidden md:table-row border-b border-[#1d1d1f]/04 last:border-0 hover:bg-[#f5f5f7] transition-colors"
                         >
                         <td className="py-3 text-xs font-medium text-[#1d1d1f] truncate max-w-[120px]">
-                          {order.CustomerName}
+                          <Link to={`/orders/${order.id}`} className="hover:underline hover:text-[#0071e3] transition-colors">
+                            {order.CustomerName}
+                          </Link>
                         </td>
                         <td className="py-3 text-xs text-[#1d1d1f]/60">
                           {normalizeCloudProvider(order.CloudProvider ?? "")}
@@ -484,7 +499,7 @@ const Dashboard = () => {
                         </td>
                         <td className="py-3 text-right">
                           <Link
-                            to={`/orders/${order.Title}`}
+                            to={`/orders/${order.id}`}
                             className="text-[#0071e3] hover:text-[#0071e3]/70 transition-colors inline-flex p-1.5 bg-blue-50 rounded-lg"
                           >
                             <Eye className="w-3.5 h-3.5" />

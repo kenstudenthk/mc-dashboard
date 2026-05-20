@@ -52,6 +52,21 @@ const formatDate = (iso: string): string => {
   }
 };
 
+const isToday = (isoDate: string): boolean => {
+  if (!isoDate) return false;
+  try {
+    const d = new Date(isoDate);
+    const today = new Date();
+    return (
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate()
+    );
+  } catch {
+    return false;
+  }
+};
+
 function TableSkeleton() {
   return (
     <>
@@ -146,13 +161,14 @@ type SortDir = "asc" | "desc";
 
 const OrderRegistry = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "All");
   const [showFilters, setShowFilters] = useState(false);
   const [providerFilter, setProviderFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [orderTypeFilter, setOrderTypeFilter] = useState("All");
+  const [orderTypeFilter, setOrderTypeFilter] = useState(() => searchParams.get("orderType") || "All");
   const [srdFrom, setSrdFrom] = useState("");
   const [srdTo, setSrdTo] = useState("");
+  const srdTodayParam = searchParams.get("srdToday") === "true";
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -502,6 +518,7 @@ const OrderRegistry = () => {
     orderTypeFilter !== "All",
     Boolean(srdFrom),
     Boolean(srdTo),
+    srdTodayParam,
     Boolean(customerFilterId || customerFilterName),
   ].filter(Boolean).length;
 
@@ -518,7 +535,11 @@ const OrderRegistry = () => {
     setOrderTypeFilter("All");
     setSrdFrom("");
     setSrdTo("");
-    clearCustomerFilter();
+    const next = new URLSearchParams(searchParams);
+    next.delete("customerId");
+    next.delete("customer");
+    next.delete("srdToday");
+    setSearchParams(next);
   };
 
   const terminatedAccountIds = allOrders
@@ -553,6 +574,10 @@ const OrderRegistry = () => {
       }
 
       if (srdTo && (!order.SRD || order.SRD > srdTo)) {
+        return false;
+      }
+
+      if (srdTodayParam && !isToday(order.SRD)) {
         return false;
       }
 
