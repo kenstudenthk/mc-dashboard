@@ -312,8 +312,17 @@ export const orderService = {
   },
 
   findAllByTitle: async (title: string): Promise<Order[]> => {
-    const orders = await call<Order[]>({ action: "GET_ORDERS_BY_TITLE", data: { Title: title } });
-    return [...orders].sort((a, b) => a.id - b.id);
+    // Same service no. can appear as "CL123456" or "123456" — query both variants.
+    const numeric = title.replace(/^CL/i, "");
+    const variants = [...new Set([title, numeric, `CL${numeric}`])];
+    const results = await Promise.all(
+      variants.map((t) => call<Order[]>({ action: "GET_ORDERS_BY_TITLE", data: { Title: t } })),
+    );
+    const seen = new Set<number>();
+    return results
+      .flat()
+      .filter((o) => (seen.has(o.id) ? false : (seen.add(o.id), true)))
+      .sort((a, b) => a.id - b.id);
   },
 
   create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
