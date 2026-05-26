@@ -119,7 +119,7 @@ export function useCustomerById(id: number | undefined) {
 // Fetches all orders sharing the same Service No. (Title field) — used for sibling tabs.
 // Normalises the key to the numeric part so "CL123456" and "123456" share the same cache entry.
 export function useOrdersByTitle(title: string | undefined) {
-  const normalizedKey = title?.replace(/^CL/i, '');
+  const normalizedKey = title?.trim().replace(/^CL/i, '');
   return useQuery<Order[]>({
     queryKey: ['orders-by-title', normalizedKey],
     queryFn: () => orderService.findAllByTitle(title!),

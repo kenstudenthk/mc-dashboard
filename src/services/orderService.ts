@@ -313,7 +313,7 @@ export const orderService = {
 
   findAllByTitle: async (title: string): Promise<Order[]> => {
     // Same service no. can appear as "CL123456" or "123456" — query both variants.
-    const numeric = title.replace(/^CL/i, "");
+    const numeric = title.trim().replace(/^CL/i, "");
     const variants = [...new Set([title, numeric, `CL${numeric}`])];
     const results = await Promise.all(
       variants.map((t) => call<Order[]>({ action: "GET_ORDERS_BY_TITLE", data: { Title: t } })),
