@@ -115,3 +115,14 @@ export function useCustomerById(id: number | undefined) {
     (id !== undefined ? customers?.find((c) => c.id === id) : undefined) ?? null;
   return { data, isLoading, isError };
 }
+
+// Fetches all orders sharing the same Service No. (Title field) — used for sibling tabs.
+export function useOrdersByTitle(title: string | undefined) {
+  return useQuery<Order[]>({
+    queryKey: ['orders-by-title', title],
+    queryFn: () => orderService.findAllByTitle(title!),
+    enabled: !!title,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}

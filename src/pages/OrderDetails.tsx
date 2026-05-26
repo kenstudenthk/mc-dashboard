@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import DOMPurify from "dompurify";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Printer,
@@ -26,7 +26,7 @@ import {
   Order,
   CreateOrderInput,
 } from "../services/orderService";
-import { useOrderById, useInvalidateOrders } from "../services/useOrdersQuery";
+import { useOrderById, useInvalidateOrders, useOrdersByTitle } from "../services/useOrdersQuery";
 import {
   orderTimelineService,
   TimelineEvent,
@@ -183,11 +183,14 @@ const OrderDetails = () => {
 
   const [activeSection, setActiveSection] = useState(0);
 
+  const navigate = useNavigate();
   const parsedId = id ? parseInt(id, 10) : undefined;
   const { data: orderFromCache, isLoading, isError } = useOrderById(parsedId);
   const invalidateOrders = useInvalidateOrders();
   const [orderOverride, setOrderOverride] = useState<Order | null>(null);
   const order = orderOverride ?? orderFromCache ?? null;
+  const { data: siblings = [] } = useOrdersByTitle(order?.Title);
+  const showTabs = siblings.length >= 2;
 
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [serviceAccount, setServiceAccount] = useState<ServiceAccount | null>(
@@ -400,13 +403,19 @@ const OrderDetails = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            to="/orders"
-            className="p-2 rounded-xl transition-colors hover:bg-white"
-            style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+          <TutorTooltip
+            text="Return to the orders list."
+            position="bottom"
+            componentName="OrderDetails/BackToOrders"
           >
-            <ArrowLeft className="w-4 h-4" style={{ color: "#9f9b93" }} />
-          </Link>
+            <Link
+              to="/orders"
+              className="p-2 rounded-xl transition-colors hover:bg-white"
+              style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+            >
+              <ArrowLeft className="w-4 h-4" style={{ color: "#9f9b93" }} />
+            </Link>
+          </TutorTooltip>
           <div>
             <div className="flex items-center gap-3">
               <h1
@@ -419,12 +428,18 @@ const OrderDetails = () => {
               >
                 {order.Title}
               </h1>
-              <span
-                className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
-                style={statusStyle}
+              <TutorTooltip
+                text="Current order status."
+                position="bottom"
+                componentName="OrderDetails/StatusBadge"
               >
-                {order.Status}
-              </span>
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
+                  style={statusStyle}
+                >
+                  {order.Status}
+                </span>
+              </TutorTooltip>
             </div>
             <div className="text-sm mt-1" style={{ color: "#9f9b93" }}>
               <p>SRD: {formatDate(order.SRD)}</p>
@@ -435,26 +450,38 @@ const OrderDetails = () => {
         <div className="flex items-center gap-2">
           {!isEditMode ? (
             <>
-              <button
-                className="p-2 rounded-xl transition-colors hover:bg-white"
-                style={{
-                  background: "#faf9f7",
-                  border: "1px solid #dad4c8",
-                  color: "#9f9b93",
-                }}
+              <TutorTooltip
+                text="Print this order."
+                position="bottom"
+                componentName="OrderDetails/PrintOrder"
               >
-                <Printer className="w-4 h-4" />
-              </button>
-              <button
-                className="p-2 rounded-xl transition-colors hover:bg-white"
-                style={{
-                  background: "#faf9f7",
-                  border: "1px solid #dad4c8",
-                  color: "#9f9b93",
-                }}
+                <button
+                  className="p-2 rounded-xl transition-colors hover:bg-white"
+                  style={{
+                    background: "#faf9f7",
+                    border: "1px solid #dad4c8",
+                    color: "#9f9b93",
+                  }}
+                >
+                  <Printer className="w-4 h-4" />
+                </button>
+              </TutorTooltip>
+              <TutorTooltip
+                text="Download this order."
+                position="bottom"
+                componentName="OrderDetails/DownloadOrder"
               >
-                <Download className="w-4 h-4" />
-              </button>
+                <button
+                  className="p-2 rounded-xl transition-colors hover:bg-white"
+                  style={{
+                    background: "#faf9f7",
+                    border: "1px solid #dad4c8",
+                    color: "#9f9b93",
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              </TutorTooltip>
               <TutorTooltip
                 text="Send an email to the customer using a pre-filled template."
                 position="bottom"
@@ -490,24 +517,36 @@ const OrderDetails = () => {
             </>
           ) : (
             <>
-              <button
-                onClick={handleEditClose}
-                className="px-5 py-2 rounded-xl text-sm font-medium transition-all hover:bg-[#faf9f7]"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #dad4c8",
-                  color: "#55534e",
-                }}
+              <TutorTooltip
+                text="Discard unsaved changes and leave edit mode."
+                position="bottom"
+                componentName="OrderDetails/CancelEdit"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                disabled={editSaving}
-                className="gradient-cta px-6 py-2 font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                <button
+                  onClick={handleEditClose}
+                  className="px-5 py-2 rounded-xl text-sm font-medium transition-all hover:bg-[#faf9f7]"
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #dad4c8",
+                    color: "#55534e",
+                  }}
+                >
+                  Cancel
+                </button>
+              </TutorTooltip>
+              <TutorTooltip
+                text="Save all edited order and service account fields."
+                position="bottom"
+                componentName="OrderDetails/SaveChanges"
               >
-                {editSaving ? "Saving…" : "Save Changes"}
-              </button>
+                <button
+                  onClick={handleEditSave}
+                  disabled={editSaving}
+                  className="gradient-cta px-6 py-2 font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {editSaving ? "Saving…" : "Save Changes"}
+                </button>
+              </TutorTooltip>
             </>
           )}
         </div>
@@ -519,32 +558,69 @@ const OrderDetails = () => {
         const flow = mapOrderFlow(order.OrderType ?? "");
         if (!provider) return null;
         return (
-          <ServiceTimeline
-            provider={provider}
-            flow={flow}
-            horizontal
-            completedSteps={completedSteps}
-            onCompleteStep={async (stepKey, stepLabel) => {
-              await orderStepsService.complete(
-                order.id,
-                stepKey,
-                stepLabel,
-                userEmail,
-              );
-              const updated = await orderStepsService.getByOrderId(order.id);
-              setCompletedSteps(updated);
-            }}
-            onUncompleteStep={async (stepKey) => {
-              await orderStepsService.uncomplete(order.id, stepKey, userEmail);
-              const updated = await orderStepsService.getByOrderId(order.id);
-              setCompletedSteps(updated);
-            }}
-          />
+          <TutorTooltip
+            text="Track and update the provisioning checklist for this order."
+            position="top"
+            componentName="OrderDetails/ProvisioningSteps"
+          >
+            <ServiceTimeline
+              provider={provider}
+              flow={flow}
+              horizontal
+              completedSteps={completedSteps}
+              onCompleteStep={async (stepKey, stepLabel) => {
+                await orderStepsService.complete(
+                  order.id,
+                  stepKey,
+                  stepLabel,
+                  userEmail,
+                );
+                const updated = await orderStepsService.getByOrderId(order.id);
+                setCompletedSteps(updated);
+              }}
+              onUncompleteStep={async (stepKey) => {
+                await orderStepsService.uncomplete(order.id, stepKey, userEmail);
+                const updated = await orderStepsService.getByOrderId(order.id);
+                setCompletedSteps(updated);
+              }}
+            />
+          </TutorTooltip>
         );
       })()}
 
       {/* Section layout — sidebar nav + content */}
       <div className="flex gap-6 items-start">
+        {/* Order sibling tabs — shown when ≥2 orders share the same Service No. */}
+        {showTabs && (
+          <div
+            className="w-14 shrink-0 bg-white rounded-2xl p-2"
+            style={{
+              position: "sticky",
+              top: "1.5rem",
+              zIndex: 10,
+              border: "1px solid #dad4c8",
+              boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+            }}
+          >
+            {siblings.map((sibling, index) => {
+              const isActive = sibling.id === parsedId;
+              return (
+                <button
+                  key={sibling.id}
+                  onClick={() => navigate(`/orders/${sibling.id}`)}
+                  className="w-full rounded-xl py-2 text-xs font-medium text-center"
+                  style={{ background: isActive ? "#094cb2" : "transparent", color: isActive ? "white" : "#9f9b93" }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#faf9f7"; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <div>Order</div>
+                  <div>{index + 1}</div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Sticky sidebar */}
         <aside
           className="w-52 shrink-0 bg-white rounded-2xl p-3"
@@ -581,24 +657,30 @@ const OrderDetails = () => {
                 icon: <Mail className="w-3.5 h-3.5" />,
               },
             ].map(({ label, icon }, i) => (
-              <button
-                type="button"
+              <TutorTooltip
                 key={label}
-                onClick={() => setActiveSection(i)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left cursor-pointer hover:bg-[#faf9f7]"
-                style={
-                  activeSection === i
-                    ? { background: "#eee9df", color: "#000" }
-                    : { color: "#9f9b93" }
-                }
+                text={`Open the ${label} section.`}
+                position="right"
+                componentName={`OrderDetails/SectionNav/${label}`}
               >
-                <span
-                  style={{ color: activeSection === i ? "#078a52" : "#c5bfb5" }}
+                <button
+                  type="button"
+                  onClick={() => setActiveSection(i)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left cursor-pointer hover:bg-[#faf9f7]"
+                  style={
+                    activeSection === i
+                      ? { background: "#eee9df", color: "#000" }
+                      : { color: "#9f9b93" }
+                  }
                 >
-                  {icon}
-                </span>
-                {label}
-              </button>
+                  <span
+                    style={{ color: activeSection === i ? "#078a52" : "#c5bfb5" }}
+                  >
+                    {icon}
+                  </span>
+                  {label}
+                </button>
+              </TutorTooltip>
             ))}
           </div>
         </aside>
@@ -746,13 +828,19 @@ const OrderDetails = () => {
                     Remark
                   </dt>
                   {canEdit && !isEditMode && !isRemarkQuickEdit && (
-                    <button
-                      onClick={handleQuickRemarkOpen}
-                      className="p-1 rounded-md hover:bg-[#faf9f7] transition-colors"
-                      title="Quick Edit Remark"
+                    <TutorTooltip
+                      text="Edit only the remark without opening the full order editor."
+                      position="top"
+                      componentName="OrderDetails/QuickEditRemark"
                     >
-                      <Pencil className="w-3 h-3" style={{ color: "#078a52" }} />
-                    </button>
+                      <button
+                        onClick={handleQuickRemarkOpen}
+                        className="p-1 rounded-md hover:bg-[#faf9f7] transition-colors"
+                        title="Quick Edit Remark"
+                      >
+                        <Pencil className="w-3 h-3" style={{ color: "#078a52" }} />
+                      </button>
+                    </TutorTooltip>
                   )}
                 </div>
                 <dd
@@ -762,18 +850,24 @@ const OrderDetails = () => {
                   {isEditMode ? (
                     <div className="space-y-1.5">
                       <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const today = getTodayFormatted();
-                            const current = editForm.Remark ? editForm.Remark.trim() : "";
-                            const newVal = current ? `${current}\n\n${today} - ` : `${today} - `;
-                            set("Remark", newVal);
-                          }}
-                          className="text-[10px] font-semibold text-[#078a52] hover:underline"
+                        <TutorTooltip
+                          text="Insert today's date at the end of the remark."
+                          position="top"
+                          componentName="OrderDetails/AddRemarkDate"
                         >
-                          + Add Today's Date
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const today = getTodayFormatted();
+                              const current = editForm.Remark ? editForm.Remark.trim() : "";
+                              const newVal = current ? `${current}\n\n${today} - ` : `${today} - `;
+                              set("Remark", newVal);
+                            }}
+                            className="text-[10px] font-semibold text-[#078a52] hover:underline"
+                          >
+                            + Add Today's Date
+                          </button>
+                        </TutorTooltip>
                       </div>
                       <textarea
                         value={editForm.Remark ?? ""}
@@ -790,22 +884,34 @@ const OrderDetails = () => {
                         className={`${inputClass(quickRemarkValue)} min-h-[120px] resize-none font-sans`}
                       />
                       <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => setIsRemarkQuickEdit(false)}
-                          disabled={quickRemarkSaving}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium border border-[#dad4c8] hover:bg-[#faf9f7] transition-colors"
-                          style={{ color: "#55534e" }}
+                        <TutorTooltip
+                          text="Discard the remark draft."
+                          position="top"
+                          componentName="OrderDetails/CancelQuickRemark"
                         >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleQuickRemarkSave}
-                          disabled={quickRemarkSaving}
-                          className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm transition-all disabled:opacity-50"
-                          style={{ background: "#078a52" }}
+                          <button
+                            onClick={() => setIsRemarkQuickEdit(false)}
+                            disabled={quickRemarkSaving}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-[#dad4c8] hover:bg-[#faf9f7] transition-colors"
+                            style={{ color: "#55534e" }}
+                          >
+                            Cancel
+                          </button>
+                        </TutorTooltip>
+                        <TutorTooltip
+                          text="Save the updated remark."
+                          position="top"
+                          componentName="OrderDetails/SaveQuickRemark"
                         >
-                          {quickRemarkSaving ? "Saving..." : "Save Remark"}
-                        </button>
+                          <button
+                            onClick={handleQuickRemarkSave}
+                            disabled={quickRemarkSaving}
+                            className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm transition-all disabled:opacity-50"
+                            style={{ background: "#078a52" }}
+                          >
+                            {quickRemarkSaving ? "Saving..." : "Save Remark"}
+                          </button>
+                        </TutorTooltip>
                       </div>
                     </div>
                   ) : (
@@ -837,13 +943,19 @@ const OrderDetails = () => {
                 </div>
                 {!isEditMode && (
                   <>
-                    <Link
-                      to={`/customers/${order.CustomerID}`}
-                      className="text-sm font-semibold hover:underline transition-colors block mb-2"
-                      style={{ color: "#078a52" }}
+                    <TutorTooltip
+                      text="Open this customer's profile."
+                      position="top"
+                      componentName="OrderDetails/CustomerLink"
                     >
-                      {order.CustomerName}
-                    </Link>
+                      <Link
+                        to={`/customers/${order.CustomerID}`}
+                        className="text-sm font-semibold hover:underline transition-colors block mb-2"
+                        style={{ color: "#078a52" }}
+                      >
+                        {order.CustomerName}
+                      </Link>
+                    </TutorTooltip>
                     <p className="text-xs mb-4" style={{ color: "#9f9b93" }}>
                       ID #{order.CustomerID}
                     </p>
@@ -1093,7 +1205,12 @@ const OrderDetails = () => {
           })()}
 
           {activeSection === 3 && (
-            <div className="card p-6">
+            <TutorTooltip
+              text="Provisioning references, tickets, ownership, and handoff tracking for this order."
+              position="top"
+              componentName="OrderDetails/ProvisioningTracking"
+            >
+              <div className="card p-6">
               <div
                 className="flex items-center gap-2 mb-4 pb-4"
                 style={{ borderBottom: "1px solid #eee9df" }}
@@ -1177,15 +1294,21 @@ const OrderDetails = () => {
                         SD Number
                       </dt>
                       <dd className="text-sm font-medium">
-                        <a
-                          href={`http://10.8.100.3:8080/pabx/servlet/IncidentDetailServlet?incidentId=${order.SDNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline"
-                          style={{ color: "#078a52" }}
+                        <TutorTooltip
+                          text="Open this SD ticket in the incident system."
+                          position="top"
+                          componentName="OrderDetails/SDNumberLink"
                         >
-                          {order.SDNumber}
-                        </a>
+                          <a
+                            href={`http://10.8.100.3:8080/pabx/servlet/IncidentDetailServlet?incidentId=${order.SDNumber}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                            style={{ color: "#078a52" }}
+                          >
+                            {order.SDNumber}
+                          </a>
+                        </TutorTooltip>
                       </dd>
                     </div>
                   ) : (
@@ -1194,74 +1317,92 @@ const OrderDetails = () => {
                 </dl>
                 <dl>
                   <InfoField label="PS Job (Y/N)" value={order.PSJob} isEdit={isEditMode}>
-                    <div
-                      className="flex items-center gap-1 p-1 rounded-lg w-fit"
-                      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                    <TutorTooltip
+                      text="Mark whether this order is a PS job."
+                      position="top"
+                      componentName="OrderDetails/PSJobToggle"
                     >
-                      {["Y", "N"].map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => set("PSJob", editForm.PSJob === opt ? "" : opt)}
-                          className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
-                          style={
-                            editForm.PSJob === opt
-                              ? { background: "#000", color: "#fff" }
-                              : { color: "#9f9b93" }
-                          }
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
+                      <div
+                        className="flex items-center gap-1 p-1 rounded-lg w-fit"
+                        style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                      >
+                        {["Y", "N"].map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => set("PSJob", editForm.PSJob === opt ? "" : opt)}
+                            className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                            style={
+                              editForm.PSJob === opt
+                                ? { background: "#000", color: "#fff" }
+                                : { color: "#9f9b93" }
+                            }
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </TutorTooltip>
                   </InfoField>
                   <InfoField label="T2 / T3" value={order.T2T3} isEdit={isEditMode}>
-                    <div
-                      className="flex items-center gap-1 p-1 rounded-lg"
-                      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                    <TutorTooltip
+                      text="Set the service tier classification."
+                      position="top"
+                      componentName="OrderDetails/TierToggle"
                     >
-                      {["T1", "T2", "T3", "N/A"].map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => set("T2T3", editForm.T2T3 === opt ? "" : opt)}
-                          className="flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all"
-                          style={
-                            editForm.T2T3 === opt
-                              ? { background: "#000", color: "#fff" }
-                              : { color: "#9f9b93" }
-                          }
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
+                      <div
+                        className="flex items-center gap-1 p-1 rounded-lg"
+                        style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                      >
+                        {["T1", "T2", "T3", "N/A"].map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => set("T2T3", editForm.T2T3 === opt ? "" : opt)}
+                            className="flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all"
+                            style={
+                              editForm.T2T3 === opt
+                                ? { background: "#000", color: "#fff" }
+                                : { color: "#9f9b93" }
+                            }
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </TutorTooltip>
                   </InfoField>
                   <InfoField
                     label="Welcome Letter"
                     value={order.WelcomeLetter}
                     isEdit={isEditMode}
                   >
-                    <div
-                      className="flex items-center gap-1 p-1 rounded-lg w-fit"
-                      style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                    <TutorTooltip
+                      text="Track whether the welcome letter has been sent."
+                      position="top"
+                      componentName="OrderDetails/WelcomeLetterToggle"
                     >
-                      {["Yes", "No"].map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => set("WelcomeLetter", editForm.WelcomeLetter === opt ? "" : opt)}
-                          className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
-                          style={
-                            editForm.WelcomeLetter === opt
-                              ? { background: "#000", color: "#fff" }
-                              : { color: "#9f9b93" }
-                          }
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
+                      <div
+                        className="flex items-center gap-1 p-1 rounded-lg w-fit"
+                        style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
+                      >
+                        {["Yes", "No"].map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => set("WelcomeLetter", editForm.WelcomeLetter === opt ? "" : opt)}
+                            className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                            style={
+                              editForm.WelcomeLetter === opt
+                                ? { background: "#000", color: "#fff" }
+                                : { color: "#9f9b93" }
+                            }
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </TutorTooltip>
                   </InfoField>
                   <InfoField label="Handled By" value={order.By} isEdit={isEditMode}>
                     <input
@@ -1315,15 +1456,21 @@ const OrderDetails = () => {
                               Case ID
                             </dt>
                             <dd className="text-sm font-medium">
-                              <a
-                                href={order.CaseIDURL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:underline"
-                                style={{ color: "#078a52" }}
+                              <TutorTooltip
+                                text="Open the linked case record."
+                                position="top"
+                                componentName="OrderDetails/CaseIDLink"
                               >
-                                {order.CaseID}
-                              </a>
+                                <a
+                                  href={order.CaseIDURL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:underline"
+                                  style={{ color: "#078a52" }}
+                                >
+                                  {order.CaseID}
+                                </a>
+                              </TutorTooltip>
                             </dd>
                           </div>
                         ) : (
@@ -1341,16 +1488,22 @@ const OrderDetails = () => {
                             Order Form
                           </dt>
                           <dd className="text-sm font-medium">
-                            <a
-                              href={order.OrderFormURL}
-                              download
-                              rel="noopener noreferrer"
-                              className="hover:underline inline-flex items-center gap-1"
-                              style={{ color: "#078a52" }}
+                            <TutorTooltip
+                              text="Download the attached order form."
+                              position="top"
+                              componentName="OrderDetails/OrderFormDownload"
                             >
-                              <Download className="w-3.5 h-3.5" />
-                              Download File
-                            </a>
+                              <a
+                                href={order.OrderFormURL}
+                                download
+                                rel="noopener noreferrer"
+                                className="hover:underline inline-flex items-center gap-1"
+                                style={{ color: "#078a52" }}
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                Download File
+                              </a>
+                            </TutorTooltip>
                           </dd>
                         </div>
                       )}
@@ -1358,7 +1511,8 @@ const OrderDetails = () => {
                   )}
                 </dl>
               </div>
-            </div>
+              </div>
+            </TutorTooltip>
           )}
 
           {activeSection === 4 && (
@@ -1425,7 +1579,12 @@ const OrderDetails = () => {
           )}
 
           {activeSection === 5 && (
-            <div className="card p-6">
+            <TutorTooltip
+              text="Review emails already sent for this order."
+              position="top"
+              componentName="OrderDetails/EmailHistory"
+            >
+              <div className="card p-6">
               <div
                 className="flex items-center justify-between mb-4 pb-4"
                 style={{ borderBottom: "1px solid #eee9df" }}
@@ -1458,13 +1617,19 @@ const OrderDetails = () => {
                   <p className="text-sm" style={{ color: "#9f9b93" }}>
                     No emails sent for this order yet.
                   </p>
-                  <button
-                    onClick={() => setIsEmailPanelOpen(true)}
-                    className="mt-3 text-sm font-medium transition-colors"
-                    style={{ color: "#0089ad" }}
+                  <TutorTooltip
+                    text="Open the email composer for this order."
+                    position="top"
+                    componentName="OrderDetails/SendFirstEmail"
                   >
-                    Send the first email →
-                  </button>
+                    <button
+                      onClick={() => setIsEmailPanelOpen(true)}
+                      className="mt-3 text-sm font-medium transition-colors"
+                      style={{ color: "#0089ad" }}
+                    >
+                      Send the first email →
+                    </button>
+                  </TutorTooltip>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1479,56 +1644,62 @@ const OrderDetails = () => {
                       });
                     return (
                       <div key={logId}>
-                        <button
-                          onClick={toggleExpand}
-                          className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left transition-colors hover:bg-[#faf9f7]"
-                          style={{ border: "1px solid #eee9df" }}
+                        <TutorTooltip
+                          text={isExpanded ? "Collapse this email log." : "Expand this email log."}
+                          position="top"
+                          componentName="OrderDetails/EmailLogToggle"
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span
-                                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                                style={
-                                  log.Status === "Sent"
-                                    ? {
-                                        background: "#d1f4e0",
-                                        color: "#02492a",
-                                      }
-                                    : {
-                                        background: "#fde8e8",
-                                        color: "#b0101a",
-                                      }
-                                }
+                          <button
+                            onClick={toggleExpand}
+                            className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left transition-colors hover:bg-[#faf9f7]"
+                            style={{ border: "1px solid #eee9df" }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                  style={
+                                    log.Status === "Sent"
+                                      ? {
+                                          background: "#d1f4e0",
+                                          color: "#02492a",
+                                        }
+                                      : {
+                                          background: "#fde8e8",
+                                          color: "#b0101a",
+                                        }
+                                  }
+                                >
+                                  {log.Status}
+                                </span>
+                                <span
+                                  className="text-xs font-medium truncate"
+                                  style={{ color: "#000" }}
+                                >
+                                  {log.Subject}
+                                </span>
+                              </div>
+                              <p
+                                className="text-[11px]"
+                                style={{ color: "#9f9b93" }}
                               >
-                                {log.Status}
-                              </span>
-                              <span
-                                className="text-xs font-medium truncate"
-                                style={{ color: "#000" }}
-                              >
-                                {log.Subject}
-                              </span>
+                                To: {log.SentTo} · {log.SentBy} ·{" "}
+                                {formatDate(log.SentAt)}
+                              </p>
                             </div>
-                            <p
-                              className="text-[11px]"
-                              style={{ color: "#9f9b93" }}
-                            >
-                              To: {log.SentTo} · {log.SentBy} ·{" "}
-                              {formatDate(log.SentAt)}
-                            </p>
-                          </div>
-                          {isExpanded ? (
-                            <ChevronUp
-                              className="w-3.5 h-3.5 shrink-0 ml-2"
-                              style={{ color: "#9f9b93" }}
-                            />
-                          ) : (
-                            <ChevronDown
-                              className="w-3.5 h-3.5 shrink-0 ml-2"
-                              style={{ color: "#9f9b93" }}
-                            />
-                          )}
-                        </button>
+                            {isExpanded ? (
+                              <ChevronUp
+                                className="w-3.5 h-3.5 shrink-0 ml-2"
+                                style={{ color: "#9f9b93" }}
+                              />
+                            ) : (
+                              <ChevronDown
+                                className="w-3.5 h-3.5 shrink-0 ml-2"
+                                style={{ color: "#9f9b93" }}
+                              />
+                            )}
+                          </button>
+                        </TutorTooltip>
                         {isExpanded && (
                           <div
                             className="mx-1 px-4 py-3 rounded-b-xl text-xs"
@@ -1564,7 +1735,8 @@ const OrderDetails = () => {
                   })}
                 </div>
               )}
-            </div>
+              </div>
+            </TutorTooltip>
           )}
         </main>
       </div>

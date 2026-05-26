@@ -311,6 +311,11 @@ export const orderService = {
     return order;
   },
 
+  findAllByTitle: async (title: string): Promise<Order[]> => {
+    const orders = await call<Order[]>({ action: "GET_BY_TITLE", data: { Title: title } });
+    return [...orders].sort((a, b) => a.id - b.id);
+  },
+
   create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
     return call<Order>({ action: "CREATE", data, userEmail });
   },
