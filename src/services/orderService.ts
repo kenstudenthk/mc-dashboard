@@ -312,7 +312,7 @@ export const orderService = {
   },
 
   findAllByTitle: async (title: string): Promise<Order[]> => {
-    const orders = await call<Order[]>({ action: "GET_BY_TITLE", data: { Title: title } });
+    const orders = await call<Order[]>({ action: "GET_ORDERS_BY_TITLE", data: { Title: title } });
     return [...orders].sort((a, b) => a.id - b.id);
   },
 
