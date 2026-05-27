@@ -356,7 +356,7 @@ const OrderDetails = () => {
       AccountName: serviceAccount?.AccountName ?? order.SA_AccountName ?? "",
       Domain: serviceAccount?.Domain ?? order.SA_Domain ?? "",
       LoginEmail: serviceAccount?.LoginEmail ?? order.SA_LoginEmail ?? "",
-      OtherAccountInfo: serviceAccount?.OtherAccountInfo ?? "",
+      OtherAccountInfo: serviceAccount?.OtherAccountInfo ?? order.SA_OtherAccountInfo ?? "",
       Password: serviceAccount?.Password ?? order.SA_Password ?? "",
     });
     setEditError(null);
@@ -376,24 +376,49 @@ const OrderDetails = () => {
     try {
       const saId = serviceAccount?.id ?? order.SA_Id ?? null;
       const hasSaData = !!(saEditForm.SecondaryID || saEditForm.AccountName || saEditForm.LoginEmail);
-      const [updated] = await Promise.all([
-        orderService.update(order.id, editForm, userEmail),
-        saId
-          ? serviceAccountService.update(saId, saEditForm, userEmail)
-          : hasSaData
-            ? serviceAccountService.create(
-                {
-                  Title: order.Title,
-                  CustomerIDId: order.CustomerID ?? undefined,
-                  Provider: normalizeCloudProvider(order.CloudProvider ?? ""),
-                  ...saEditForm,
-                  AccountStatus: "Active",
-                },
-                userEmail,
-              )
-            : Promise.resolve(null),
-      ]);
-      setOrderOverride(updated);
+      const saPayload: Partial<CreateServiceAccountInput> = {
+        Title: editForm.Title ?? order.Title,
+        CustomerIDId: editForm.CustomerID ?? order.CustomerID ?? undefined,
+        Provider: normalizeCloudProvider(editForm.CloudProvider ?? order.CloudProvider ?? ""),
+        ...saEditForm,
+      };
+      const savedServiceAccount = saId
+        ? await serviceAccountService.update(saId, saPayload, userEmail)
+        : hasSaData
+          ? await serviceAccountService.create(
+              {
+                ...saPayload,
+                Title: saPayload.Title ?? order.Title,
+                Provider: saPayload.Provider ?? normalizeCloudProvider(order.CloudProvider ?? ""),
+                AccountStatus: "Active",
+              },
+              userEmail,
+            )
+          : null;
+      const updated = await orderService.update(
+        order.id,
+        {
+          ...editForm,
+          AccountID: savedServiceAccount?.SecondaryID ?? saEditForm.SecondaryID ?? order.AccountID,
+          SAId: savedServiceAccount?.id ?? saId ?? undefined,
+        },
+        userEmail,
+      );
+      const updatedWithServiceAccount = savedServiceAccount
+        ? {
+            ...updated,
+            SA_Id: savedServiceAccount.id,
+            SA_SecondaryID: savedServiceAccount.SecondaryID,
+            SA_PrimaryAccountID: savedServiceAccount.PrimaryAccountID,
+            SA_AccountName: savedServiceAccount.AccountName,
+            SA_Domain: savedServiceAccount.Domain,
+            SA_LoginEmail: savedServiceAccount.LoginEmail,
+            SA_Password: savedServiceAccount.Password,
+            SA_OtherAccountInfo: savedServiceAccount.OtherAccountInfo,
+          }
+        : updated;
+      setServiceAccount(savedServiceAccount ?? serviceAccount);
+      setOrderOverride(updatedWithServiceAccount);
       invalidateOrders();
       handleEditClose();
     } catch {
