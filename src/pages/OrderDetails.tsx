@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Printer,
   Download,
+  Copy,
   CheckCircle,
   Clock,
   FileText,
@@ -119,6 +120,7 @@ const formatDate = (iso: string): string => {
   if (!iso) return "—";
   try {
     const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
     const day = String(d.getDate()).padStart(2, "0");
     const month = d.toLocaleString("en-GB", { month: "short" });
     const year = String(d.getFullYear()).slice(2);
@@ -126,6 +128,70 @@ const formatDate = (iso: string): string => {
   } catch {
     return iso;
   }
+};
+
+const copyCell = (value: unknown): string =>
+  value == null ? "" : String(value).replace(/\s+/g, " ").trim();
+
+const buildOrderCopyRow = (
+  order: Order,
+  serviceAccount: ServiceAccount | null,
+): string => {
+  const accountId = serviceAccount?.SecondaryID ?? order.SA_SecondaryID ?? order.AccountID;
+  const billingAccount =
+    serviceAccount?.PrimaryAccountID ?? order.SA_PrimaryAccountID ?? order.BillingAccount;
+  const cells = [
+    order.Status,
+    order.OrderType,
+    order.ServiceType,
+    order.ContactPerson,
+    order.ContactNo,
+    order.ContactEmail,
+    order.CustomerName,
+    order.CloudProvider,
+    billingAccount,
+    accountId,
+    serviceAccount?.AccountName ?? order.SA_AccountName ?? order.AccountName,
+    serviceAccount?.LoginEmail ?? order.SA_LoginEmail ?? order.AccountLoginEmail,
+    serviceAccount?.Password ?? order.SA_Password ?? order.Password,
+    order.BillingAddress,
+    serviceAccount?.OtherAccountInfo ?? order.SA_OtherAccountInfo ?? order.OtherAccountInfo,
+    formatDate(order.SRD),
+    order.OrderReceiveDate ? formatDate(order.OrderReceiveDate) : "",
+    order.CxSCompleteDate ? formatDate(order.CxSCompleteDate) : "",
+    order.Title,
+    order.CxSRequestNo,
+    order.TID,
+    order.OasisNumber,
+    order.SDNumber,
+    order.Remark,
+    order.PSJob,
+    order.T2T3,
+    order.WelcomeLetter,
+    order.By,
+    order.OrderFormURL,
+  ];
+
+  return cells.map(copyCell).join("\t");
+};
+
+const copyTextToClipboard = async (text: string): Promise<void> => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  const copied = document.execCommand("copy");
+  document.body.removeChild(textarea);
+
+  if (!copied) throw new Error("Clipboard copy failed");
 };
 
 // Clay swatch status colors
@@ -215,6 +281,7 @@ const OrderDetails = () => {
   const [isRemarkQuickEdit, setIsRemarkQuickEdit] = useState(false);
   const [quickRemarkValue, setQuickRemarkValue] = useState("");
   const [quickRemarkSaving, setQuickRemarkSaving] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
 
   const getTodayFormatted = () => {
     const d = new Date();
@@ -342,6 +409,19 @@ const OrderDetails = () => {
   const setSa = (field: keyof CreateServiceAccountInput, value: string) =>
     setSaEditForm((prev) => ({ ...prev, [field]: value }));
 
+  const handleCopyOrder = async () => {
+    if (!order) return;
+
+    try {
+      await copyTextToClipboard(buildOrderCopyRow(order, serviceAccount));
+      setCopyStatus("copied");
+      window.setTimeout(() => setCopyStatus("idle"), 1600);
+    } catch {
+      setCopyStatus("error");
+      window.setTimeout(() => setCopyStatus("idle"), 2200);
+    }
+  };
+
   const refreshEmailLogs = useCallback(() => {
     if (!order?.Title) return;
     emailService
@@ -464,6 +544,29 @@ const OrderDetails = () => {
                   }}
                 >
                   <Printer className="w-4 h-4" />
+                </button>
+              </TutorTooltip>
+              <TutorTooltip
+                text="Copy this order as one Excel-ready row."
+                position="bottom"
+                componentName="OrderDetails/CopyOrder"
+              >
+                <button
+                  onClick={handleCopyOrder}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-white"
+                  style={{
+                    background: copyStatus === "copied" ? "#e8f7ef" : "#faf9f7",
+                    border: "1px solid #dad4c8",
+                    color: copyStatus === "error" ? "#b0101a" : "#078a52",
+                  }}
+                  aria-live="polite"
+                >
+                  <Copy className="w-4 h-4" />
+                  {copyStatus === "copied"
+                    ? "Copied"
+                    : copyStatus === "error"
+                      ? "Copy Failed"
+                      : "Copy"}
                 </button>
               </TutorTooltip>
               <TutorTooltip
