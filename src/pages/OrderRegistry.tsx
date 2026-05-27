@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
-import { Order, orderService } from "../services/orderService";
+import { CreateOrderInput, Order, orderService } from "../services/orderService";
 import { Customer } from "../services/customerService";
 import { usePermission } from "../contexts/PermissionContext";
 import {
@@ -66,6 +66,53 @@ const isToday = (isoDate: string): boolean => {
     return false;
   }
 };
+
+const dateValue = (value?: string): string =>
+  value ? value.slice(0, 10) : "";
+
+const buildStatusUpdatePayload = (
+  order: Order,
+  status: string,
+): Partial<CreateOrderInput> => ({
+  Title: order.Title,
+  CustomerID: order.CustomerID,
+  CustomerName: order.CustomerName,
+  PreviousName: order.PreviousName ?? "",
+  OrderType: order.OrderType,
+  Status: status,
+  SRD: dateValue(order.SRD),
+  CloudProvider: order.CloudProvider,
+  Amount: order.Amount ?? 0,
+  AccountID: order.AccountID ?? "",
+  ServiceType: order.ServiceType ?? "",
+  OasisNumber: order.OasisNumber ?? "",
+  OrderReceiveDate: dateValue(order.OrderReceiveDate),
+  CxSCompleteDate: dateValue(order.CxSCompleteDate),
+  ContactPerson: order.ContactPerson ?? "",
+  ContactNo: order.ContactNo ?? "",
+  ContactEmail: order.ContactEmail ?? "",
+  ContactNo2: order.ContactNo2 ?? "",
+  ContactEmail2: order.ContactEmail2 ?? "",
+  BillingAddress: order.BillingAddress ?? "",
+  BillingAccount: order.BillingAccount ?? "",
+  AccountName: order.AccountName ?? "",
+  AccountLoginEmail: order.AccountLoginEmail ?? "",
+  Password: order.Password ?? "",
+  OtherAccountInfo: order.OtherAccountInfo ?? "",
+  CxSRequestNo: order.CxSRequestNo ?? "",
+  TID: order.TID ?? "",
+  SDNumber: order.SDNumber ?? "",
+  PSJob: order.PSJob ?? "",
+  T2T3: order.T2T3 ?? "",
+  WelcomeLetter: order.WelcomeLetter ?? "",
+  By: order.By ?? "",
+  OrderFormURL: order.OrderFormURL ?? "",
+  CaseID: order.CaseID ?? "",
+  CaseIDURL: order.CaseIDURL ?? "",
+  Remark: order.Remark ?? "",
+  SubName: order.SubName ?? "",
+  SAId: order.SA_Id,
+});
 
 function TableSkeleton() {
   return (
@@ -262,11 +309,17 @@ const OrderRegistry = () => {
       });
   }, [userEmail]);
 
-  const handleStatusChange = async (orderId: number, newStatus: string) => {
+  const handleStatusChange = async (order: Order, newStatus: string) => {
     setStatusDropdownId(null);
+    const orderId = order.id;
     setUpdatingStatusId(orderId);
     try {
-      await orderService.update(orderId, { Status: newStatus }, userEmail);
+      const latestOrder = await orderService.findById(orderId);
+      await orderService.update(
+        orderId,
+        buildStatusUpdatePayload(latestOrder, newStatus),
+        userEmail,
+      );
       invalidateOrders();
     } finally {
       setUpdatingStatusId(null);
@@ -1537,7 +1590,7 @@ const OrderRegistry = () => {
                                           <button
                                             key={s}
                                             onClick={() =>
-                                              handleStatusChange(order.id, s)
+                                              handleStatusChange(order, s)
                                             }
                                             className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between gap-2 hover:bg-[#f5f5f7] ${
                                               order.Status === s
