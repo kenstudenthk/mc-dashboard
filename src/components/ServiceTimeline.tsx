@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import CloudProviderLogo from "./CloudProviderLogo";
 import type { OrderStep } from "../services/orderStepsService";
 
@@ -125,6 +125,7 @@ export default function ServiceTimeline({
 
   const [activeFlow, setActiveFlow] = useState<Flow>(resolvedFlow);
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Build lookup: StepKey → OrderStep (for timestamp display)
   const completedMap = new Map<string, OrderStep>(
@@ -178,6 +179,21 @@ export default function ServiceTimeline({
         </span>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setIsCollapsed((value) => !value)}
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all"
+          style={{ color: "#55534e", border: "1px solid #dad4c8", background: "#ffffff" }}
+          aria-expanded={!isCollapsed}
+          aria-label={isCollapsed ? "Expand service timeline" : "Collapse service timeline"}
+        >
+          {isCollapsed ? "Show" : "Hide"}
+          <ChevronDown
+            size={14}
+            className="transition-transform duration-200"
+            style={{ transform: isCollapsed ? "rotate(0deg)" : "rotate(180deg)" }}
+          />
+        </button>
         {isAllDone && (
           <button onClick={handleReset} className="text-xs font-medium underline" style={{ color: "#9f9b93" }}>
             Reset
@@ -214,18 +230,20 @@ export default function ServiceTimeline({
       >
         {header}
 
-        {/* Progress bar */}
-        <div className="mb-5">
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#eee9df" }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ background: "#078a52", width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%` }}
-            />
-          </div>
-        </div>
+        {!isCollapsed && (
+          <>
+            {/* Progress bar */}
+            <div className="mb-5">
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#eee9df" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ background: "#078a52", width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
 
-        {/* Step circles row */}
-        <div className="flex items-start">
+            {/* Step circles row */}
+            <div className="flex items-start">
           {steps.map((step, index) => {
             const state = getStepState(step.id);
             const isLast = index === steps.length - 1;
@@ -296,32 +314,34 @@ export default function ServiceTimeline({
               </React.Fragment>
             );
           })}
-        </div>
+            </div>
 
-        {/* Active step description */}
-        {!isAllDone && activeStep && (
-          <div className="mt-4 rounded-xl px-4 py-3" style={{ background: "#faf9f7", border: "1.5px solid #000" }}>
-            <p className="text-sm font-bold text-black mb-0.5">{activeStep.title}</p>
-            <p className="text-xs leading-relaxed" style={{ color: "#55534e" }}>{activeStep.description}</p>
-            <button
-              onClick={handleMarkDone}
-              className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: "#078a52", color: "#ffffff", border: "none" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#02492a"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#078a52"; }}
-            >
-              <Check size={12} strokeWidth={3} />
-              Mark as Done
-            </button>
-          </div>
-        )}
+            {/* Active step description */}
+            {!isAllDone && activeStep && (
+              <div className="mt-4 rounded-xl px-4 py-3" style={{ background: "#faf9f7", border: "1.5px solid #000" }}>
+                <p className="text-sm font-bold text-black mb-0.5">{activeStep.title}</p>
+                <p className="text-xs leading-relaxed" style={{ color: "#55534e" }}>{activeStep.description}</p>
+                <button
+                  onClick={handleMarkDone}
+                  className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{ background: "#078a52", color: "#ffffff", border: "none" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#02492a"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#078a52"; }}
+                >
+                  <Check size={12} strokeWidth={3} />
+                  Mark as Done
+                </button>
+              </div>
+            )}
 
-        {/* All done banner */}
-        {isAllDone && (
-          <div className="mt-4 rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#84e7a5", border: "1px solid #078a52" }}>
-            <Check size={16} color="#02492a" strokeWidth={3} />
-            <span className="text-sm font-semibold" style={{ color: "#02492a" }}>All steps completed — provisioning done!</span>
-          </div>
+            {/* All done banner */}
+            {isAllDone && (
+              <div className="mt-4 rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#84e7a5", border: "1px solid #078a52" }}>
+                <Check size={16} color="#02492a" strokeWidth={3} />
+                <span className="text-sm font-semibold" style={{ color: "#02492a" }}>All steps completed — provisioning done!</span>
+              </div>
+            )}
+          </>
         )}
       </div>
     );
@@ -335,31 +355,33 @@ export default function ServiceTimeline({
         border: "1px solid #dad4c8",
         boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
       }}
-    >
-      {header}
+      >
+        {header}
 
-      {/* Progress bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs font-medium" style={{ color: "#55534e" }}>
-            {isAllDone ? "All steps completed" : `Step ${currentStep} of ${totalSteps}`}
-          </span>
-          {isAllDone && (
-            <button onClick={handleReset} className="text-xs font-medium underline" style={{ color: "#9f9b93" }}>
-              Reset
-            </button>
-          )}
-        </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#eee9df" }}>
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ background: "#078a52", width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%` }}
-          />
-        </div>
-      </div>
+      {!isCollapsed && (
+        <>
+          {/* Progress bar */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-medium" style={{ color: "#55534e" }}>
+                {isAllDone ? "All steps completed" : `Step ${currentStep} of ${totalSteps}`}
+              </span>
+              {isAllDone && (
+                <button onClick={handleReset} className="text-xs font-medium underline" style={{ color: "#9f9b93" }}>
+                  Reset
+                </button>
+              )}
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#eee9df" }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ background: "#078a52", width: `${Math.min(((currentStep - 1) / totalSteps) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
 
-      {/* Steps */}
-      <div>
+          {/* Steps */}
+          <div>
         {steps.map((step, index) => {
           const state = getStepState(step.id);
           const isLast = index === steps.length - 1;
@@ -456,14 +478,16 @@ export default function ServiceTimeline({
             </div>
           );
         })}
-      </div>
+          </div>
 
-      {/* All done banner */}
-      {isAllDone && (
-        <div className="mt-2 rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#84e7a5", border: "1px solid #078a52" }}>
-          <Check size={16} color="#02492a" strokeWidth={3} />
-          <span className="text-sm font-semibold" style={{ color: "#02492a" }}>All steps completed — provisioning done!</span>
-        </div>
+          {/* All done banner */}
+          {isAllDone && (
+            <div className="mt-2 rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#84e7a5", border: "1px solid #078a52" }}>
+              <Check size={16} color="#02492a" strokeWidth={3} />
+              <span className="text-sm font-semibold" style={{ color: "#02492a" }}>All steps completed — provisioning done!</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
