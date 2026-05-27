@@ -374,8 +374,15 @@ const OrderDetails = () => {
     setEditSaving(true);
     setEditError(null);
     try {
-      const saId = serviceAccount?.id ?? order.SA_Id ?? null;
-      const hasSaData = !!(saEditForm.SecondaryID || saEditForm.AccountName || saEditForm.LoginEmail);
+      const hasSaData = Object.values(saEditForm).some((value) =>
+        String(value ?? "").trim() !== "",
+      );
+      const matchingServiceAccounts =
+        !serviceAccount && !order.SA_Id && saEditForm.SecondaryID
+          ? await serviceAccountService.findBySecondaryId(saEditForm.SecondaryID)
+          : [];
+      const resolvedServiceAccount = serviceAccount ?? matchingServiceAccounts[0] ?? null;
+      const saId = resolvedServiceAccount?.id ?? order.SA_Id ?? null;
       const saPayload: Partial<CreateServiceAccountInput> = {
         Title: editForm.Title ?? order.Title,
         CustomerIDId: editForm.CustomerID ?? order.CustomerID ?? undefined,
@@ -417,7 +424,7 @@ const OrderDetails = () => {
             SA_OtherAccountInfo: savedServiceAccount.OtherAccountInfo,
           }
         : updated;
-      setServiceAccount(savedServiceAccount ?? serviceAccount);
+      setServiceAccount(savedServiceAccount ?? resolvedServiceAccount);
       setOrderOverride(updatedWithServiceAccount);
       invalidateOrders();
       handleEditClose();
@@ -459,8 +466,8 @@ const OrderDetails = () => {
     if (!order?.id) return;
     Promise.allSettled([
       orderTimelineService.getByOrder(order.id),
-      order.AccountID
-        ? serviceAccountService.findBySecondaryId(order.AccountID)
+      order.SA_SecondaryID || order.AccountID
+        ? serviceAccountService.findBySecondaryId(order.SA_SecondaryID ?? order.AccountID ?? "")
         : Promise.resolve([]),
       orderStepsService.getByOrderId(order.id),
     ]).then(([eventsResult, accountsResult, stepsResult]) => {
@@ -473,7 +480,7 @@ const OrderDetails = () => {
       if (stepsResult.status === "fulfilled") setCompletedSteps(stepsResult.value);
       else console.error('[OrderDetails] steps fetch failed:', stepsResult.reason);
     });
-  }, [order?.id]);
+  }, [order?.id, order?.SA_SecondaryID, order?.AccountID]);
 
   useEffect(() => {
     refreshEmailLogs();
