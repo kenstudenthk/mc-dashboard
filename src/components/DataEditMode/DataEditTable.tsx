@@ -134,6 +134,7 @@ const ORDER_UPDATE_FIELDS = [
   "Remark",
   "SubName",
 ] as const satisfies readonly (keyof CreateOrderInput)[];
+const ORDER_UPDATE_FIELD_SET = new Set<string>(ORDER_UPDATE_FIELDS);
 
 const DATE_FIELDS_FOR_UPDATE = new Set<keyof CreateOrderInput>([
   "SRD",
@@ -141,30 +142,30 @@ const DATE_FIELDS_FOR_UPDATE = new Set<keyof CreateOrderInput>([
   "CxSCompleteDate",
 ]);
 
-const buildFullUpdatePayload = (
-  order: Order,
-  patch: Partial<Order>,
-): Partial<CreateOrderInput> => {
-  const merged = { ...order, ...patch };
-  return ORDER_UPDATE_FIELDS.reduce<Partial<CreateOrderInput>>(
-    (payload, key) => {
-      const value = merged[key];
-      if (key === "CustomerID") {
+const buildUpdatePayload = (patch: Partial<Order>): Partial<CreateOrderInput> => {
+  return Object.entries(patch).reduce<Partial<CreateOrderInput>>(
+    (payload, [key, value]) => {
+      if (!ORDER_UPDATE_FIELD_SET.has(key)) {
+        return payload;
+      }
+
+      const field = key as keyof CreateOrderInput;
+      if (field === "CustomerID") {
         if (value != null && value !== "") {
           payload.CustomerID = Number(value);
         }
         return payload;
       }
 
-      if (key === "Amount") {
+      if (field === "Amount") {
         payload.Amount = value == null || value === "" ? 0 : Number(value);
         return payload;
       }
 
-      payload[key] = (
+      payload[field] = (
         value == null
           ? ""
-          : DATE_FIELDS_FOR_UPDATE.has(key) && typeof value === "string"
+          : DATE_FIELDS_FOR_UPDATE.has(field) && typeof value === "string"
             ? value.slice(0, 10)
             : value
       ) as never;
@@ -254,7 +255,7 @@ export function DataEditTable({ orders, onExit }: Props) {
           if (!order) return Promise.resolve();
           return orderService.update(
             id,
-            buildFullUpdatePayload(order, patch),
+            buildUpdatePayload(patch),
             userEmail,
           );
         }),
