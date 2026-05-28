@@ -120,6 +120,7 @@ const ORDER_UPDATE_FIELDS = [
   "BillingAccount",
   "AccountName",
   "AccountLoginEmail",
+  "Password",
   "OtherAccountInfo",
   "CxSRequestNo",
   "TID",
@@ -143,7 +144,7 @@ const DATE_FIELDS_FOR_UPDATE = new Set<keyof CreateOrderInput>([
 ]);
 
 const buildUpdatePayload = (patch: Partial<Order>): Partial<CreateOrderInput> => {
-  return Object.entries(patch).reduce<Partial<CreateOrderInput>>(
+  const payload = Object.entries(patch).reduce<Partial<CreateOrderInput>>(
     (payload, [key, value]) => {
       if (!ORDER_UPDATE_FIELD_SET.has(key)) {
         return payload;
@@ -158,7 +159,8 @@ const buildUpdatePayload = (patch: Partial<Order>): Partial<CreateOrderInput> =>
       }
 
       if (field === "Amount") {
-        payload.Amount = value == null || value === "" ? 0 : Number(value);
+        const amount = value == null || value === "" ? 0 : Number(value);
+        payload.Amount = Number.isFinite(amount) ? amount : 0;
         return payload;
       }
 
@@ -173,6 +175,12 @@ const buildUpdatePayload = (patch: Partial<Order>): Partial<CreateOrderInput> =>
     },
     {},
   );
+
+  if (patch.SA_Id != null) {
+    payload.SAId = Number(patch.SA_Id);
+  }
+
+  return payload;
 };
 
 interface Props {
@@ -255,7 +263,7 @@ export function DataEditTable({ orders, onExit }: Props) {
           if (!order) return Promise.resolve();
           return orderService.update(
             id,
-            buildUpdatePayload(patch),
+            buildUpdatePayload({ ...order, ...patch }),
             userEmail,
           );
         }),
