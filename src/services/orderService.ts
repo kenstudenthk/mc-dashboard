@@ -138,6 +138,11 @@ function sanitizeUpdateData(
   const sanitized: Record<string, unknown> = {};
 
   Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
+    if (key === "SAId") {
+      if (value != null) sanitized.SA = Number(value);
+      return;
+    }
+
     if (key === "CustomerID") {
       if (value != null && value !== "") sanitized.CustomerID = Number(value);
       return;
@@ -327,7 +332,9 @@ export const orderService = {
   },
 
   create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
-    return call<Order>({ action: "CREATE", data, userEmail });
+    const { SAId, ...rest } = data;
+    const payload = SAId != null ? { ...rest, SA: SAId } : rest;
+    return call<Order>({ action: "CREATE", data: payload, userEmail });
   },
 
   update: async (
