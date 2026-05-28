@@ -59,6 +59,36 @@ async function call<T>(body: object): Promise<T> {
   return withId(json as T) as T;
 }
 
+export function normalizeAccountId(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+export async function resolveOrCreateServiceAccount(
+  accountId: string,
+  provider: string,
+  userEmail: string,
+  knownAccounts?: ServiceAccount[],
+  createData?: Partial<CreateServiceAccountInput>,
+): Promise<{ id: number; created: boolean }> {
+  if (!accountId.trim()) throw new Error("Account ID must not be empty");
+  const accounts = knownAccounts ?? await serviceAccountService.findAll();
+  const match = accounts.find(
+    (sa) => normalizeAccountId(sa.SecondaryID ?? "") === normalizeAccountId(accountId),
+  );
+  if (match) return { id: match.id, created: false };
+  const created = await serviceAccountService.create(
+    {
+      Title: accountId.trim(),
+      AccountStatus: "Active",
+      ...createData,
+      Provider: provider,
+      SecondaryID: accountId.trim(),
+    },
+    userEmail,
+  );
+  return { id: created.id, created: true };
+}
+
 export const serviceAccountService = {
   create: (data: CreateServiceAccountInput, userEmail: string) =>
     call<ServiceAccount>({ action: "CREATE", data, userEmail }),

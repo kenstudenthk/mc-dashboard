@@ -10,6 +10,13 @@ import {
   normalizeCustomerName,
   resolveOrCreateCustomer,
 } from "../../services/customerService";
+import {
+  type ServiceAccount,
+  serviceAccountService,
+  normalizeAccountId,
+  resolveOrCreateServiceAccount,
+} from "../../services/serviceAccountService";
+import { normalizeCloudProvider } from "../../services/emailTemplateService";
 import { useInvalidateOrders } from "../../services/useOrdersQuery";
 import { usePermission } from "../../contexts/PermissionContext";
 import { EditableCell } from "./EditableCell";
@@ -300,6 +307,42 @@ export function DataEditTable({ orders, onExit }: Props) {
         }
       }
 
+      // SA pre-pass: resolve/create service account IDs for any changed AccountID.
+      const hasAccountIdChange = dirtyEntries.some(
+        ([, patch]) => "AccountID" in patch && !!patch.AccountID,
+      );
+      const accountIdToSaIdMap = new Map<string, number>();
+      if (hasAccountIdChange) {
+        const uniqueAccountMap = new Map<string, { accountId: string; provider: string }>();
+        for (const [id, patch] of dirtyEntries) {
+          if ("AccountID" in patch && patch.AccountID) {
+            const norm = normalizeAccountId(patch.AccountID as string);
+            if (!uniqueAccountMap.has(norm)) {
+              const order = orders.find((o) => o.id === id);
+              uniqueAccountMap.set(norm, {
+                accountId: patch.AccountID as string,
+                provider: normalizeCloudProvider(order?.CloudProvider ?? ""),
+              });
+            }
+          }
+        }
+        let runtimeAccounts: ServiceAccount[] = await serviceAccountService.findAll();
+        for (const [norm, { accountId, provider }] of uniqueAccountMap) {
+          try {
+            const result = await resolveOrCreateServiceAccount(accountId, provider, userEmail, runtimeAccounts);
+            accountIdToSaIdMap.set(norm, result.id);
+            if (result.created) {
+              runtimeAccounts = [
+                ...runtimeAccounts,
+                { id: result.id, Title: accountId, Provider: provider, SecondaryID: accountId, AccountStatus: "Active" },
+              ];
+            }
+          } catch {
+            // SA resolution failed — update proceeds without SA_Id injection for this name
+          }
+        }
+      }
+
       await Promise.all(
         dirtyEntries.map(([id, patch]) => {
           const order = orders.find((item) => item.id === id);
@@ -310,7 +353,15 @@ export function DataEditTable({ orders, onExit }: Props) {
               normalizeCustomerName(patch.CustomerName as string),
             );
             if (resolvedId != null) {
-              resolvedPatch = { ...patch, CustomerID: resolvedId };
+              resolvedPatch = { ...resolvedPatch, CustomerID: resolvedId };
+            }
+          }
+          if ("AccountID" in patch && patch.AccountID) {
+            const resolvedSaId = accountIdToSaIdMap.get(
+              normalizeAccountId(patch.AccountID as string),
+            );
+            if (resolvedSaId != null) {
+              resolvedPatch = { ...resolvedPatch, SA_Id: resolvedSaId };
             }
           }
           return orderService.update(

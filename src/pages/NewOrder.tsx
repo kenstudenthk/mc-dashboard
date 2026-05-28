@@ -6,7 +6,7 @@ import CustomerCombobox from "../components/CustomerCombobox";
 import ServiceAccountCombobox from "../components/ServiceAccountCombobox";
 import { orderService } from "../services/orderService";
 import { customerService, resolveOrCreateCustomer } from "../services/customerService";
-import { serviceAccountService } from "../services/serviceAccountService";
+import { serviceAccountService, resolveOrCreateServiceAccount } from "../services/serviceAccountService";
 import { usePermission } from "../contexts/PermissionContext";
 import { CLOUD_PROVIDER_OPTIONS, normalizeCloudProvider } from "../constants/cloudProviders";
 
@@ -1225,23 +1225,27 @@ const NewOrder = () => {
       // Resolve SA: user may have selected an existing one (selectedSaId) or typed a new ID.
       let saId: number | undefined = selectedSaId ?? undefined;
       if (!saId && productSubscribe && accountId) {
-        const newSa = await serviceAccountService.create(
-          {
-            Title: title,
-            CustomerIDId: resolvedCustomerId ?? undefined,
-            Provider: cloudProvider,
-            PrimaryAccountID: billingAccount || undefined,
-            SecondaryID: accountId || undefined,
-            AccountName: accountName || undefined,
-            Domain: azurePrimaryDomain || undefined,
-            LoginEmail: accountLoginEmail || undefined,
-            Password: password || undefined,
-            OtherAccountInfo: otherAccountInfo || undefined,
-            AccountStatus: "Active",
-          },
-          userEmail,
-        );
-        saId = newSa.id;
+        try {
+          const resolved = await resolveOrCreateServiceAccount(
+            accountId,
+            cloudProvider,
+            userEmail,
+            undefined,
+            {
+              Title: title,
+              CustomerIDId: resolvedCustomerId ?? undefined,
+              AccountName: accountName || undefined,
+              Domain: azurePrimaryDomain || undefined,
+              LoginEmail: accountLoginEmail || undefined,
+              Password: password || undefined,
+              PrimaryAccountID: billingAccount || undefined,
+              OtherAccountInfo: otherAccountInfo || undefined,
+            },
+          );
+          saId = resolved.id;
+        } catch {
+          // SA resolution failed — order created without SAId
+        }
       }
 
       const order = await orderService.create(

@@ -11,6 +11,13 @@ import {
   normalizeCustomerName,
   resolveOrCreateCustomer,
 } from "../../services/customerService";
+import {
+  type ServiceAccount,
+  serviceAccountService,
+  normalizeAccountId,
+  resolveOrCreateServiceAccount,
+} from "../../services/serviceAccountService";
+import { normalizeCloudProvider } from "../../services/emailTemplateService";
 import type {
   BulkImportStep,
   ConflictItem,
@@ -128,6 +135,42 @@ export function BulkImportModal({
       }
     }
 
+    // SA pre-pass: resolve or create every unique AccountID before touching orders.
+    const rowsWithAccount = finalRows.filter((r) => !!r.AccountID);
+    const accountIdToFirstRow = new Map<string, FinalRow>();
+    for (const row of rowsWithAccount) {
+      const norm = normalizeAccountId(row.AccountID!);
+      if (!accountIdToFirstRow.has(norm)) accountIdToFirstRow.set(norm, row);
+    }
+    let runtimeAccounts: ServiceAccount[] = await serviceAccountService.findAll();
+    const accountIdToSaIdMap = new Map<string, number>();
+    for (const [normalizedId, row] of accountIdToFirstRow) {
+      const provider = normalizeCloudProvider(row.CloudProvider ?? "");
+      try {
+        const result = await resolveOrCreateServiceAccount(
+          row.AccountID!,
+          provider,
+          userEmail,
+          runtimeAccounts,
+          {
+            AccountName: row.AccountName,
+            LoginEmail: row.AccountLoginEmail,
+            PrimaryAccountID: row.BillingAccount,
+            OtherAccountInfo: row.OtherAccountInfo,
+          },
+        );
+        accountIdToSaIdMap.set(normalizedId, result.id);
+        if (result.created) {
+          runtimeAccounts = [
+            ...runtimeAccounts,
+            { id: result.id, Title: row.AccountID!, Provider: provider, SecondaryID: row.AccountID, AccountStatus: "Active" },
+          ];
+        }
+      } catch {
+        // SA resolution failed — order will be created without SAId
+      }
+    }
+
     const initial: ImportProgress[] = finalRows.map((r) => ({
       rowIndex: r.rowIndex,
       title: r.Title,
@@ -167,6 +210,7 @@ export function BulkImportModal({
             CloudProvider: row.CloudProvider,
             Amount: row.Amount,
             AccountID: row.AccountID,
+            SAId: row.AccountID ? accountIdToSaIdMap.get(normalizeAccountId(row.AccountID)) : undefined,
             ServiceType: row.ServiceType,
             OasisNumber: row.OasisNumber,
             OrderReceiveDate: row.OrderReceiveDate,
