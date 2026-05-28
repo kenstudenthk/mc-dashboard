@@ -94,9 +94,16 @@ export async function resolveOrCreateServiceAccount(
   return { id: created.id, created: true };
 }
 
+function remapCustomerID<T extends { CustomerIDId?: number }>(
+  data: T,
+): Omit<T, "CustomerIDId"> & { CustomerID?: number } {
+  const { CustomerIDId, ...rest } = data;
+  return CustomerIDId != null ? { ...rest, CustomerID: CustomerIDId } : rest;
+}
+
 export const serviceAccountService = {
   create: (data: CreateServiceAccountInput, userEmail: string) =>
-    call<ServiceAccount>({ action: "CREATE", data, userEmail }),
+    call<ServiceAccount>({ action: "CREATE", data: remapCustomerID(data), userEmail }),
 
   findAll: async (): Promise<ServiceAccount[]> => {
     const result = await call<unknown>({ action: "GET_ALL" });
@@ -114,5 +121,5 @@ export const serviceAccountService = {
   },
 
   update: (id: number, data: Partial<CreateServiceAccountInput>, userEmail: string) =>
-    call<ServiceAccount>({ action: "UPDATE", data: { id, ...data }, userEmail }),
+    call<ServiceAccount>({ action: "UPDATE", data: { id, ...remapCustomerID(data) }, userEmail }),
 };
