@@ -136,7 +136,7 @@ export function BulkImportModal({
     }
 
     // SA pre-pass: resolve or create every unique AccountID before touching orders.
-    const rowsWithAccount = finalRows.filter((r) => !!r.AccountID);
+    const rowsWithAccount = finalRows.filter((r) => !!r.AccountID?.trim());
     const accountIdToFirstRow = new Map<string, FinalRow>();
     for (const row of rowsWithAccount) {
       const norm = normalizeAccountId(row.AccountID!);
@@ -153,6 +153,7 @@ export function BulkImportModal({
           userEmail,
           runtimeAccounts,
           {
+            CustomerIDId: nameToIdMap.get(normalizeCustomerName(row.resolvedCustomerName)),
             AccountName: row.AccountName,
             LoginEmail: row.AccountLoginEmail,
             PrimaryAccountID: row.BillingAccount,

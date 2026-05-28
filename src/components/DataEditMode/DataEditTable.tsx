@@ -309,27 +309,34 @@ export function DataEditTable({ orders, onExit }: Props) {
 
       // SA pre-pass: resolve/create service account IDs for any changed AccountID.
       const hasAccountIdChange = dirtyEntries.some(
-        ([, patch]) => "AccountID" in patch && !!patch.AccountID,
+        ([, patch]) => "AccountID" in patch && !!(patch.AccountID as string)?.trim(),
       );
       const accountIdToSaIdMap = new Map<string, number>();
       if (hasAccountIdChange) {
-        const uniqueAccountMap = new Map<string, { accountId: string; provider: string }>();
+        const uniqueAccountMap = new Map<string, { accountId: string; provider: string; customerId?: number }>();
         for (const [id, patch] of dirtyEntries) {
-          if ("AccountID" in patch && patch.AccountID) {
+          if ("AccountID" in patch && (patch.AccountID as string)?.trim()) {
             const norm = normalizeAccountId(patch.AccountID as string);
             if (!uniqueAccountMap.has(norm)) {
               const order = orders.find((o) => o.id === id);
               uniqueAccountMap.set(norm, {
                 accountId: patch.AccountID as string,
                 provider: normalizeCloudProvider(order?.CloudProvider ?? ""),
+                customerId: order?.CustomerID,
               });
             }
           }
         }
         let runtimeAccounts: ServiceAccount[] = await serviceAccountService.findAll();
-        for (const [norm, { accountId, provider }] of uniqueAccountMap) {
+        for (const [norm, { accountId, provider, customerId }] of uniqueAccountMap) {
           try {
-            const result = await resolveOrCreateServiceAccount(accountId, provider, userEmail, runtimeAccounts);
+            const result = await resolveOrCreateServiceAccount(
+              accountId,
+              provider,
+              userEmail,
+              runtimeAccounts,
+              customerId != null ? { CustomerIDId: customerId } : undefined,
+            );
             accountIdToSaIdMap.set(norm, result.id);
             if (result.created) {
               runtimeAccounts = [
@@ -356,7 +363,7 @@ export function DataEditTable({ orders, onExit }: Props) {
               resolvedPatch = { ...resolvedPatch, CustomerID: resolvedId };
             }
           }
-          if ("AccountID" in patch && patch.AccountID) {
+          if ("AccountID" in patch && (patch.AccountID as string)?.trim()) {
             const resolvedSaId = accountIdToSaIdMap.get(
               normalizeAccountId(patch.AccountID as string),
             );
