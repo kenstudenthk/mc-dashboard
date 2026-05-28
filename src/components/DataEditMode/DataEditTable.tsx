@@ -5,6 +5,11 @@ import {
   Order,
   orderService,
 } from "../../services/orderService";
+import {
+  customerService,
+  normalizeCustomerName,
+  resolveOrCreateCustomer,
+} from "../../services/customerService";
 import { useInvalidateOrders } from "../../services/useOrdersQuery";
 import { usePermission } from "../../contexts/PermissionContext";
 import { EditableCell } from "./EditableCell";
@@ -257,13 +262,60 @@ export function DataEditTable({ orders, onExit }: Props) {
     setIsSaving(true);
     setSaveError(null);
     try {
+      const dirtyEntries = [...dirtyMap];
+      // C3 fix: check both key presence AND truthy value to avoid a wasted findAll() call
+      // when a patch contains CustomerName: "" (cleared field).
+      const hasCustomerNameChange = dirtyEntries.some(
+        ([, patch]) => "CustomerName" in patch && !!patch.CustomerName,
+      );
+
+      // Pre-pass: resolve/create customer IDs for any changed CustomerName.
+      // Sequential to prevent duplicate customers when the same new name
+      // appears across multiple dirty rows in one save.
+      // C4 fix: individual try/catch per name so one failure doesn't abort unrelated updates.
+      const nameToIdMap = new Map<string, number>();
+      if (hasCustomerNameChange) {
+        let runtimeCustomers = await customerService.findAll();
+        const uniqueNames = [
+          ...new Set(
+            dirtyEntries
+              .filter(([, patch]) => "CustomerName" in patch && patch.CustomerName)
+              .map(([, patch]) => patch.CustomerName as string),
+          ),
+        ];
+        for (const name of uniqueNames) {
+          try {
+            const result = await resolveOrCreateCustomer(name, userEmail, runtimeCustomers);
+            nameToIdMap.set(normalizeCustomerName(name), result.id);
+            if (result.created) {
+              runtimeCustomers = [
+                ...runtimeCustomers,
+                { id: result.id, Company: result.name, Email: "", Status: "Active" },
+              ];
+            }
+          } catch {
+            // Name resolution failed — the update for rows with this CustomerName will
+            // proceed without a CustomerID update rather than blocking all other saves.
+          }
+        }
+      }
+
       await Promise.all(
-        [...dirtyMap].map(([id, patch]) => {
+        dirtyEntries.map(([id, patch]) => {
           const order = orders.find((item) => item.id === id);
           if (!order) return Promise.resolve();
+          let resolvedPatch = patch;
+          if ("CustomerName" in patch && patch.CustomerName) {
+            const resolvedId = nameToIdMap.get(
+              normalizeCustomerName(patch.CustomerName as string),
+            );
+            if (resolvedId != null) {
+              resolvedPatch = { ...patch, CustomerID: resolvedId };
+            }
+          }
           return orderService.update(
             id,
-            buildUpdatePayload({ ...order, ...patch }),
+            buildUpdatePayload({ ...order, ...resolvedPatch }),
             userEmail,
           );
         }),

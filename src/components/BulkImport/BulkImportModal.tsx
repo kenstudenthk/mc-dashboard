@@ -6,7 +6,11 @@ import {
   detectConflicts,
   applyConflictResolutions,
 } from "../../services/bulkImportService";
-import type { Customer } from "../../services/customerService";
+import {
+  type Customer,
+  normalizeCustomerName,
+  resolveOrCreateCustomer,
+} from "../../services/customerService";
 import type {
   BulkImportStep,
   ConflictItem,
@@ -95,6 +99,35 @@ export function BulkImportModal({
   };
 
   const handleStartImport = async (): Promise<void> => {
+    // Pre-pass: resolve or create every unique customer name before touching orders.
+    // Sequential (not parallel) so duplicate names in the same batch create only one record.
+    const uniqueNames = [
+      ...new Set(finalRows.map((r) => r.resolvedCustomerName)),
+    ];
+    let runtimeCustomers: Customer[] = [...customers];
+    const nameToIdMap = new Map<string, number>();
+    const failedNames = new Map<string, string>(); // normalizedName → error reason
+
+    for (const name of uniqueNames) {
+      try {
+        const result = await resolveOrCreateCustomer(
+          name,
+          userEmail,
+          runtimeCustomers,
+        );
+        nameToIdMap.set(normalizeCustomerName(name), result.id);
+        if (result.created) {
+          runtimeCustomers = [
+            ...runtimeCustomers,
+            { id: result.id, Company: result.name, Email: "", Status: "Active" },
+          ];
+        }
+      } catch (e: unknown) {
+        const reason = e instanceof Error ? e.message : "Unknown error";
+        failedNames.set(normalizeCustomerName(name), reason);
+      }
+    }
+
     const initial: ImportProgress[] = finalRows.map((r) => ({
       rowIndex: r.rowIndex,
       title: r.Title,
@@ -105,6 +138,20 @@ export function BulkImportModal({
 
     for (let i = 0; i < finalRows.length; i++) {
       const row = finalRows[i];
+      const normalizedName = normalizeCustomerName(row.resolvedCustomerName);
+
+      if (failedNames.has(normalizedName)) {
+        const reason = failedNames.get(normalizedName);
+        setProgress((prev) =>
+          prev.map((p, idx) =>
+            idx === i
+              ? { ...p, status: "error", errorMessage: `Could not resolve customer "${row.resolvedCustomerName}": ${reason}` }
+              : p,
+          ),
+        );
+        continue;
+      }
+
       setProgress((prev) =>
         prev.map((p, idx) => (idx === i ? { ...p, status: "importing" } : p)),
       );
@@ -113,7 +160,7 @@ export function BulkImportModal({
           {
             Title: row.Title,
             CustomerName: row.resolvedCustomerName,
-            CustomerID: row.resolvedCustomerId,
+            CustomerID: nameToIdMap.get(normalizedName),
             OrderType: row.OrderType,
             Status: row.Status,
             SRD: row.SRD,

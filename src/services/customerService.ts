@@ -67,6 +67,37 @@ async function call<T>(body: object): Promise<T> {
   return withId(normalizeChoiceFields(json as T)) as T;
 }
 
+export function normalizeCustomerName(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+export async function resolveOrCreateCustomer(
+  name: string,
+  userEmail: string,
+  knownCustomers?: Customer[],
+  createData?: Partial<CreateCustomerInput>,
+): Promise<{ id: number; name: string; created: boolean }> {
+  if (!name.trim()) throw new Error("Customer name must not be empty");
+  const customers = knownCustomers ?? await customerService.findAll();
+  const match = customers.find(
+    (c) => normalizeCustomerName(c.Company ?? "") === normalizeCustomerName(name),
+  );
+  if (match) return { id: match.id, name: match.Company ?? name.trim(), created: false };
+  const created = await customerService.create(
+    {
+      Email: "",
+      Phone: "",
+      Status: "Active",
+      Tier: "Standard",
+      ...createData,
+      Title: name.trim(),
+      Company: name.trim(),
+    },
+    userEmail,
+  );
+  return { id: created.id, name: name.trim(), created: true };
+}
+
 export const customerService = {
   findAll: () => call<Customer[]>({ action: "GET_ALL" }),
 

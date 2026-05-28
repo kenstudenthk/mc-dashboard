@@ -5,7 +5,7 @@ import { TutorTooltip } from "../components/TutorTooltip";
 import CustomerCombobox from "../components/CustomerCombobox";
 import ServiceAccountCombobox from "../components/ServiceAccountCombobox";
 import { orderService } from "../services/orderService";
-import { customerService } from "../services/customerService";
+import { customerService, resolveOrCreateCustomer } from "../services/customerService";
 import { serviceAccountService } from "../services/serviceAccountService";
 import { usePermission } from "../contexts/PermissionContext";
 import { CLOUD_PROVIDER_OPTIONS, normalizeCloudProvider } from "../constants/cloudProviders";
@@ -49,6 +49,33 @@ const filledInput = "bg-white border-[#094cb2]/40";
 const emptyInput = `${OAT_BG} ${OAT_BORDER}`;
 
 // ─── Primitive Components ─────────────────────────────────────────────────────
+const WithTutorTooltip = ({
+  children,
+  text,
+  position = "top",
+  wrapperClass = "w-full",
+  componentName,
+}: {
+  children: React.ReactNode;
+  text?: string;
+  position?: "top" | "bottom" | "left" | "right";
+  wrapperClass?: string;
+  componentName?: string;
+}) => {
+  if (!text) return <>{children}</>;
+
+  return (
+    <TutorTooltip
+      text={text}
+      position={position}
+      wrapperClass={wrapperClass}
+      componentName={componentName}
+    >
+      {children}
+    </TutorTooltip>
+  );
+};
+
 const FieldLabel = ({
   text,
   required,
@@ -68,6 +95,7 @@ const InputGroup = ({
   placeholder = "",
   disabled = false,
   required = false,
+  tooltip,
   value,
   onChange,
 }: {
@@ -76,127 +104,144 @@ const InputGroup = ({
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  tooltip?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => (
-  <div className="space-y-1.5">
-    <FieldLabel text={label} required={required} />
-    <input
-      type={type}
-      disabled={disabled}
-      value={value}
-      onChange={onChange}
-      required={required}
-      className={`${inputBase} ${value && value.trim() ? filledInput : emptyInput} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-      placeholder={placeholder}
-    />
-  </div>
+  <WithTutorTooltip text={tooltip} position="bottom">
+    <div className="space-y-1.5">
+      <FieldLabel text={label} required={required} />
+      <input
+        type={type}
+        disabled={disabled}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className={`${inputBase} ${value && value.trim() ? filledInput : emptyInput} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        placeholder={placeholder}
+      />
+    </div>
+  </WithTutorTooltip>
 );
 
 const SelectGroup = ({
   label,
   options,
   required = false,
+  tooltip,
   value,
   onChange,
 }: {
   label: string;
   options: readonly string[];
   required?: boolean;
+  tooltip?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }) => (
-  <div className="space-y-1.5">
-    <FieldLabel text={label} required={required} />
-    <select
-      value={value}
-      onChange={onChange}
-      required={required}
-      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all appearance-none text-sm ${value && value !== "" ? "bg-white border-[#094cb2]/40 text-black" : `${OAT_BG} ${OAT_BORDER} ${SECONDARY_TEXT}`}`}
-    >
-      <option value="">Select…</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  </div>
+  <WithTutorTooltip text={tooltip} position="bottom">
+    <div className="space-y-1.5">
+      <FieldLabel text={label} required={required} />
+      <select
+        value={value}
+        onChange={onChange}
+        required={required}
+        className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all appearance-none text-sm ${value && value !== "" ? "bg-white border-[#094cb2]/40 text-black" : `${OAT_BG} ${OAT_BORDER} ${SECONDARY_TEXT}`}`}
+      >
+        <option value="">Select…</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  </WithTutorTooltip>
 );
 
 const ToggleGroup = ({
   label,
   options,
+  tooltip,
   value,
   onChange,
 }: {
   label: string;
   options: string[];
+  tooltip?: string;
   value: string;
   onChange: (v: string) => void;
 }) => (
-  <div className="space-y-1.5">
-    <FieldLabel text={label} />
-    <div
-      className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER} w-fit`}
-    >
-      {options.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onChange(value === opt ? "" : opt)}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-            value === opt
-              ? "bg-[#094cb2] text-white shadow-sm"
-              : `${TERTIARY_TEXT} hover:text-black`
-          }`}
-        >
-          {opt}
-        </button>
-      ))}
+  <WithTutorTooltip text={tooltip} position="bottom" wrapperClass="w-fit">
+    <div className="space-y-1.5">
+      <FieldLabel text={label} />
+      <div
+        className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER} w-fit`}
+      >
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(value === opt ? "" : opt)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              value === opt
+                ? "bg-[#094cb2] text-white shadow-sm"
+                : `${TERTIARY_TEXT} hover:text-black`
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
+  </WithTutorTooltip>
 );
 
 const SegmentedControl = ({
   label,
   options,
+  tooltip,
   value,
   onChange,
 }: {
   label: string;
   options: string[];
+  tooltip?: string;
   value: string;
   onChange: (v: string) => void;
 }) => (
-  <div className="space-y-1.5">
-    <FieldLabel text={label} />
-    <div
-      className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER}`}
-    >
-      {options.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onChange(value === opt ? "" : opt)}
-          className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all ${
-            value === opt
-              ? "bg-[#094cb2] text-white shadow-sm"
-              : `${TERTIARY_TEXT} hover:text-black`
-          }`}
-        >
-          {opt}
-        </button>
-      ))}
+  <WithTutorTooltip text={tooltip} position="bottom">
+    <div className="space-y-1.5">
+      <FieldLabel text={label} />
+      <div
+        className={`flex items-center gap-1 p-1 ${OAT_BG} rounded-lg border ${OAT_BORDER}`}
+      >
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(value === opt ? "" : opt)}
+            className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all ${
+              value === opt
+                ? "bg-[#094cb2] text-white shadow-sm"
+                : `${TERTIARY_TEXT} hover:text-black`
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
+  </WithTutorTooltip>
 );
 
-const SectionHeader = ({ title }: { title: string }) => (
-  <div className="flex items-center gap-3 mb-6">
-    <span className={`label-text ${SECONDARY_TEXT} shrink-0`}>{title}</span>
-    <div className={`flex-1 h-px bg-[#eee9df]`} />
-  </div>
+const SectionHeader = ({ title, tooltip }: { title: string; tooltip?: string }) => (
+  <WithTutorTooltip text={tooltip} position="bottom">
+    <div className="flex items-center gap-3 mb-6">
+      <span className={`label-text ${SECONDARY_TEXT} shrink-0`}>{title}</span>
+      <div className={`flex-1 h-px bg-[#eee9df]`} />
+    </div>
+  </WithTutorTooltip>
 );
 
 const NavItem = ({
@@ -298,20 +343,27 @@ const OrderInfoSection = ({
     }}
   >
     <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <span className={`label-text ${SECONDARY_TEXT} shrink-0`}>
-          ORDER INFORMATION
-        </span>
-        <div className="flex-1 h-px bg-[#eee9df]" />
-      </div>
+      <WithTutorTooltip
+        text="Start with the order identifiers, status, type, dates, and amount that define the order record."
+        position="bottom"
+        wrapperClass="flex-1 min-w-0"
+      >
+        <div className="flex items-center gap-3">
+          <span className={`label-text ${SECONDARY_TEXT} shrink-0`}>
+            ORDER INFORMATION
+          </span>
+          <div className="flex-1 h-px bg-[#eee9df]" />
+        </div>
+      </WithTutorTooltip>
       <TutorTooltip
         text="Check this box if you are creating an account before receiving an official Service No. This will pre-fill many fields with 'TBC'."
         position="left"
+        wrapperClass="ml-6 shrink-0"
       >
         <button
           type="button"
           onClick={() => onPreProvisionToggle(!isPreProvision)}
-          className="ml-6 flex items-center gap-2.5 shrink-0"
+          className="flex items-center gap-2.5 shrink-0"
         >
           <div
             className={`relative w-9 h-5 rounded-full transition-colors ${
@@ -337,6 +389,7 @@ const OrderInfoSection = ({
       <InputGroup
         label="Service No."
         placeholder="e.g. CL549486"
+        tooltip="Enter the official service number for this order. For pre-provision orders, this can stay as TBC until issued."
         value={serviceNo}
         onChange={(e) => setServiceNo(e.target.value)}
       />
@@ -344,6 +397,7 @@ const OrderInfoSection = ({
         label="Status"
         options={STATUS_OPTIONS}
         required={isRequired("status")}
+        tooltip="Choose the current processing state. This status appears in order tracking and registry views."
         value={status}
         onChange={(e) => setStatus(e.target.value)}
       />
@@ -364,18 +418,21 @@ const OrderInfoSection = ({
       <InputGroup
         label="Service Type"
         placeholder="e.g. Offset Amount"
+        tooltip="Describe the commercial or technical service type, such as a new subscription, offset amount, or service change."
         value={serviceType}
         onChange={(e) => setServiceType(e.target.value)}
       />
       <InputGroup
         label="OASIS Number"
         placeholder="e.g. CB23-00007546\1"
+        tooltip="Record the OASIS reference used to trace this order back to the source order document."
         value={oasisNumber}
         onChange={(e) => setOasisNumber(e.target.value)}
       />
       <InputGroup
         label="Project Name"
         placeholder="e.g. Project Alpha"
+        tooltip="Optional project or subscription name used to identify the customer workload."
         value={subName}
         onChange={(e) => setSubName(e.target.value)}
       />
@@ -383,6 +440,7 @@ const OrderInfoSection = ({
       <InputGroup
         label="Order Receive Date"
         type="date"
+        tooltip="Set the date the order was received by the team."
         value={orderReceiveDate}
         onChange={(e) => setOrderReceiveDate(e.target.value)}
       />
@@ -390,12 +448,14 @@ const OrderInfoSection = ({
         label="SRD"
         type="date"
         required={isRequired("srd")}
+        tooltip="Set the requested service ready date for provisioning and follow-up planning."
         value={srd}
         onChange={(e) => setSrd(e.target.value)}
       />
       <InputGroup
         label="CxS Complete Date"
         type="date"
+        tooltip="Set the date CxS completed the provisioning or order handling work."
         value={cxsCompleteDate}
         onChange={(e) => setCxsCompleteDate(e.target.value)}
       />
@@ -404,6 +464,7 @@ const OrderInfoSection = ({
         label="Amount"
         type="number"
         placeholder="0.00"
+        tooltip="Enter the order amount for reporting and registry totals."
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
@@ -469,26 +530,36 @@ const CustomerInfoSection = ({
         "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
     }}
   >
-    <SectionHeader title="CUSTOMER INFORMATION" />
+    <SectionHeader
+      title="CUSTOMER INFORMATION"
+      tooltip="Select or create the customer record and capture the contacts used for provisioning communication."
+    />
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
       <div className="md:col-span-2">
-        <CustomerCombobox
-          value={companyName}
-          onChange={(name, id) => {
-            setCompanyName(name);
-            setCustomerId(id);
-          }}
-        />
+        <TutorTooltip
+          text="Search for an existing customer or type a company name to create a new customer record when the order is saved."
+          position="bottom"
+        >
+          <CustomerCombobox
+            value={companyName}
+            onChange={(name, id) => {
+              setCompanyName(name);
+              setCustomerId(id);
+            }}
+          />
+        </TutorTooltip>
       </div>
       <InputGroup
         label="Contact Person"
         placeholder="e.g. Don Ng"
+        tooltip="Enter the main customer contact for this order."
         value={contactPerson}
         onChange={(e) => setContactPerson(e.target.value)}
       />
       <InputGroup
         label="Contact No."
         placeholder="e.g. 67594210"
+        tooltip="Enter the primary phone number for order or provisioning follow-up."
         value={contactNo}
         onChange={(e) => setContactNo(e.target.value)}
       />
@@ -497,6 +568,7 @@ const CustomerInfoSection = ({
           label="Contact Email"
           type="email"
           placeholder="email@example.com"
+          tooltip="Enter the primary email for provisioning updates and customer communication."
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
         />
@@ -504,6 +576,7 @@ const CustomerInfoSection = ({
       <InputGroup
         label="2nd Contact No."
         placeholder="e.g. 67594210"
+        tooltip="Optional backup phone number if the primary contact is unavailable."
         value={contactNo2}
         onChange={(e) => setContactNo2(e.target.value)}
       />
@@ -512,19 +585,26 @@ const CustomerInfoSection = ({
           label="2nd Contact Email"
           type="email"
           placeholder="email@example.com"
+          tooltip="Optional backup email address for order communication."
           value={contactEmail2}
           onChange={(e) => setContactEmail2(e.target.value)}
         />
       </div>
-      <div className="md:col-span-3 space-y-1.5">
-        <FieldLabel text="Billing Address" />
-        <textarea
-          className={`w-full px-4 py-2.5 ${OAT_BG} border ${OAT_BORDER} rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all min-h-[80px] text-sm text-black placeholder:${SECONDARY_TEXT} resize-none`}
-          placeholder="Enter full billing address"
-          value={billingAddress}
-          onChange={(e) => setBillingAddress(e.target.value)}
-        />
-      </div>
+      <TutorTooltip
+        text="Enter the billing address that should be associated with this order and customer record."
+        position="bottom"
+        wrapperClass="md:col-span-3"
+      >
+        <div className="space-y-1.5">
+          <FieldLabel text="Billing Address" />
+          <textarea
+            className={`w-full px-4 py-2.5 ${OAT_BG} border ${OAT_BORDER} rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all min-h-[80px] text-sm text-black placeholder:${SECONDARY_TEXT} resize-none`}
+            placeholder="Enter full billing address"
+            value={billingAddress}
+            onChange={(e) => setBillingAddress(e.target.value)}
+          />
+        </div>
+      </TutorTooltip>
     </div>
   </div>
 );
@@ -575,13 +655,17 @@ const CloudServiceSection = ({
         "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
     }}
   >
-    <SectionHeader title="CLOUD SERVICE DETAILS" />
+    <SectionHeader
+      title="CLOUD SERVICE DETAILS"
+      tooltip="Choose the cloud provider and record the account identifiers needed to link the order to a service account."
+    />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="md:col-span-2">
         <SelectGroup
           label="Product Subscribe"
           options={CLOUD_PROVIDER_OPTIONS}
           required={isRequired("productSubscribe")}
+          tooltip="Choose the cloud provider for this order. Changing provider clears the account fields so the correct identifiers can be entered."
           value={productSubscribe}
           onChange={(e) => {
             setProductSubscribe(e.target.value);
@@ -603,19 +687,26 @@ const CloudServiceSection = ({
           <InputGroup
             label="Billing Account / Master Account"
             placeholder="e.g. 7.59168E+11"
+            tooltip="Enter the AWS payer or master account ID when it differs from the root account."
             value={billingAccount}
             onChange={(e) => setBillingAccount(e.target.value)}
           />
-          <ServiceAccountCombobox
-            label="Account ID / Root ID"
-            placeholder="e.g. 74430167128"
-            value={accountId}
-            provider="AWS"
-            onChange={onServiceAccountSelect}
-          />
+          <TutorTooltip
+            text="Search for an existing AWS account or enter the root account ID to create a linked service account when saved."
+            position="bottom"
+          >
+            <ServiceAccountCombobox
+              label="Account ID / Root ID"
+              placeholder="e.g. 74430167128"
+              value={accountId}
+              provider="AWS"
+              onChange={onServiceAccountSelect}
+            />
+          </TutorTooltip>
           <InputGroup
             label="Account Name / Cloud Checker Name"
             placeholder="e.g. CL545725"
+            tooltip="Enter the friendly account name shown in account and cloud checker records."
             value={accountName}
             onChange={(e) => setAccountName(e.target.value)}
           />
@@ -623,6 +714,7 @@ const CloudServiceSection = ({
             label="Account Login Email"
             type="email"
             placeholder="admin@example.com"
+            tooltip="Enter the administrator login email for the cloud account."
             value={accountLoginEmail}
             onChange={(e) => setAccountLoginEmail(e.target.value)}
           />
@@ -630,17 +722,23 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Alibaba" && (
         <>
-          <ServiceAccountCombobox
-            label="UID"
-            placeholder="e.g. 5.04886E+15"
-            value={accountId}
-            provider="Alibaba"
-            onChange={onServiceAccountSelect}
-          />
+          <TutorTooltip
+            text="Search for an existing Alibaba account or enter the UID to create a linked service account when saved."
+            position="bottom"
+          >
+            <ServiceAccountCombobox
+              label="UID"
+              placeholder="e.g. 5.04886E+15"
+              value={accountId}
+              provider="Alibaba"
+              onChange={onServiceAccountSelect}
+            />
+          </TutorTooltip>
           <InputGroup
             label="Admin Email"
             type="email"
             placeholder="admin@example.com"
+            tooltip="Enter the administrator email for this Alibaba account."
             value={accountLoginEmail}
             onChange={(e) => setAccountLoginEmail(e.target.value)}
           />
@@ -648,22 +746,29 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Azure" && (
         <>
-          <ServiceAccountCombobox
-            label="Tenant ID"
-            placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194"
-            value={accountId}
-            provider="Azure"
-            onChange={onServiceAccountSelect}
-          />
+          <TutorTooltip
+            text="Search for an existing Azure tenant or enter the tenant ID to create a linked service account when saved."
+            position="bottom"
+          >
+            <ServiceAccountCombobox
+              label="Tenant ID"
+              placeholder="e.g. 3d44d6b3-5212-4b12-b3ed-83f62ba12194"
+              value={accountId}
+              provider="Azure"
+              onChange={onServiceAccountSelect}
+            />
+          </TutorTooltip>
           <InputGroup
             label="Azure Subscription ID"
             placeholder="e.g. 807a0e4b-1c78-4f9b-aeea-1a8f5765f128"
+            tooltip="Enter the Azure subscription ID associated with this order."
             value={billingAccount}
             onChange={(e) => setBillingAccount(e.target.value)}
           />
           <InputGroup
             label="Primary Domain"
             placeholder="e.g. example.onmicrosoft.com"
+            tooltip="Enter the primary Microsoft tenant domain for this Azure account."
             value={azurePrimaryDomain}
             onChange={(e) => setAzurePrimaryDomain(e.target.value)}
           />
@@ -671,6 +776,7 @@ const CloudServiceSection = ({
             label="Admin Email"
             type="email"
             placeholder="admin@example.onmicrosoft.com"
+            tooltip="Enter the Azure administrator login email."
             value={accountLoginEmail}
             onChange={(e) => setAccountLoginEmail(e.target.value)}
           />
@@ -678,17 +784,23 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Huawei" && (
         <>
-          <ServiceAccountCombobox
-            label="Huawei ID"
-            placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573"
-            value={accountId}
-            provider="Huawei"
-            onChange={onServiceAccountSelect}
-          />
+          <TutorTooltip
+            text="Search for an existing Huawei account or enter the Huawei ID to create a linked service account when saved."
+            position="bottom"
+          >
+            <ServiceAccountCombobox
+              label="Huawei ID"
+              placeholder="e.g. ccfb8a2e45374b78860fcfb72194e573"
+              value={accountId}
+              provider="Huawei"
+              onChange={onServiceAccountSelect}
+            />
+          </TutorTooltip>
           <InputGroup
             label="Login Email"
             type="email"
             placeholder="admin@example.com"
+            tooltip="Enter the Huawei login email for account access."
             value={accountLoginEmail}
             onChange={(e) => setAccountLoginEmail(e.target.value)}
           />
@@ -696,17 +808,23 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "GCP" && (
         <>
-          <ServiceAccountCombobox
-            label="Billing Account ID"
-            placeholder="e.g. 013933-F2938A-CC207B"
-            value={accountId}
-            provider="GCP"
-            onChange={onServiceAccountSelect}
-          />
+          <TutorTooltip
+            text="Search for an existing GCP billing account or enter the billing account ID to create a linked service account when saved."
+            position="bottom"
+          >
+            <ServiceAccountCombobox
+              label="Billing Account ID"
+              placeholder="e.g. 013933-F2938A-CC207B"
+              value={accountId}
+              provider="GCP"
+              onChange={onServiceAccountSelect}
+            />
+          </TutorTooltip>
           <InputGroup
             label="Admin Email"
             type="email"
             placeholder="admin@example.com"
+            tooltip="Enter the GCP administrator email for account access."
             value={accountLoginEmail}
             onChange={(e) => setAccountLoginEmail(e.target.value)}
           />
@@ -714,17 +832,23 @@ const CloudServiceSection = ({
       )}
       {productSubscribe === "Tencent" && (
         <>
-          <ServiceAccountCombobox
-            label="Tenant ID"
-            placeholder="e.g. 200019722598"
-            value={accountId}
-            provider="Tencent"
-            onChange={onServiceAccountSelect}
-          />
+          <TutorTooltip
+            text="Search for an existing Tencent tenant or enter the tenant ID to create a linked service account when saved."
+            position="bottom"
+          >
+            <ServiceAccountCombobox
+              label="Tenant ID"
+              placeholder="e.g. 200019722598"
+              value={accountId}
+              provider="Tencent"
+              onChange={onServiceAccountSelect}
+            />
+          </TutorTooltip>
           <InputGroup
             label="Login Email"
             type="email"
             placeholder="admin@example.com"
+            tooltip="Enter the Tencent login email for account access."
             value={accountLoginEmail}
             onChange={(e) => setAccountLoginEmail(e.target.value)}
           />
@@ -737,18 +861,25 @@ const CloudServiceSection = ({
             label="Password"
             type="password"
             placeholder="••••••••"
+            tooltip="Enter the cloud account password only when it is required for operational handover."
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <div className="md:col-span-2 space-y-1.5">
-            <FieldLabel text="Other Account Information" />
-            <textarea
-              className={`w-full px-4 py-2.5 ${OAT_BG} border ${OAT_BORDER} rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all min-h-[80px] text-sm text-black placeholder:${SECONDARY_TEXT} resize-none`}
-              placeholder="Domain names, additional IDs, etc."
-              value={otherAccountInfo}
-              onChange={(e) => setOtherAccountInfo(e.target.value)}
-            />
-          </div>
+          <TutorTooltip
+            text="Use this area for extra account identifiers, domains, notes, or access details that do not fit the provider-specific fields."
+            position="bottom"
+            wrapperClass="md:col-span-2"
+          >
+            <div className="space-y-1.5">
+              <FieldLabel text="Other Account Information" />
+              <textarea
+                className={`w-full px-4 py-2.5 ${OAT_BG} border ${OAT_BORDER} rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all min-h-[80px] text-sm text-black placeholder:${SECONDARY_TEXT} resize-none`}
+                placeholder="Domain names, additional IDs, etc."
+                value={otherAccountInfo}
+                onChange={(e) => setOtherAccountInfo(e.target.value)}
+              />
+            </div>
+          </TutorTooltip>
         </>
       )}
     </div>
@@ -811,24 +942,30 @@ const ProvisioningSection = ({
         "rgba(0,0,0,0.06) 0px 1px 2px, rgba(0,0,0,0.04) 0px -1px 1px inset",
     }}
   >
-    <SectionHeader title="PROVISIONING & TRACKING" />
+    <SectionHeader
+      title="PROVISIONING & TRACKING"
+      tooltip="Capture internal provisioning references, ownership, and follow-up links used after the order is created."
+    />
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
       <InputGroup
         label="CxS Request No."
         placeholder="e.g. RN822908/1-2"
+        tooltip="Enter the CxS request number used to track provisioning activity."
         value={cxsRequestNo}
         onChange={(e) => setCxsRequestNo(e.target.value)}
       />
       <InputGroup
         label="TID"
         placeholder="e.g. 103690"
+        tooltip="Enter the TID reference associated with this provisioning request."
         value={tid}
         onChange={(e) => setTid(e.target.value)}
       />
       <InputGroup
         label="SD Number"
         placeholder="e.g. SD11652876"
+        tooltip="Enter the service desk number used for internal tracking."
         value={sdNumber}
         onChange={(e) => setSdNumber(e.target.value)}
       />
@@ -838,18 +975,21 @@ const ProvisioningSection = ({
       <ToggleGroup
         label="PS Job"
         options={["Y", "N"]}
+        tooltip="Mark whether this order requires a PS job."
         value={psJob}
         onChange={setPsJob}
       />
       <ToggleGroup
         label="Welcome Letter"
         options={["Yes", "No"]}
+        tooltip="Track whether the customer welcome letter is required or has been handled."
         value={welcomeLetter}
         onChange={setWelcomeLetter}
       />
       <SegmentedControl
         label="T2 / T3"
         options={["T1", "T2", "T3", "N/A"]}
+        tooltip="Choose the support tier classification for this order when applicable."
         value={t2t3}
         onChange={setT2t3}
       />
@@ -859,6 +999,7 @@ const ProvisioningSection = ({
       <InputGroup
         label="Handled By"
         placeholder="e.g. Kilson, Helen, Hin"
+        tooltip="Enter the teammate responsible for handling this order."
         value={by}
         onChange={(e) => setBy(e.target.value)}
       />
@@ -866,6 +1007,7 @@ const ProvisioningSection = ({
         <InputGroup
           label="Order Form URL"
           placeholder="http://10.10.10.209/OASIS_FILE_MANAGER/..."
+          tooltip="Paste the source order form URL so the team can open the original order document."
           value={orderFormUrl}
           onChange={(e) => setOrderFormUrl(e.target.value)}
         />
@@ -873,6 +1015,7 @@ const ProvisioningSection = ({
       <InputGroup
         label="Case ID"
         placeholder="e.g. CASE-123456"
+        tooltip="Enter the external or internal case ID related to this order."
         value={caseId}
         onChange={(e) => setCaseId(e.target.value)}
       />
@@ -880,19 +1023,26 @@ const ProvisioningSection = ({
         <InputGroup
           label="Case ID URL"
           placeholder="https://…"
+          tooltip="Paste the case link so the team can open the related support or workflow record."
           value={caseIdUrl}
           onChange={(e) => setCaseIdUrl(e.target.value)}
         />
       </div>
-      <div className="md:col-span-3 space-y-1.5">
-        <FieldLabel text="Remark" />
-        <textarea
-          className={`w-full px-4 py-2.5 ${OAT_BG} border ${OAT_BORDER} rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all min-h-[120px] text-sm text-black placeholder:${SECONDARY_TEXT} resize-none`}
-          placeholder="Enter timeline, log updates, or special instructions..."
-          value={remark}
-          onChange={(e) => setRemark(e.target.value)}
-        />
-      </div>
+      <TutorTooltip
+        text="Use remarks for timeline notes, provisioning updates, special handling instructions, or blockers."
+        position="bottom"
+        wrapperClass="md:col-span-3"
+      >
+        <div className="space-y-1.5">
+          <FieldLabel text="Remark" />
+          <textarea
+            className={`w-full px-4 py-2.5 ${OAT_BG} border ${OAT_BORDER} rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all min-h-[120px] text-sm text-black placeholder:${SECONDARY_TEXT} resize-none`}
+            placeholder="Enter timeline, log updates, or special instructions..."
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+          />
+        </div>
+      </TutorTooltip>
     </div>
   </div>
 );
@@ -1059,19 +1209,17 @@ const NewOrder = () => {
 
       let resolvedCustomerId = customerId;
       if (!resolvedCustomerId) {
-        const newCustomer = await customerService.create(
+        const resolved = await resolveOrCreateCustomer(
+          companyName,
+          userEmail,
+          undefined,
           {
-            Title: companyName,
-            Company: companyName,
             Email: contactEmail || "",
             Phone: contactNo || "",
             ContactPerson: contactPerson || undefined,
-            Status: "Active",
-            Tier: "Standard",
           },
-          userEmail,
         );
-        resolvedCustomerId = newCustomer.id;
+        resolvedCustomerId = resolved.id;
       }
 
       // Resolve SA: user may have selected an existing one (selectedSaId) or typed a new ID.
@@ -1197,12 +1345,18 @@ const NewOrder = () => {
     <div className="max-w-5xl mx-auto pb-16 space-y-6">
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-4">
-          <Link
-            to="/orders"
-            className={`p-2 ${OAT_BG} border ${OAT_BORDER} rounded-lg hover:bg-white transition-colors`}
+          <TutorTooltip
+            text="Return to the orders list without saving this new order."
+            position="bottom"
+            wrapperClass="w-fit"
           >
-            <ArrowLeft className={`w-4 h-4 ${TERTIARY_TEXT}`} />
-          </Link>
+            <Link
+              to="/orders"
+              className={`p-2 ${OAT_BG} border ${OAT_BORDER} rounded-lg hover:bg-white transition-colors block`}
+            >
+              <ArrowLeft className={`w-4 h-4 ${TERTIARY_TEXT}`} />
+            </Link>
+          </TutorTooltip>
           <div>
             <h1
               className="text-[26px] font-semibold text-black"
@@ -1262,14 +1416,19 @@ const NewOrder = () => {
           </p>
           <div className="space-y-0.5">
             {SECTION_LABELS.map((label, i) => (
-              <NavItem
+              <TutorTooltip
                 key={label}
-                index={i}
-                label={label}
-                active={activeSection === i}
-                complete={sectionComplete[i]}
-                onClick={(): void => setActiveSection(i)}
-              />
+                text={`Open the ${label.toLowerCase()} section. The dot shows when the main fields for this step have been filled.`}
+                position="right"
+              >
+                <NavItem
+                  index={i}
+                  label={label}
+                  active={activeSection === i}
+                  complete={sectionComplete[i]}
+                  onClick={(): void => setActiveSection(i)}
+                />
+              </TutorTooltip>
             ))}
           </div>
         </aside>
