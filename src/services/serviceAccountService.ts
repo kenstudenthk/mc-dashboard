@@ -75,7 +75,12 @@ export async function resolveOrCreateServiceAccount(
   const match = accounts.find(
     (sa) => normalizeAccountId(sa.SecondaryID ?? "") === normalizeAccountId(accountId),
   );
-  if (match) return { id: match.id, created: false };
+  if (match) {
+    if (createData?.CustomerIDId != null && match.CustomerID !== createData.CustomerIDId) {
+      await serviceAccountService.update(match.id, { CustomerIDId: createData.CustomerIDId }, userEmail);
+    }
+    return { id: match.id, created: false };
+  }
   const created = await serviceAccountService.create(
     {
       Title: accountId.trim(),

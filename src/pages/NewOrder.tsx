@@ -1224,7 +1224,7 @@ const NewOrder = () => {
 
       // Resolve SA: user may have selected an existing one (selectedSaId) or typed a new ID.
       let saId: number | undefined = selectedSaId ?? undefined;
-      if (!saId && productSubscribe && accountId) {
+      if (!saId && productSubscribe && accountId.trim()) {
         try {
           const resolved = await resolveOrCreateServiceAccount(
             accountId,
@@ -1243,8 +1243,9 @@ const NewOrder = () => {
             },
           );
           saId = resolved.id;
-        } catch {
-          // SA resolution failed — order created without SAId
+        } catch (e) {
+          if (orderType === "Termination") throw e;
+          // For non-Termination orders, SA resolution failure is non-blocking
         }
       }
 
