@@ -67,53 +67,6 @@ const isToday = (isoDate: string): boolean => {
   }
 };
 
-const dateValue = (value?: string): string =>
-  value ? value.slice(0, 10) : "";
-
-const buildStatusUpdatePayload = (
-  order: Order,
-  status: string,
-): Partial<CreateOrderInput> => ({
-  Title: order.Title,
-  CustomerID: order.CustomerID,
-  CustomerName: order.CustomerName,
-  PreviousName: order.PreviousName ?? "",
-  OrderType: order.OrderType,
-  Status: status,
-  SRD: dateValue(order.SRD),
-  CloudProvider: order.CloudProvider,
-  Amount: order.Amount ?? 0,
-  AccountID: order.AccountID ?? "",
-  ServiceType: order.ServiceType ?? "",
-  OasisNumber: order.OasisNumber ?? "",
-  OrderReceiveDate: dateValue(order.OrderReceiveDate),
-  CxSCompleteDate: dateValue(order.CxSCompleteDate),
-  ContactPerson: order.ContactPerson ?? "",
-  ContactNo: order.ContactNo ?? "",
-  ContactEmail: order.ContactEmail ?? "",
-  ContactNo2: order.ContactNo2 ?? "",
-  ContactEmail2: order.ContactEmail2 ?? "",
-  BillingAddress: order.BillingAddress ?? "",
-  BillingAccount: order.BillingAccount ?? "",
-  AccountName: order.AccountName ?? "",
-  AccountLoginEmail: order.AccountLoginEmail ?? "",
-  Password: order.Password ?? "",
-  OtherAccountInfo: order.OtherAccountInfo ?? "",
-  CxSRequestNo: order.CxSRequestNo ?? "",
-  TID: order.TID ?? "",
-  SDNumber: order.SDNumber ?? "",
-  PSJob: order.PSJob ?? "",
-  T2T3: order.T2T3 ?? "",
-  WelcomeLetter: order.WelcomeLetter ?? "",
-  By: order.By ?? "",
-  OrderFormURL: order.OrderFormURL ?? "",
-  CaseID: order.CaseID ?? "",
-  CaseIDURL: order.CaseIDURL ?? "",
-  Remark: order.Remark ?? "",
-  SubName: order.SubName ?? "",
-  SAId: order.SA_Id,
-});
-
 function TableSkeleton() {
   return (
     <>
@@ -314,12 +267,7 @@ const OrderRegistry = () => {
     const orderId = order.id;
     setUpdatingStatusId(orderId);
     try {
-      const latestOrder = await orderService.findById(orderId);
-      await orderService.update(
-        orderId,
-        buildStatusUpdatePayload(latestOrder, newStatus),
-        userEmail,
-      );
+      await orderService.update(orderId, { Status: newStatus }, userEmail);
       invalidateOrders();
     } finally {
       setUpdatingStatusId(null);

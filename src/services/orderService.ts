@@ -306,7 +306,7 @@ export const orderService = {
   refresh: findAll,
 
   findById: async (id: number): Promise<Order> => {
-    return call<Order>({ action: "GET_BY_TITLE", id });
+    return call<Order>({ action: "GET_BY_ID", id });
   },
 
   findByTitle: async (title: string): Promise<Order> => {
