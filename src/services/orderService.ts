@@ -40,6 +40,7 @@ export interface Order {
   CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
+  CloudChekr_Reminder?: boolean;
   // Lookup extra columns from the SA lookup column on Orders list
   SA_Id?: number;
   SA_SecondaryID?: string;
@@ -90,6 +91,7 @@ export interface CreateOrderInput {
   CaseIDURL?: string;
   Remark?: string;
   SubName?: string;
+  CloudChekr_Reminder?: boolean;
   SAId?: number;
 }
 

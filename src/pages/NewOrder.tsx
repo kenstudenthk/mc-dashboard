@@ -1330,6 +1330,7 @@ const NewOrder = () => {
           CaseIDURL: caseIdUrl || undefined,
           Remark: remark || undefined,
           SubName: subName || undefined,
+          CloudChekr_Reminder: isCloudChekrReminder,
         },
         userEmail,
       );
