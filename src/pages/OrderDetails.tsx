@@ -383,9 +383,12 @@ const OrderDetails = () => {
           : [];
       const resolvedServiceAccount = serviceAccount ?? matchingServiceAccounts[0] ?? null;
       const saId = resolvedServiceAccount?.id ?? order.SA_Id ?? null;
+      const customerIdForServiceAccount = Number(editForm.CustomerID ?? order.CustomerID);
       const saPayload: Partial<CreateServiceAccountInput> = {
         Title: editForm.Title ?? order.Title,
-        CustomerIDId: editForm.CustomerID ?? order.CustomerID ?? undefined,
+        CustomerIDId: Number.isFinite(customerIdForServiceAccount)
+          ? customerIdForServiceAccount
+          : undefined,
         Provider: normalizeCloudProvider(editForm.CloudProvider ?? order.CloudProvider ?? ""),
         ...saEditForm,
       };

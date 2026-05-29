@@ -94,11 +94,13 @@ export async function resolveOrCreateServiceAccount(
   return { id: created.id, created: true };
 }
 
-function remapCustomerID<T extends { CustomerIDId?: number }>(
+function remapCustomerID<T extends { CustomerIDId?: number | string }>(
   data: T,
 ): Omit<T, "CustomerIDId"> & { CustomerID?: number } {
   const { CustomerIDId, ...rest } = data;
-  return CustomerIDId != null ? { ...rest, CustomerID: CustomerIDId } : rest;
+  return CustomerIDId != null && CustomerIDId !== ""
+    ? { ...rest, CustomerID: Number(CustomerIDId) }
+    : rest;
 }
 
 export const serviceAccountService = {

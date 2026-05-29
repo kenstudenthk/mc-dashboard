@@ -333,7 +333,7 @@ export const orderService = {
 
   create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
     const { SAId, ...rest } = data;
-    const payload = SAId != null ? { ...rest, SA: SAId } : rest;
+    const payload = SAId != null ? { ...rest, SA: Number(SAId) } : rest;
     return call<Order>({ action: "CREATE", data: payload, userEmail });
   },
 
