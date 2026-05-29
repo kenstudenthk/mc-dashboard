@@ -67,6 +67,54 @@ const isToday = (isoDate: string): boolean => {
   }
 };
 
+const dateValue = (value?: string): string =>
+  value ? value.slice(0, 10) : "";
+
+const buildOrderUpdatePayload = (
+  order: Order,
+  patch: Partial<CreateOrderInput>,
+): Partial<CreateOrderInput> => ({
+  Title: order.Title,
+  CustomerID: order.CustomerID,
+  CustomerName: order.CustomerName,
+  PreviousName: order.PreviousName ?? "",
+  OrderType: order.OrderType,
+  Status: order.Status,
+  SRD: dateValue(order.SRD),
+  CloudProvider: order.CloudProvider,
+  Amount: order.Amount ?? 0,
+  AccountID: order.AccountID ?? "",
+  ServiceType: order.ServiceType ?? "",
+  OasisNumber: order.OasisNumber ?? "",
+  OrderReceiveDate: dateValue(order.OrderReceiveDate),
+  CxSCompleteDate: dateValue(order.CxSCompleteDate),
+  ContactPerson: order.ContactPerson ?? "",
+  ContactNo: order.ContactNo ?? "",
+  ContactEmail: order.ContactEmail ?? "",
+  ContactNo2: order.ContactNo2 ?? "",
+  ContactEmail2: order.ContactEmail2 ?? "",
+  BillingAddress: order.BillingAddress ?? "",
+  BillingAccount: order.BillingAccount ?? "",
+  AccountName: order.AccountName ?? "",
+  AccountLoginEmail: order.AccountLoginEmail ?? "",
+  Password: order.Password ?? "",
+  OtherAccountInfo: order.OtherAccountInfo ?? "",
+  CxSRequestNo: order.CxSRequestNo ?? "",
+  TID: order.TID ?? "",
+  SDNumber: order.SDNumber ?? "",
+  PSJob: order.PSJob ?? "",
+  T2T3: order.T2T3 ?? "",
+  WelcomeLetter: order.WelcomeLetter ?? "",
+  By: order.By ?? "",
+  OrderFormURL: order.OrderFormURL ?? "",
+  CaseID: order.CaseID ?? "",
+  CaseIDURL: order.CaseIDURL ?? "",
+  Remark: order.Remark ?? "",
+  SubName: order.SubName ?? "",
+  SAId: order.SA_Id,
+  ...patch,
+});
+
 function TableSkeleton() {
   return (
     <>
@@ -267,7 +315,11 @@ const OrderRegistry = () => {
     const orderId = order.id;
     setUpdatingStatusId(orderId);
     try {
-      await orderService.update(orderId, { Status: newStatus }, userEmail);
+      await orderService.update(
+        orderId,
+        buildOrderUpdatePayload(order, { Status: newStatus }),
+        userEmail,
+      );
       invalidateOrders();
     } finally {
       setUpdatingStatusId(null);
@@ -285,7 +337,11 @@ const OrderRegistry = () => {
   const handleRemarkSave = async (order: Order) => {
     setSavingRemarkId(order.id);
     try {
-      await orderService.update(order.id, { Remark: remarkDraft }, userEmail);
+      await orderService.update(
+        order.id,
+        buildOrderUpdatePayload(order, { Remark: remarkDraft }),
+        userEmail,
+      );
       invalidateOrders();
       setEditingRemarkId(null);
       setActiveRemarkId(null);
@@ -391,12 +447,15 @@ const OrderRegistry = () => {
     });
   };
 
-  const handleCaseIdSave = async (orderId: number) => {
-    setSavingCaseId(orderId);
+  const handleCaseIdSave = async (order: Order) => {
+    setSavingCaseId(order.id);
     try {
       await orderService.update(
-        orderId,
-        { CaseID: caseIdDraft.CaseID, CaseIDURL: caseIdDraft.CaseIDURL },
+        order.id,
+        buildOrderUpdatePayload(order, {
+          CaseID: caseIdDraft.CaseID,
+          CaseIDURL: caseIdDraft.CaseIDURL,
+        }),
         userEmail,
       );
       invalidateOrders();
@@ -469,7 +528,7 @@ const OrderRegistry = () => {
             <button
               type="button"
               disabled={isSaving}
-              onClick={() => handleCaseIdSave(order.id)}
+              onClick={() => handleCaseIdSave(order)}
               className="rounded-lg bg-[#0071e3] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[#005bb5] disabled:opacity-50"
             >
               {isSaving ? "Saving…" : "Save"}
