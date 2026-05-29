@@ -1126,8 +1126,8 @@ const NewOrder = () => {
     if (val) {
       // 1. Status default to "Pending for order issued"
       setStatus("Pending for order issued");
-      // 2. Order Type default to "Pre-Pro"
-      setOrderType("Pre-Pro");
+      // 2. Order Type default to "New Install"
+      setOrderType("New Install");
 
       // 3. Pre-fill "TBC" for text fields
       setServiceNo("TBC");
