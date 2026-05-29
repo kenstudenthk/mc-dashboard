@@ -380,29 +380,43 @@ const OrderRegistry = () => {
           </span>
           <div className="flex items-center gap-1">
             {!isEditing && (
+              <TutorTooltip
+                text="Edit the remarks saved on this order."
+                position="top"
+                wrapperClass="inline-flex"
+                componentName="OrderRegistry.Remarks"
+              >
+                <button
+                  type="button"
+                  title="Edit remark"
+                  onClick={() => {
+                    setEditingRemarkId(order.id);
+                    setRemarkDraft(order.Remark ?? "");
+                  }}
+                  className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#0071e3]"
+                >
+                  <PencilLine className="h-3.5 w-3.5" />
+                </button>
+              </TutorTooltip>
+            )}
+            <TutorTooltip
+              text="Close the remarks panel."
+              position="top"
+              wrapperClass="inline-flex"
+              componentName="OrderRegistry.Remarks"
+            >
               <button
                 type="button"
-                title="Edit remark"
+                title="Close remarks"
                 onClick={() => {
-                  setEditingRemarkId(order.id);
-                  setRemarkDraft(order.Remark ?? "");
+                  setActiveRemarkId(null);
+                  setEditingRemarkId(null);
                 }}
-                className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#0071e3]"
+                className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#1d1d1f]"
               >
-                <PencilLine className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5" />
               </button>
-            )}
-            <button
-              type="button"
-              title="Close remarks"
-              onClick={() => {
-                setActiveRemarkId(null);
-                setEditingRemarkId(null);
-              }}
-              className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#1d1d1f]"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+            </TutorTooltip>
           </div>
         </div>
         <div className="p-3">
@@ -417,26 +431,40 @@ const OrderRegistry = () => {
                 autoFocus
               />
               <div className="flex items-center justify-end gap-1.5">
-                <button
-                  type="button"
-                  title="Cancel edit"
-                  onClick={() => {
-                    setEditingRemarkId(null);
-                    setRemarkDraft(order.Remark ?? "");
-                  }}
-                  className="rounded-lg border border-[#1d1d1f]/10 bg-white p-1.5 text-[#1d1d1f]/45 transition-colors hover:bg-[#f5f5f7]"
+                <TutorTooltip
+                  text="Discard remark edits."
+                  position="top"
+                  wrapperClass="inline-flex"
+                  componentName="OrderRegistry.Remarks"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  title="Save remark"
-                  disabled={isSaving}
-                  onClick={() => handleRemarkSave(order)}
-                  className="rounded-lg bg-[#0071e3] p-1.5 text-white transition-colors hover:bg-[#005bb5] disabled:opacity-50"
+                  <button
+                    type="button"
+                    title="Cancel edit"
+                    onClick={() => {
+                      setEditingRemarkId(null);
+                      setRemarkDraft(order.Remark ?? "");
+                    }}
+                    className="rounded-lg border border-[#1d1d1f]/10 bg-white p-1.5 text-[#1d1d1f]/45 transition-colors hover:bg-[#f5f5f7]"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </TutorTooltip>
+                <TutorTooltip
+                  text="Save remark changes."
+                  position="top"
+                  wrapperClass="inline-flex"
+                  componentName="OrderRegistry.Remarks"
                 >
-                  <Check className="h-4 w-4" />
-                </button>
+                  <button
+                    type="button"
+                    title="Save remark"
+                    disabled={isSaving}
+                    onClick={() => handleRemarkSave(order)}
+                    className="rounded-lg bg-[#0071e3] p-1.5 text-white transition-colors hover:bg-[#005bb5] disabled:opacity-50"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                </TutorTooltip>
               </div>
             </div>
           ) : (
@@ -776,6 +804,7 @@ const OrderRegistry = () => {
           order.Title,
           order.CustomerName,
           order.AccountID,
+          order.AccountName,
           order.CaseID,
           order.CloudProvider,
           order.OrderType,
@@ -856,34 +885,55 @@ const OrderRegistry = () => {
     <div className="flex flex-col h-[calc(100vh-4rem)] gap-4">
       {/* Page-level toolbar: Refresh + Import + Edit Mode in top-right */}
       <div className="flex items-center justify-end gap-2 shrink-0">
-        <button
-          onClick={handleRefresh}
-          disabled={isFetching}
-          className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+        <TutorTooltip
+          text="Refresh orders and customer data from the latest source records."
+          position="bottom"
+          wrapperClass="inline-block"
+          componentName="OrderRegistry.Toolbar"
         >
-          <RefreshCw
-            className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
-          />
-          {isFetching ? "Refreshing…" : "Refresh"}
-        </button>
-        <button
-          onClick={() => setShowBulkImport(true)}
-          className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 transition-colors"
+          <button
+            onClick={handleRefresh}
+            disabled={isFetching}
+            className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
+            />
+            {isFetching ? "Refreshing…" : "Refresh"}
+          </button>
+        </TutorTooltip>
+        <TutorTooltip
+          text="Open the bulk import flow to upload multiple orders at once."
+          position="bottom"
+          wrapperClass="inline-block"
+          componentName="OrderRegistry.Toolbar"
         >
-          <Upload className="w-3.5 h-3.5" />
-          Import
-        </button>
-        <button
-          onClick={() => setIsEditMode((v) => !v)}
-          className={`px-3 py-1.5 rounded-lg font-medium text-sm border flex items-center gap-1.5 transition-colors ${
-            isEditMode
-              ? "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
-              : "border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7]"
-          }`}
+          <button
+            onClick={() => setShowBulkImport(true)}
+            className="px-3 py-1.5 rounded-lg font-medium text-sm border border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7] flex items-center gap-1.5 transition-colors"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Import
+          </button>
+        </TutorTooltip>
+        <TutorTooltip
+          text="Switch to the editable table for bulk field updates. Use Exit Edit to return to the registry view."
+          position="bottom"
+          wrapperClass="inline-block"
+          componentName="OrderRegistry.Toolbar"
         >
-          <PencilLine className="w-3.5 h-3.5" />
-          {isEditMode ? "Exit Edit" : "Edit Mode"}
-        </button>
+          <button
+            onClick={() => setIsEditMode((v) => !v)}
+            className={`px-3 py-1.5 rounded-lg font-medium text-sm border flex items-center gap-1.5 transition-colors ${
+              isEditMode
+                ? "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+                : "border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/70 hover:bg-[#f5f5f7]"
+            }`}
+          >
+            <PencilLine className="w-3.5 h-3.5" />
+            {isEditMode ? "Exit Edit" : "Edit Mode"}
+          </button>
+        </TutorTooltip>
       </div>
 
       {ordersError && (
@@ -996,7 +1046,7 @@ const OrderRegistry = () => {
             {/* Row 2: Search */}
             <div className="border-b border-[#dad4c8] bg-white px-4 py-3">
               <TutorTooltip
-                text="Search for a specific order by typing the Service No, Customer Name, or Account ID. Click the filter icon on the right to show additional filters."
+                text="Search for a specific order by typing the Service No, Customer Name, Account ID, or Account Name. Click the filter icon on the right to show additional filters."
                 position="bottom"
                 wrapperClass="relative w-full"
               >
@@ -1035,79 +1085,121 @@ const OrderRegistry = () => {
                   <label className="text-xs font-medium text-[#1d1d1f]/60">
                     Provider:
                   </label>
-                  <select
-                    value={providerFilter}
-                    onChange={(e) => setProviderFilter(e.target.value)}
-                    className="text-sm border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 bg-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]"
+                  <TutorTooltip
+                    text="Filter orders by cloud provider."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.Filters"
                   >
-                    <option value="All">All Providers</option>
-                    {CANONICAL_PROVIDERS.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
+                    <select
+                      value={providerFilter}
+                      onChange={(e) => setProviderFilter(e.target.value)}
+                      className="text-sm border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 bg-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]"
+                    >
+                      <option value="All">All Providers</option>
+                      {CANONICAL_PROVIDERS.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </select>
+                  </TutorTooltip>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-[#1d1d1f]/60">
                     Status:
                   </label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="text-sm border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 bg-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]"
+                  <TutorTooltip
+                    text="Filter orders by current status."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.Filters"
                   >
-                    <option value="All">All Statuses</option>
-                    {uniqueStatuses.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="text-sm border border-[#1d1d1f]/08 rounded-lg px-3 py-1.5 bg-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 text-[#1d1d1f]"
+                    >
+                      <option value="All">All Statuses</option>
+                      {uniqueStatuses.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </TutorTooltip>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-[#1d1d1f]/60">
                     Order Type:
                   </label>
-                  <select
-                    value={orderTypeFilter}
-                    onChange={(e) => setOrderTypeFilter(e.target.value)}
-                    className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                  <TutorTooltip
+                    text="Filter orders by order type."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.Filters"
                   >
-                    <option value="All">All Types</option>
-                    {ORDER_TYPE_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    <select
+                      value={orderTypeFilter}
+                      onChange={(e) => setOrderTypeFilter(e.target.value)}
+                      className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                    >
+                      <option value="All">All Types</option>
+                      {ORDER_TYPE_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </TutorTooltip>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-[#1d1d1f]/60">
                     SRD:
                   </label>
-                  <input
-                    type="date"
-                    value={srdFrom}
-                    onChange={(e) => setSrdFrom(e.target.value)}
-                    className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
-                  />
+                  <TutorTooltip
+                    text="Set the earliest Service Ready Date to include."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.Filters"
+                  >
+                    <input
+                      type="date"
+                      value={srdFrom}
+                      onChange={(e) => setSrdFrom(e.target.value)}
+                      className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                    />
+                  </TutorTooltip>
                   <span className="text-xs text-[#1d1d1f]/35">to</span>
-                  <input
-                    type="date"
-                    value={srdTo}
-                    onChange={(e) => setSrdTo(e.target.value)}
-                    className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
-                  />
+                  <TutorTooltip
+                    text="Set the latest Service Ready Date to include."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.Filters"
+                  >
+                    <input
+                      type="date"
+                      value={srdTo}
+                      onChange={(e) => setSrdTo(e.target.value)}
+                      className="rounded-lg border border-[#1d1d1f]/08 bg-white px-3 py-1.5 text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                    />
+                  </TutorTooltip>
                 </div>
                 {activeFilterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearAllFilters}
-                    className="ml-auto rounded-lg border border-[#dad4c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#55534e] hover:bg-[#f5f5f7]"
+                  <TutorTooltip
+                    text="Remove every active filter and show the full order list again."
+                    position="bottom"
+                    wrapperClass="ml-auto inline-block"
+                    componentName="OrderRegistry.Filters"
                   >
-                    Clear All
-                  </button>
+                    <button
+                      type="button"
+                      onClick={clearAllFilters}
+                      className="rounded-lg border border-[#dad4c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#55534e] hover:bg-[#f5f5f7]"
+                    >
+                      Clear All
+                    </button>
+                  </TutorTooltip>
                 )}
               </div>
             )}
@@ -1118,57 +1210,92 @@ const OrderRegistry = () => {
                   {filteredOrders.length} results
                 </span>
                 {customerFilterName && (
-                  <button
-                    type="button"
-                    onClick={clearCustomerFilter}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                  <TutorTooltip
+                    text="Remove the customer filter."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.FilterChips"
                   >
-                    Customer: {customerFilterName}
-                    <X className="h-3 w-3" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={clearCustomerFilter}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                    >
+                      Customer: {customerFilterName}
+                      <X className="h-3 w-3" />
+                    </button>
+                  </TutorTooltip>
                 )}
                 {providerFilter !== "All" && (
-                  <button
-                    type="button"
-                    onClick={() => setProviderFilter("All")}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                  <TutorTooltip
+                    text="Remove the provider filter."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.FilterChips"
                   >
-                    Provider: {providerFilter}
-                    <X className="h-3 w-3" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setProviderFilter("All")}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                    >
+                      Provider: {providerFilter}
+                      <X className="h-3 w-3" />
+                    </button>
+                  </TutorTooltip>
                 )}
                 {statusFilter !== "All" && (
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("All")}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                  <TutorTooltip
+                    text="Remove the status filter."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.FilterChips"
                   >
-                    Status: {statusFilter}
-                    <X className="h-3 w-3" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("All")}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                    >
+                      Status: {statusFilter}
+                      <X className="h-3 w-3" />
+                    </button>
+                  </TutorTooltip>
                 )}
                 {orderTypeFilter !== "All" && (
-                  <button
-                    type="button"
-                    onClick={() => setOrderTypeFilter("All")}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                  <TutorTooltip
+                    text="Remove the order type filter."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.FilterChips"
                   >
-                    Type: {orderTypeFilter}
-                    <X className="h-3 w-3" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrderTypeFilter("All")}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                    >
+                      Type: {orderTypeFilter}
+                      <X className="h-3 w-3" />
+                    </button>
+                  </TutorTooltip>
                 )}
                 {(srdFrom || srdTo) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSrdFrom("");
-                      setSrdTo("");
-                    }}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                  <TutorTooltip
+                    text="Remove the Service Ready Date filter."
+                    position="bottom"
+                    wrapperClass="inline-block"
+                    componentName="OrderRegistry.FilterChips"
                   >
-                    SRD: {srdFrom || "Any"} - {srdTo || "Any"}
-                    <X className="h-3 w-3" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSrdFrom("");
+                        setSrdTo("");
+                      }}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#eee9df] px-2.5 py-1 font-semibold text-[#55534e]"
+                    >
+                      SRD: {srdFrom || "Any"} - {srdTo || "Any"}
+                      <X className="h-3 w-3" />
+                    </button>
+                  </TutorTooltip>
                 )}
               </div>
             )}
@@ -1384,20 +1511,31 @@ const OrderRegistry = () => {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <button
-                                      onClick={() => handlePinToggle(order.id)}
-                                      className={`p-1 rounded-lg transition-colors ${
+                                    <TutorTooltip
+                                      text={
                                         pinnedIds.has(order.id)
-                                          ? "text-[#094cb2]"
-                                          : "text-[#1d1d1f]/25"
-                                      }`}
+                                          ? "Unpin this order from the top of the list."
+                                          : "Pin this order to the top of the list."
+                                      }
+                                      position="bottom"
+                                      wrapperClass="inline-flex"
+                                      componentName="OrderRegistry.MobileActions"
                                     >
-                                      {pinnedIds.has(order.id) ? (
-                                        <Pin className="w-3.5 h-3.5 fill-current" />
-                                      ) : (
-                                        <Pin className="w-3.5 h-3.5" />
-                                      )}
-                                    </button>
+                                      <button
+                                        onClick={() => handlePinToggle(order.id)}
+                                        className={`p-1 rounded-lg transition-colors ${
+                                          pinnedIds.has(order.id)
+                                            ? "text-[#094cb2]"
+                                            : "text-[#1d1d1f]/25"
+                                        }`}
+                                      >
+                                        {pinnedIds.has(order.id) ? (
+                                          <Pin className="w-3.5 h-3.5 fill-current" />
+                                        ) : (
+                                          <Pin className="w-3.5 h-3.5" />
+                                        )}
+                                      </button>
+                                    </TutorTooltip>
                                     <span
                                       className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${getStatusColor(
                                         order.Status,
@@ -1442,33 +1580,47 @@ const OrderRegistry = () => {
                                       className="relative"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <button
-                                        type="button"
-                                        title="View remarks"
-                                        onClick={() => handleRemarkOpen(order)}
-                                        className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${
-                                          order.Remark?.trim()
-                                            ? "bg-amber-50 text-amber-700"
-                                            : isTerminated
-                                              ? "bg-red-50 text-red-400"
-                                              : "bg-[#f5f5f7] text-[#1d1d1f]/35"
-                                        }`}
+                                      <TutorTooltip
+                                        text="View or edit remarks for this order."
+                                        position="left"
+                                        wrapperClass="inline-flex"
+                                        componentName="OrderRegistry.MobileActions"
                                       >
-                                        <MessageSquareText className="w-4 h-4" />
-                                      </button>
+                                        <button
+                                          type="button"
+                                          title="View remarks"
+                                          onClick={() => handleRemarkOpen(order)}
+                                          className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${
+                                            order.Remark?.trim()
+                                              ? "bg-amber-50 text-amber-700"
+                                              : isTerminated
+                                                ? "bg-red-50 text-red-400"
+                                                : "bg-[#f5f5f7] text-[#1d1d1f]/35"
+                                          }`}
+                                        >
+                                          <MessageSquareText className="w-4 h-4" />
+                                        </button>
+                                      </TutorTooltip>
                                       {activeRemarkId === order.id &&
                                         renderRemarkPopover(order, "right")}
                                     </div>
-                                    <Link
-                                      to={`/orders/${order.id}`}
-                                      className={`p-1.5 rounded-lg flex-shrink-0 ${
-                                        isTerminated
-                                          ? "text-red-400 bg-red-50"
-                                          : "text-[#1d1d1f]/35 bg-[#f5f5f7]"
-                                      }`}
+                                    <TutorTooltip
+                                      text="Open this order's detail page."
+                                      position="left"
+                                      wrapperClass="inline-flex"
+                                      componentName="OrderRegistry.MobileActions"
                                     >
-                                      <Eye className="w-4 h-4" />
-                                    </Link>
+                                      <Link
+                                        to={`/orders/${order.id}`}
+                                        className={`p-1.5 rounded-lg flex-shrink-0 ${
+                                          isTerminated
+                                            ? "text-red-400 bg-red-50"
+                                            : "text-[#1d1d1f]/35 bg-[#f5f5f7]"
+                                        }`}
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </Link>
+                                    </TutorTooltip>
                                   </div>
                                 </div>
                                 <div className="mt-1 text-[10px] leading-none text-[#1d1d1f]/35">
@@ -1504,11 +1656,22 @@ const OrderRegistry = () => {
                                 handlePinToggle(order.id);
                               }}
                             >
-                              {pinnedIds.has(order.id) ? (
-                                <Pin className="w-3.5 h-3.5 fill-current text-red-500 rotate-90 mx-auto" />
-                              ) : (
-                                <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/25 rotate-90 mx-auto transition-opacity" />
-                              )}
+                              <TutorTooltip
+                                text={
+                                  pinnedIds.has(order.id)
+                                    ? "Unpin this order from the top of the list."
+                                    : "Pin this order to the top of the list."
+                                }
+                                position="right"
+                                wrapperClass="inline-flex"
+                                componentName="OrderRegistry.Table.Actions"
+                              >
+                                {pinnedIds.has(order.id) ? (
+                                  <Pin className="w-3.5 h-3.5 fill-current text-red-500 rotate-90 mx-auto" />
+                                ) : (
+                                  <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/25 rotate-90 mx-auto transition-opacity" />
+                                )}
+                              </TutorTooltip>
                             </td>
                             <td
                               className={`px-3 py-3 text-xs font-semibold hover:underline ${
@@ -1603,14 +1766,21 @@ const OrderRegistry = () => {
                                     <span className="text-[#1d1d1f]/25">—</span>
                                   )}
                                 </div>
-                                <button
-                                  type="button"
-                                  title="Edit Case ID"
-                                  onClick={() => handleCaseIdOpen(order)}
-                                  className="flex-shrink-0 rounded p-0.5 text-[#1d1d1f]/25 opacity-0 transition-all hover:bg-blue-50 hover:text-[#0071e3] group-hover/caseid:opacity-100"
+                                <TutorTooltip
+                                  text="Edit the Case ID and optional case link for this order."
+                                  position="top"
+                                  wrapperClass="inline-flex flex-shrink-0"
+                                  componentName="OrderRegistry.Table.Actions"
                                 >
-                                  <PencilLine className="h-3 w-3" />
-                                </button>
+                                  <button
+                                    type="button"
+                                    title="Edit Case ID"
+                                    onClick={() => handleCaseIdOpen(order)}
+                                    className="flex-shrink-0 rounded p-0.5 text-[#1d1d1f]/25 opacity-0 transition-all hover:bg-blue-50 hover:text-[#0071e3] group-hover/caseid:opacity-100"
+                                  >
+                                    <PencilLine className="h-3 w-3" />
+                                  </button>
+                                </TutorTooltip>
                                 {caseIdEditId === order.id &&
                                   renderCaseIdPopover(order)}
                               </div>
@@ -1691,20 +1861,27 @@ const OrderRegistry = () => {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="relative inline-flex">
-                                <button
-                                  type="button"
-                                  title="View remarks"
-                                  onClick={() => handleRemarkOpen(order)}
-                                  className={`rounded-lg p-1.5 transition-colors ${
-                                    order.Remark?.trim()
-                                      ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                      : isTerminated
-                                        ? "text-red-400 hover:bg-red-50 hover:text-red-600"
-                                        : "text-[#1d1d1f]/35 hover:bg-[#f5f5f7] hover:text-[#0071e3]"
-                                  }`}
+                                <TutorTooltip
+                                  text="View or edit remarks for this order."
+                                  position="left"
+                                  wrapperClass="inline-flex"
+                                  componentName="OrderRegistry.Table.Actions"
                                 >
-                                  <MessageSquareText className="h-4 w-4" />
-                                </button>
+                                  <button
+                                    type="button"
+                                    title="View remarks"
+                                    onClick={() => handleRemarkOpen(order)}
+                                    className={`rounded-lg p-1.5 transition-colors ${
+                                      order.Remark?.trim()
+                                        ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                        : isTerminated
+                                          ? "text-red-400 hover:bg-red-50 hover:text-red-600"
+                                          : "text-[#1d1d1f]/35 hover:bg-[#f5f5f7] hover:text-[#0071e3]"
+                                    }`}
+                                  >
+                                    <MessageSquareText className="h-4 w-4" />
+                                  </button>
+                                </TutorTooltip>
                                 {activeRemarkId === order.id &&
                                   renderRemarkPopover(order)}
                               </div>
@@ -1712,39 +1889,53 @@ const OrderRegistry = () => {
                             <td className="px-3 py-3 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <div className="flex items-center gap-1.5 opacity-100 transition-opacity">
-                                  <Link
-                                    to={`/orders/${order.id}`}
-                                    className={`p-1.5 rounded-lg transition-colors ${
-                                      isTerminated
-                                        ? "text-red-400 hover:text-red-600 hover:bg-red-50"
-                                        : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
-                                    }`}
+                                  <TutorTooltip
+                                    text="Open this order's detail page."
+                                    position="top"
+                                    wrapperClass="inline-flex"
+                                    componentName="OrderRegistry.Table.Actions"
                                   >
-                                    <Eye className="w-4 h-4" />
-                                  </Link>
-                                  {/* Change Status */}
-                                  <div
-                                    className="relative"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <button
-                                      onClick={() =>
-                                        setStatusDropdownId(
-                                          statusDropdownId === order.id
-                                            ? null
-                                            : order.id,
-                                        )
-                                      }
-                                      disabled={updatingStatusId === order.id}
-                                      title="Change Status"
-                                      className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                                    <Link
+                                      to={`/orders/${order.id}`}
+                                      className={`p-1.5 rounded-lg transition-colors ${
                                         isTerminated
                                           ? "text-red-400 hover:text-red-600 hover:bg-red-50"
                                           : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
                                       }`}
                                     >
-                                      <ClipboardList className="w-4 h-4" />
-                                    </button>
+                                      <Eye className="w-4 h-4" />
+                                    </Link>
+                                  </TutorTooltip>
+                                  {/* Change Status */}
+                                  <div
+                                    className="relative"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <TutorTooltip
+                                      text="Open the status menu for this order."
+                                      position="top"
+                                      wrapperClass="inline-flex"
+                                      componentName="OrderRegistry.Table.Actions"
+                                    >
+                                      <button
+                                        onClick={() =>
+                                          setStatusDropdownId(
+                                            statusDropdownId === order.id
+                                              ? null
+                                              : order.id,
+                                          )
+                                        }
+                                        disabled={updatingStatusId === order.id}
+                                        title="Change Status"
+                                        className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                                          isTerminated
+                                            ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                            : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50"
+                                        }`}
+                                      >
+                                        <ClipboardList className="w-4 h-4" />
+                                      </button>
+                                    </TutorTooltip>
                                     {statusDropdownId === order.id && (
                                       <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#1d1d1f]/10 rounded-xl shadow-lg py-1 min-w-[210px]">
                                         <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">
@@ -1776,15 +1967,22 @@ const OrderRegistry = () => {
                                       </div>
                                     )}
                                   </div>
-                                  <button
-                                    className={`p-1.5 rounded-lg transition-colors ${
-                                      isTerminated
-                                        ? "text-red-400 hover:text-red-600 hover:bg-red-50"
-                                        : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"
-                                    }`}
+                                  <TutorTooltip
+                                    text="Open more actions for this order when available."
+                                    position="top"
+                                    wrapperClass="inline-flex"
+                                    componentName="OrderRegistry.Table.Actions"
                                   >
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </button>
+                                    <button
+                                      className={`p-1.5 rounded-lg transition-colors ${
+                                        isTerminated
+                                          ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                                          : "text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"
+                                      }`}
+                                    >
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </button>
+                                  </TutorTooltip>
                                 </div>
                               </div>
                             </td>
