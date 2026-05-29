@@ -289,6 +289,8 @@ const NavItem = ({
 interface OrderInfoProps {
   isPreProvision: boolean;
   onPreProvisionToggle: (v: boolean) => void;
+  isCloudChekrReminder: boolean;
+  onCloudChekrReminderToggle: (v: boolean) => void;
   serviceNo: string;
   setServiceNo: (v: string) => void;
   status: string;
@@ -314,6 +316,8 @@ interface OrderInfoProps {
 const OrderInfoSection = ({
   isPreProvision,
   onPreProvisionToggle,
+  isCloudChekrReminder,
+  onCloudChekrReminderToggle,
   serviceNo,
   setServiceNo,
   status,
@@ -355,34 +359,53 @@ const OrderInfoSection = ({
           <div className="flex-1 h-px bg-[#eee9df]" />
         </div>
       </WithTutorTooltip>
-      <TutorTooltip
-        text="Check this box if you are creating an account before receiving an official Service No. This will pre-fill many fields with 'TBC'."
-        position="left"
-        wrapperClass="ml-6 shrink-0"
-      >
-        <button
-          type="button"
-          onClick={() => onPreProvisionToggle(!isPreProvision)}
-          className="flex items-center gap-2.5 shrink-0"
+      <div className="ml-6 flex shrink-0 flex-wrap items-center justify-end gap-4">
+        <TutorTooltip
+          text="Use this when preparing a CloudChekr reminder. It fills the same TBC defaults, leaves Service Type blank, and selects AWS."
+          position="left"
+          wrapperClass="shrink-0"
         >
-          <div
-            className={`relative w-9 h-5 rounded-full transition-colors ${
-              isPreProvision ? "bg-[#094cb2]" : "bg-[#dad4c8]"
-            }`}
+          <label
+            className={`flex cursor-pointer items-center gap-2.5 text-sm font-medium ${TERTIARY_TEXT} whitespace-nowrap`}
+          >
+            <input
+              type="checkbox"
+              checked={isCloudChekrReminder}
+              onChange={(e) => onCloudChekrReminderToggle(e.target.checked)}
+              className="h-4 w-4 rounded border-[#dad4c8] text-[#094cb2] focus:ring-[#094cb2]/20"
+            />
+            CloudChekr Reminder?
+          </label>
+        </TutorTooltip>
+        <TutorTooltip
+          text="Check this box if you are creating an account before receiving an official Service No. This will pre-fill many fields with 'TBC'."
+          position="left"
+          wrapperClass="shrink-0"
+        >
+          <button
+            type="button"
+            onClick={() => onPreProvisionToggle(!isPreProvision)}
+            className="flex items-center gap-2.5 shrink-0"
           >
             <div
-              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                isPreProvision ? "translate-x-4" : "translate-x-0"
+              className={`relative w-9 h-5 rounded-full transition-colors ${
+                isPreProvision ? "bg-[#094cb2]" : "bg-[#dad4c8]"
               }`}
-            />
-          </div>
-          <span
-            className={`text-sm font-medium ${TERTIARY_TEXT} whitespace-nowrap`}
-          >
-            Pre-Provision
-          </span>
-        </button>
-      </TutorTooltip>
+            >
+              <div
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  isPreProvision ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </div>
+            <span
+              className={`text-sm font-medium ${TERTIARY_TEXT} whitespace-nowrap`}
+            >
+              Pre-Provision
+            </span>
+          </button>
+        </TutorTooltip>
+      </div>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -1056,6 +1079,7 @@ const NewOrder = () => {
   const [activeSection, setActiveSection] = useState<number>(0);
 
   const [isPreProvision, setIsPreProvision] = useState(false);
+  const [isCloudChekrReminder, setIsCloudChekrReminder] = useState(false);
   const [serviceNo, setServiceNo] = useState("");
   const [status, setStatus] = useState("");
   const [productSubscribe, setProductSubscribe] = useState("");
@@ -1121,60 +1145,83 @@ const NewOrder = () => {
       });
   }, [searchParams]);
 
+  const applyTbcDefaults = (serviceTypeValue: string) => {
+    // 1. Status default to "Pending for order issued"
+    setStatus("Pending for order issued");
+    // 2. Order Type default to "New Install"
+    setOrderType("New Install");
+
+    // 3. Pre-fill "TBC" for text fields
+    setServiceNo("TBC");
+    setServiceType(serviceTypeValue);
+    setOasisNumber("TBC");
+    setSubName("TBC");
+    setContactPerson("TBC");
+    setContactNo("TBC");
+    setContactEmail("TBC");
+    setContactNo2("TBC");
+    setContactEmail2("TBC");
+    setBillingAddress("TBC");
+    setBillingAccount("TBC");
+    setAccountName("TBC");
+    setAccountLoginEmail("TBC");
+    setAzurePrimaryDomain("TBC");
+    setPassword("TBC");
+    setOtherAccountInfo("TBC");
+    setCxsRequestNo("TBC");
+    setTid("TBC");
+    setSdNumber("TBC");
+    setOrderFormUrl("TBC");
+
+    // Fields to leave blank: productSubscribe, companyName, accountId, by, caseId, caseIdUrl, remark
+  };
+
+  const clearTbcDefaults = () => {
+    setServiceNo("");
+    setStatus("");
+    setOrderType("");
+    setServiceType("");
+    setOasisNumber("");
+    setSubName("");
+    setContactPerson("");
+    setContactNo("");
+    setContactEmail("");
+    setContactNo2("");
+    setContactEmail2("");
+    setBillingAddress("");
+    setBillingAccount("");
+    setAccountName("");
+    setAccountLoginEmail("");
+    setAzurePrimaryDomain("");
+    setPassword("");
+    setOtherAccountInfo("");
+    setCxsRequestNo("");
+    setTid("");
+    setSdNumber("");
+    setOrderFormUrl("");
+  };
+
   const handlePreProvisionToggle = (val: boolean) => {
     setIsPreProvision(val);
     if (val) {
-      // 1. Status default to "Pending for order issued"
-      setStatus("Pending for order issued");
-      // 2. Order Type default to "New Install"
-      setOrderType("New Install");
-
-      // 3. Pre-fill "TBC" for text fields
-      setServiceNo("TBC");
-      setServiceType("Pre-Provision");
-      setOasisNumber("TBC");
-      setSubName("TBC");
-      setContactPerson("TBC");
-      setContactNo("TBC");
-      setContactEmail("TBC");
-      setContactNo2("TBC");
-      setContactEmail2("TBC");
-      setBillingAddress("TBC");
-      setBillingAccount("TBC");
-      setAccountName("TBC");
-      setAccountLoginEmail("TBC");
-      setAzurePrimaryDomain("TBC");
-      setPassword("TBC");
-      setOtherAccountInfo("TBC");
-      setCxsRequestNo("TBC");
-      setTid("TBC");
-      setSdNumber("TBC");
-      setOrderFormUrl("TBC");
-
-      // Fields to leave blank: productSubscribe, companyName, accountId, by, caseId, caseIdUrl, remark
+      setIsCloudChekrReminder(false);
+      applyTbcDefaults("Pre-Provision");
     } else {
-      setServiceNo("");
-      setStatus("");
-      setOrderType("");
-      setServiceType("");
-      setOasisNumber("");
-      setSubName("");
-      setContactPerson("");
-      setContactNo("");
-      setContactEmail("");
-      setContactNo2("");
-      setContactEmail2("");
-      setBillingAddress("");
-      setBillingAccount("");
-      setAccountName("");
-      setAccountLoginEmail("");
-      setAzurePrimaryDomain("");
-      setPassword("");
-      setOtherAccountInfo("");
-      setCxsRequestNo("");
-      setTid("");
-      setSdNumber("");
-      setOrderFormUrl("");
+      clearTbcDefaults();
+    }
+  };
+
+  const handleCloudChekrReminderToggle = (val: boolean) => {
+    setIsCloudChekrReminder(val);
+    if (val) {
+      setIsPreProvision(false);
+      resetCloudAccountFields();
+      applyTbcDefaults("");
+      setProductSubscribe("AWS");
+    } else {
+      clearTbcDefaults();
+      setProductSubscribe("");
+      resetCloudAccountFields();
     }
   };
 
@@ -1443,6 +1490,8 @@ const NewOrder = () => {
             <OrderInfoSection
               isPreProvision={isPreProvision}
               onPreProvisionToggle={handlePreProvisionToggle}
+              isCloudChekrReminder={isCloudChekrReminder}
+              onCloudChekrReminderToggle={handleCloudChekrReminderToggle}
               serviceNo={serviceNo}
               setServiceNo={setServiceNo}
               status={status}
