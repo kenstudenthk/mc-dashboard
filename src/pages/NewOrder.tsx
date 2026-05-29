@@ -1131,7 +1131,7 @@ const NewOrder = () => {
 
       // 3. Pre-fill "TBC" for text fields
       setServiceNo("TBC");
-      setServiceType("TBC");
+      setServiceType("Pre-Provision");
       setOasisNumber("TBC");
       setSubName("TBC");
       setContactPerson("TBC");
