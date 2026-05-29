@@ -235,6 +235,9 @@ const OrderRegistry = () => {
   const [caseIdEditId, setCaseIdEditId] = useState<number | null>(null);
   const [caseIdDraft, setCaseIdDraft] = useState({ CaseID: "", CaseIDURL: "" });
   const [savingCaseId, setSavingCaseId] = useState<number | null>(null);
+  const [crmEditId, setCrmEditId] = useState<number | null>(null);
+  const [crmDraft, setCrmDraft] = useState({ CxSRequestNo: "", CRMURL: "" });
+  const [savingCrmId, setSavingCrmId] = useState<number | null>(null);
 
   const { userEmail } = usePermission();
   const {
@@ -300,6 +303,13 @@ const OrderRegistry = () => {
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [caseIdEditId]);
+
+  useEffect(() => {
+    if (crmEditId === null) return;
+    const handler = () => setCrmEditId(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [crmEditId]);
 
   useEffect(() => {
     if (!userEmail) return;
@@ -533,6 +543,108 @@ const OrderRegistry = () => {
               className="rounded-lg bg-[#0071e3] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[#005bb5] disabled:opacity-50"
             >
               {isSaving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleCrmOpen = (order: Order) => {
+    const isOpen = crmEditId === order.id;
+    setCaseIdEditId(null);
+    setCrmEditId(isOpen ? null : order.id);
+    setCrmDraft({
+      CxSRequestNo: order.CxSRequestNo ?? "",
+      CRMURL: order.CRMURL ?? "",
+    });
+  };
+
+  const handleCrmSave = async (order: Order) => {
+    setSavingCrmId(order.id);
+    try {
+      await orderService.update(
+        order.id,
+        buildOrderUpdatePayload(order, {
+          CxSRequestNo: crmDraft.CxSRequestNo,
+          CRMURL: crmDraft.CRMURL,
+        }),
+        userEmail,
+      );
+      invalidateOrders();
+      setCrmEditId(null);
+    } finally {
+      setSavingCrmId(null);
+    }
+  };
+
+  const renderCrmPopover = (
+    order: Order,
+    align: "left" | "right" = "left",
+  ) => {
+    const isSaving = savingCrmId === order.id;
+    return (
+      <div
+        className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-50 mt-2 w-72 rounded-xl border border-[#1d1d1f]/10 bg-white shadow-[0_18px_45px_rgba(29,29,31,0.18)]`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-[#1d1d1f]/08 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#1d1d1f]/40">
+            Edit CRM URL
+          </span>
+          <button
+            type="button"
+            onClick={() => setCrmEditId(null)}
+            className="rounded-md p-1 text-[#1d1d1f]/35 transition-colors hover:bg-[#f5f5f7] hover:text-[#1d1d1f]"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <div className="space-y-2.5 p-3">
+          <div>
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[#1d1d1f]/40">
+              CxS / WFM No.
+            </label>
+            <input
+              type="text"
+              value={crmDraft.CxSRequestNo}
+              onChange={(e) =>
+                setCrmDraft((d) => ({ ...d, CxSRequestNo: e.target.value }))
+              }
+              className="w-full rounded-lg border border-[#1d1d1f]/10 bg-[#faf9f7] px-3 py-1.5 text-sm text-[#1d1d1f]/75 outline-none transition-all focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/15"
+              placeholder="e.g. 9026052706927440"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[#1d1d1f]/40">
+              CRMURL
+            </label>
+            <input
+              type="url"
+              value={crmDraft.CRMURL}
+              onChange={(e) =>
+                setCrmDraft((d) => ({ ...d, CRMURL: e.target.value }))
+              }
+              className="w-full rounded-lg border border-[#1d1d1f]/10 bg-[#faf9f7] px-3 py-1.5 text-sm text-[#1d1d1f]/75 outline-none transition-all focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/15"
+              placeholder="https://..."
+            />
+          </div>
+          <div className="flex items-center justify-end gap-1.5 pt-0.5">
+            <button
+              type="button"
+              onClick={() => setCrmEditId(null)}
+              className="rounded-lg border border-[#1d1d1f]/10 bg-white px-3 py-1.5 text-xs text-[#1d1d1f]/45 transition-colors hover:bg-[#f5f5f7]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleCrmSave(order)}
+              className="rounded-lg bg-[#0071e3] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[#005bb5] disabled:opacity-50"
+            >
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </div>
@@ -1510,7 +1622,51 @@ const OrderRegistry = () => {
                                   : "text-[#1d1d1f]/55"
                               }`}
                             >
-                              {order.CxSRequestNo ?? "—"}
+                              <div
+                                className="group/cxs relative flex items-center gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  {order.CxSRequestNo ? (
+                                    order.CRMURL ? (
+                                      <a
+                                        href={order.CRMURL}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="block truncate text-[#0071e3] hover:underline"
+                                        title={order.CxSRequestNo}
+                                      >
+                                        {order.CxSRequestNo}
+                                      </a>
+                                    ) : (
+                                      <span
+                                        className={`block truncate ${isTerminated ? "text-red-500" : "text-[#1d1d1f]/55"}`}
+                                        title={order.CxSRequestNo}
+                                      >
+                                        {order.CxSRequestNo}
+                                      </span>
+                                    )
+                                  ) : (
+                                    <span className="text-[#1d1d1f]/25">—</span>
+                                  )}
+                                </div>
+                                <TutorTooltip
+                                  text="Edit the CxS / WFM number and optional CRM link for this order."
+                                  position="top"
+                                  wrapperClass="inline-flex flex-shrink-0"
+                                  componentName="OrderRegistry.Table.Actions"
+                                >
+                                  <button
+                                    type="button"
+                                    title="Edit CRM URL"
+                                    onClick={() => handleCrmOpen(order)}
+                                    className="flex-shrink-0 rounded p-0.5 text-[#1d1d1f]/25 opacity-0 transition-all hover:bg-blue-50 hover:text-[#0071e3] group-hover/cxs:opacity-100"
+                                  >
+                                    <PencilLine className="h-3 w-3" />
+                                  </button>
+                                </TutorTooltip>
+                                {crmEditId === order.id && renderCrmPopover(order)}
+                              </div>
                             </td>
                             <td
                               className={`px-3 py-3 text-xs w-[90px] ${
