@@ -912,6 +912,8 @@ const CloudServiceSection = ({
 interface ProvisioningProps {
   cxsRequestNo: string;
   setCxsRequestNo: (v: string) => void;
+  crmUrl: string;
+  setCrmUrl: (v: string) => void;
   tid: string;
   setTid: (v: string) => void;
   sdNumber: string;
@@ -937,6 +939,8 @@ interface ProvisioningProps {
 const ProvisioningSection = ({
   cxsRequestNo,
   setCxsRequestNo,
+  crmUrl,
+  setCrmUrl,
   tid,
   setTid,
   sdNumber,
@@ -977,6 +981,13 @@ const ProvisioningSection = ({
         tooltip="Enter the CxS request number used to track provisioning activity."
         value={cxsRequestNo}
         onChange={(e) => setCxsRequestNo(e.target.value)}
+      />
+      <InputGroup
+        label="CRMURL"
+        placeholder="https://…"
+        tooltip="Paste the CRM link so the team can open the related CxS request record."
+        value={crmUrl}
+        onChange={(e) => setCrmUrl(e.target.value)}
       />
       <InputGroup
         label="TID"
@@ -1107,6 +1118,7 @@ const NewOrder = () => {
   const [password, setPassword] = useState("");
   const [otherAccountInfo, setOtherAccountInfo] = useState("");
   const [cxsRequestNo, setCxsRequestNo] = useState("");
+  const [crmUrl, setCrmUrl] = useState("");
   const [tid, setTid] = useState("");
   const [sdNumber, setSdNumber] = useState("");
   const [psJob, setPsJob] = useState("");
@@ -1169,6 +1181,7 @@ const NewOrder = () => {
     setPassword("TBC");
     setOtherAccountInfo("TBC");
     setCxsRequestNo("TBC");
+    setCrmUrl("TBC");
     setTid("TBC");
     setSdNumber("TBC");
     setOrderFormUrl("TBC");
@@ -1196,6 +1209,7 @@ const NewOrder = () => {
     setPassword("");
     setOtherAccountInfo("");
     setCxsRequestNo("");
+    setCrmUrl("");
     setTid("");
     setSdNumber("");
     setOrderFormUrl("");
@@ -1319,6 +1333,7 @@ const NewOrder = () => {
           ContactEmail2: contactEmail2 || undefined,
           BillingAddress: billingAddress || undefined,
           CxSRequestNo: cxsRequestNo || undefined,
+          CRMURL: crmUrl || undefined,
           TID: tid || undefined,
           SDNumber: sdNumber || undefined,
           PSJob: psJob || undefined,
@@ -1559,6 +1574,8 @@ const NewOrder = () => {
             <ProvisioningSection
               cxsRequestNo={cxsRequestNo}
               setCxsRequestNo={setCxsRequestNo}
+              crmUrl={crmUrl}
+              setCrmUrl={setCrmUrl}
               tid={tid}
               setTid={setTid}
               sdNumber={sdNumber}

@@ -29,6 +29,7 @@ export interface Order {
   Password?: string;
   OtherAccountInfo?: string;
   CxSRequestNo?: string;
+  CRMURL?: string;
   TID?: string;
   SDNumber?: string;
   PSJob?: string;
@@ -80,6 +81,7 @@ export interface CreateOrderInput {
   Password?: string;
   OtherAccountInfo?: string;
   CxSRequestNo?: string;
+  CRMURL?: string;
   TID?: string;
   SDNumber?: string;
   PSJob?: string;
@@ -121,6 +123,7 @@ const ORDER_STRING_FIELDS = new Set([
   "Password",
   "OtherAccountInfo",
   "CxSRequestNo",
+  "CRMURL",
   "TID",
   "SDNumber",
   "PSJob",

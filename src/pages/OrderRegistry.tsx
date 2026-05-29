@@ -100,6 +100,7 @@ const buildOrderUpdatePayload = (
   Password: order.Password ?? "",
   OtherAccountInfo: order.OtherAccountInfo ?? "",
   CxSRequestNo: order.CxSRequestNo ?? "",
+  CRMURL: order.CRMURL ?? "",
   TID: order.TID ?? "",
   SDNumber: order.SDNumber ?? "",
   PSJob: order.PSJob ?? "",
