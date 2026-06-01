@@ -84,6 +84,9 @@ const ServiceAccountCombobox = ({
     );
 
     if (match) {
+      if (provider === "AWS") {
+        onChange(match.SecondaryID ?? trimmed, match);
+      }
       setCheckResult("found");
       setCheckedAccount(match);
     } else {

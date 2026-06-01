@@ -37,6 +37,7 @@ import {
   ServiceAccount,
   CreateServiceAccountInput,
 } from "../services/serviceAccountService";
+import { masterListService, MasterListAccount } from "../services/masterListService";
 import { orderStepsService, OrderStep } from "../services/orderStepsService";
 import { emailService, EmailLog } from "../services/emailService";
 import { EmailComposePanel } from "../components/EmailComposePanel";
@@ -240,6 +241,111 @@ const InfoField = ({
 // ─── Edit Panel Components ────────────────────────────────────────────────────
 const inputClass = (val: string) =>
   `w-full px-3.5 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition-all text-sm placeholder:text-[#9f9b93] ${val ? "bg-white border-black/30" : "bg-[#faf9f7] border-[#dad4c8]"}`;
+
+const getMasterListBillingValue = (account: MasterListAccount): string =>
+  String(
+    account.Payer_AWS_ID ??
+      account.BillingAccount ??
+      account.MasterAccount ??
+      account.MasterAccountID ??
+      account.PrimaryAccountID ??
+      account.AccountID ??
+      account.RootID ??
+      account.Title ??
+      "",
+  ).trim();
+
+const getMasterListBillingLabel = (account: MasterListAccount): string => {
+  const value = getMasterListBillingValue(account);
+  const detail = [account.Customer_Name, account.AccountName, account.Company]
+    .filter((item): item is string => typeof item === "string" && item.trim() !== "")
+    .join(" - ");
+  return detail ? `${value} (${detail})` : value;
+};
+
+const AwsBillingAccountSelect = ({
+  customerId,
+  value,
+  onChange,
+}: {
+  customerId?: number;
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const [accounts, setAccounts] = useState<MasterListAccount[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
+
+    const loadAccounts = customerId
+      ? masterListService
+          .findByCustomerId(customerId)
+          .catch(() => masterListService.findAll())
+      : masterListService.findAll();
+
+    loadAccounts
+      .then((items) => {
+        if (!cancelled) setAccounts(items);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAccounts([]);
+          setLoadError(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId]);
+
+  const seen = new Set<string>();
+  const options = accounts.filter((account) => {
+    const accountValue = getMasterListBillingValue(account);
+    if (!accountValue || seen.has(accountValue)) return false;
+    seen.add(accountValue);
+    return true;
+  });
+  const hasCurrentValue = options.some(
+    (account) => getMasterListBillingValue(account) === value,
+  );
+
+  return (
+    <div className="space-y-1">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={loading && options.length === 0}
+        className={`${inputClass(value)} appearance-none ${loading && options.length === 0 ? "opacity-60 cursor-wait" : ""}`}
+      >
+        <option value="">
+          {loading ? "Loading master accounts..." : "Select master account"}
+        </option>
+        {value && !hasCurrentValue && <option value={value}>{value}</option>}
+        {options.map((account) => {
+          const accountValue = getMasterListBillingValue(account);
+          return (
+            <option key={`${account.id}-${accountValue}`} value={accountValue}>
+              {getMasterListBillingLabel(account)}
+            </option>
+          );
+        })}
+      </select>
+      {loadError && (
+        <p className="text-xs text-red-600">
+          Unable to load API_MasterList accounts.
+        </p>
+      )}
+    </div>
+  );
+};
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 const OrderDetails = () => {
@@ -1254,12 +1360,20 @@ const OrderDetails = () => {
                       value={serviceAccount?.PrimaryAccountID ?? order.SA_PrimaryAccountID}
                       isEdit={isEditMode}
                     >
-                      <input
-                        type="text"
-                        value={saEditForm.PrimaryAccountID ?? ""}
-                        onChange={(e) => setSa("PrimaryAccountID", e.target.value)}
-                        className={inputClass(saEditForm.PrimaryAccountID ?? "")}
-                      />
+                      {normalizeCloudProvider(editForm.CloudProvider ?? order.CloudProvider ?? "") === "AWS" ? (
+                        <AwsBillingAccountSelect
+                          customerId={Number(editForm.CustomerID ?? order.CustomerID) || undefined}
+                          value={saEditForm.PrimaryAccountID ?? ""}
+                          onChange={(value) => setSa("PrimaryAccountID", value)}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={saEditForm.PrimaryAccountID ?? ""}
+                          onChange={(e) => setSa("PrimaryAccountID", e.target.value)}
+                          className={inputClass(saEditForm.PrimaryAccountID ?? "")}
+                        />
+                      )}
                     </InfoField>
                     <InfoField
                       label={saLabels.accountId}

@@ -7,6 +7,7 @@ import ServiceAccountCombobox from "../components/ServiceAccountCombobox";
 import { orderService } from "../services/orderService";
 import { customerService, resolveOrCreateCustomer } from "../services/customerService";
 import { serviceAccountService, resolveOrCreateServiceAccount } from "../services/serviceAccountService";
+import { masterListService, MasterListAccount } from "../services/masterListService";
 import { usePermission } from "../contexts/PermissionContext";
 import { CLOUD_PROVIDER_OPTIONS, normalizeCloudProvider } from "../constants/cloudProviders";
 
@@ -47,6 +48,27 @@ const inputBase =
   "w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all text-sm text-black placeholder:text-[#9f9b93]";
 const filledInput = "bg-white border-[#094cb2]/40";
 const emptyInput = `${OAT_BG} ${OAT_BORDER}`;
+
+const getMasterListBillingValue = (account: MasterListAccount): string =>
+  String(
+    account.Payer_AWS_ID ??
+      account.BillingAccount ??
+      account.MasterAccount ??
+      account.MasterAccountID ??
+      account.PrimaryAccountID ??
+      account.AccountID ??
+      account.RootID ??
+      account.Title ??
+      "",
+  ).trim();
+
+const getMasterListBillingLabel = (account: MasterListAccount): string => {
+  const value = getMasterListBillingValue(account);
+  const detail = [account.Customer_Name, account.AccountName, account.Company]
+    .filter((item): item is string => typeof item === "string" && item.trim() !== "")
+    .join(" - ");
+  return detail ? `${value} (${detail})` : value;
+};
 
 // ─── Primitive Components ─────────────────────────────────────────────────────
 const WithTutorTooltip = ({
@@ -158,6 +180,96 @@ const SelectGroup = ({
     </div>
   </WithTutorTooltip>
 );
+
+const AwsBillingAccountSelect = ({
+  customerId,
+  value,
+  onChange,
+}: {
+  customerId: number | null;
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const [accounts, setAccounts] = useState<MasterListAccount[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
+
+    const loadAccounts = customerId
+      ? masterListService
+          .findByCustomerId(customerId)
+          .catch(() => masterListService.findAll())
+      : masterListService.findAll();
+
+    loadAccounts
+      .then((items) => {
+        if (!cancelled) setAccounts(items);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAccounts([]);
+          setLoadError(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId]);
+
+  const seen = new Set<string>();
+  const options = accounts.filter((account) => {
+    const accountValue = getMasterListBillingValue(account);
+    if (!accountValue || seen.has(accountValue)) return false;
+    seen.add(accountValue);
+    return true;
+  });
+  const hasCurrentValue = options.some(
+    (account) => getMasterListBillingValue(account) === value,
+  );
+
+  return (
+    <WithTutorTooltip
+      text="Choose the AWS payer or master account from API_MasterList."
+      position="bottom"
+    >
+      <div className="space-y-1.5">
+        <FieldLabel text="Billing Account / Master Account" />
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={loading && options.length === 0}
+          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(20,110,245)]/20 focus:border-[rgb(20,110,245)] transition-all appearance-none text-sm ${value ? "bg-white border-[#094cb2]/40 text-black" : `${OAT_BG} ${OAT_BORDER} ${SECONDARY_TEXT}`} ${loading && options.length === 0 ? "opacity-60 cursor-wait" : ""}`}
+        >
+          <option value="">
+            {loading ? "Loading master accounts..." : "Select master account"}
+          </option>
+          {value && !hasCurrentValue && <option value={value}>{value}</option>}
+          {options.map((account) => {
+            const accountValue = getMasterListBillingValue(account);
+            return (
+              <option key={`${account.id}-${accountValue}`} value={accountValue}>
+                {getMasterListBillingLabel(account)}
+              </option>
+            );
+          })}
+        </select>
+        {loadError && (
+          <p className="text-xs text-red-600">
+            Unable to load API_MasterList accounts.
+          </p>
+        )}
+      </div>
+    </WithTutorTooltip>
+  );
+};
 
 const ToggleGroup = ({
   label,
@@ -633,6 +745,7 @@ const CustomerInfoSection = ({
 );
 
 interface CloudServiceProps {
+  customerId: number | null;
   productSubscribe: string;
   setProductSubscribe: (v: string) => void;
   resetCloudAccountFields: () => void;
@@ -653,6 +766,7 @@ interface CloudServiceProps {
 }
 
 const CloudServiceSection = ({
+  customerId,
   productSubscribe,
   setProductSubscribe,
   resetCloudAccountFields,
@@ -707,12 +821,10 @@ const CloudServiceSection = ({
 
       {productSubscribe === "AWS" && (
         <>
-          <InputGroup
-            label="Billing Account / Master Account"
-            placeholder="e.g. 7.59168E+11"
-            tooltip="Enter the AWS payer or master account ID when it differs from the root account."
+          <AwsBillingAccountSelect
+            customerId={customerId}
             value={billingAccount}
-            onChange={(e) => setBillingAccount(e.target.value)}
+            onChange={setBillingAccount}
           />
           <TutorTooltip
             text="Search for an existing AWS account or enter the root account ID to create a linked service account when saved."
@@ -1551,6 +1663,7 @@ const NewOrder = () => {
           )}
           {activeSection === 2 && (
             <CloudServiceSection
+              customerId={customerId}
               productSubscribe={productSubscribe}
               setProductSubscribe={setProductSubscribe}
               resetCloudAccountFields={resetCloudAccountFields}
