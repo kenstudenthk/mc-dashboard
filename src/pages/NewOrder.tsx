@@ -190,12 +190,10 @@ const AwsBillingAccountSelect = ({
 }) => {
   const [accounts, setAccounts] = useState<MasterListAccount[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setLoadError(false);
 
     const payerAwsId = value.trim();
     const loadAccounts = payerAwsId
@@ -211,7 +209,6 @@ const AwsBillingAccountSelect = ({
       .catch(() => {
         if (!cancelled) {
           setAccounts([]);
-          setLoadError(true);
         }
       })
       .finally(() => {
@@ -260,11 +257,6 @@ const AwsBillingAccountSelect = ({
             );
           })}
         </select>
-        {loadError && (
-          <p className="text-xs text-red-600">
-            Unable to load API_MasterList accounts.
-          </p>
-        )}
       </div>
     </WithTutorTooltip>
   );
