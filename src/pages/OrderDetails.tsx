@@ -245,10 +245,18 @@ const inputClass = (val: string) =>
 const getMasterListBillingValue = (account: MasterListAccount): string =>
   String(
     account.Payer_AWS_ID ??
+      account.PayerAWSID ??
+      account.Payer_x0020_AWS_x0020_ID ??
+      account.Payer_x0020_AWS_x0020_Id ??
       account.BillingAccount ??
+      account.Billing_x0020_Account ??
+      account.Billing_x0020_Account_x0020__x002f ??
       account.MasterAccount ??
       account.MasterAccountID ??
+      account.Master_x0020_Account ??
+      account.Master_x0020_Account_x0020_ID ??
       account.PrimaryAccountID ??
+      account.PrimaryID ??
       account.AccountID ??
       account.RootID ??
       account.Title ??

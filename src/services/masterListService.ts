@@ -1,12 +1,4 @@
-const URL = (
-  import.meta.env.VITE_API_MASTER_ACCOUNT_URL ||
-  import.meta.env.VITE_API_MASTER_LIST_URL ||
-  import.meta.env.VITE_API_MASTERLIST_URL ||
-  import.meta.env.VITE_API_MasterList_URL ||
-  import.meta.env.VITE_API_MasterList ||
-  import.meta.env.VITE_API_API_MASTERLIST_URL ||
-  import.meta.env.VITE_API_API_MASTER_LIST_URL
-) as string;
+const URL = import.meta.env.VITE_API_MASTER_ACCOUNT_URL as string;
 
 export interface MasterListAccount {
   id: number;
@@ -14,10 +6,18 @@ export interface MasterListAccount {
   CustomerID?: number;
   CustomerIDId?: number;
   BillingAccount?: string;
+  Billing_x0020_Account?: string;
+  Billing_x0020_Account_x0020__x002f?: string;
   Payer_AWS_ID?: string;
+  PayerAWSID?: string;
+  Payer_x0020_AWS_x0020_ID?: string;
+  Payer_x0020_AWS_x0020_Id?: string;
   MasterAccount?: string;
   MasterAccountID?: string;
+  Master_x0020_Account?: string;
+  Master_x0020_Account_x0020_ID?: string;
   PrimaryAccountID?: string;
+  PrimaryID?: string;
   AccountID?: string;
   RootID?: string;
   AccountName?: string;
@@ -40,6 +40,23 @@ function withId(data: unknown): unknown {
   return data;
 }
 
+function unwrapData(data: unknown): unknown {
+  if (data === null || typeof data !== "object") return data;
+  const obj = data as Record<string, unknown>;
+  if (Array.isArray(obj.value)) return obj.value;
+  if (Array.isArray(obj.body)) return obj.body;
+  if (obj.body !== null && typeof obj.body === "object") {
+    const body = obj.body as Record<string, unknown>;
+    if (Array.isArray(body.value)) return body.value;
+    if (Array.isArray(body.data)) return body.data;
+  }
+  if (obj.data !== null && typeof obj.data === "object") {
+    const nested = unwrapData(obj.data);
+    if (nested !== obj.data) return nested;
+  }
+  return data;
+}
+
 async function call<T>(body: object): Promise<T> {
   if (!URL) throw new Error("VITE_API_MASTER_ACCOUNT_URL is not set");
 
@@ -52,11 +69,9 @@ async function call<T>(body: object): Promise<T> {
   const json = await res.json();
   if (json != null && typeof json === "object" && "success" in json) {
     if (!json.success) throw new Error(json.error?.message ?? "API error");
-    if (Array.isArray(json.data?.value))
-      return withId(json.data.value as T) as T;
-    if (json.data != null) return withId(json.data as T) as T;
+    if (json.data != null) return withId(unwrapData(json.data) as T) as T;
   }
-  return withId(json as T) as T;
+  return withId(unwrapData(json) as T) as T;
 }
 
 export const masterListService = {
