@@ -182,11 +182,9 @@ const SelectGroup = ({
 );
 
 const AwsBillingAccountSelect = ({
-  customerId,
   value,
   onChange,
 }: {
-  customerId: number | null;
   value: string;
   onChange: (value: string) => void;
 }) => {
@@ -199,9 +197,10 @@ const AwsBillingAccountSelect = ({
     setLoading(true);
     setLoadError(false);
 
-    const loadAccounts = customerId
+    const payerAwsId = value.trim();
+    const loadAccounts = payerAwsId
       ? masterListService
-          .findByCustomerId(customerId)
+          .findByPayerAwsId(payerAwsId)
           .catch(() => masterListService.findAll())
       : masterListService.findAll();
 
@@ -222,7 +221,7 @@ const AwsBillingAccountSelect = ({
     return () => {
       cancelled = true;
     };
-  }, [customerId]);
+  }, [value]);
 
   const seen = new Set<string>();
   const options = accounts.filter((account) => {
@@ -745,7 +744,6 @@ const CustomerInfoSection = ({
 );
 
 interface CloudServiceProps {
-  customerId: number | null;
   productSubscribe: string;
   setProductSubscribe: (v: string) => void;
   resetCloudAccountFields: () => void;
@@ -766,7 +764,6 @@ interface CloudServiceProps {
 }
 
 const CloudServiceSection = ({
-  customerId,
   productSubscribe,
   setProductSubscribe,
   resetCloudAccountFields,
@@ -822,7 +819,6 @@ const CloudServiceSection = ({
       {productSubscribe === "AWS" && (
         <>
           <AwsBillingAccountSelect
-            customerId={customerId}
             value={billingAccount}
             onChange={setBillingAccount}
           />
@@ -1663,7 +1659,6 @@ const NewOrder = () => {
           )}
           {activeSection === 2 && (
             <CloudServiceSection
-              customerId={customerId}
               productSubscribe={productSubscribe}
               setProductSubscribe={setProductSubscribe}
               resetCloudAccountFields={resetCloudAccountFields}

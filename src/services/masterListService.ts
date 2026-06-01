@@ -1,6 +1,11 @@
 const URL = (
+  import.meta.env.VITE_API_MASTER_ACCOUNT_URL ||
   import.meta.env.VITE_API_MASTER_LIST_URL ||
-  import.meta.env.VITE_API_MASTERLIST_URL
+  import.meta.env.VITE_API_MASTERLIST_URL ||
+  import.meta.env.VITE_API_MasterList_URL ||
+  import.meta.env.VITE_API_MasterList ||
+  import.meta.env.VITE_API_API_MASTERLIST_URL ||
+  import.meta.env.VITE_API_API_MASTER_LIST_URL
 ) as string;
 
 export interface MasterListAccount {
@@ -36,7 +41,7 @@ function withId(data: unknown): unknown {
 }
 
 async function call<T>(body: object): Promise<T> {
-  if (!URL) throw new Error("VITE_API_MASTER_LIST_URL is not set");
+  if (!URL) throw new Error("VITE_API_MASTER_ACCOUNT_URL is not set");
 
   const res = await fetch(URL, {
     method: "POST",
@@ -63,10 +68,10 @@ export const masterListService = {
     return Array.isArray(result) ? (result as MasterListAccount[]) : [];
   },
 
-  findByCustomerId: async (customerId: number): Promise<MasterListAccount[]> => {
+  findByPayerAwsId: async (payerAwsId: string): Promise<MasterListAccount[]> => {
     const result = await call<unknown>({
       action: "GET_BY_CUSTOMER",
-      data: { CustomerID: customerId },
+      data: { Payer_AWS_ID: payerAwsId },
     });
     return Array.isArray(result) ? (result as MasterListAccount[]) : [];
   },

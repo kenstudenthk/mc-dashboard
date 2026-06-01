@@ -264,11 +264,9 @@ const getMasterListBillingLabel = (account: MasterListAccount): string => {
 };
 
 const AwsBillingAccountSelect = ({
-  customerId,
   value,
   onChange,
 }: {
-  customerId?: number;
   value: string;
   onChange: (value: string) => void;
 }) => {
@@ -281,9 +279,10 @@ const AwsBillingAccountSelect = ({
     setLoading(true);
     setLoadError(false);
 
-    const loadAccounts = customerId
+    const payerAwsId = value.trim();
+    const loadAccounts = payerAwsId
       ? masterListService
-          .findByCustomerId(customerId)
+          .findByPayerAwsId(payerAwsId)
           .catch(() => masterListService.findAll())
       : masterListService.findAll();
 
@@ -304,7 +303,7 @@ const AwsBillingAccountSelect = ({
     return () => {
       cancelled = true;
     };
-  }, [customerId]);
+  }, [value]);
 
   const seen = new Set<string>();
   const options = accounts.filter((account) => {
@@ -1362,7 +1361,6 @@ const OrderDetails = () => {
                     >
                       {normalizeCloudProvider(editForm.CloudProvider ?? order.CloudProvider ?? "") === "AWS" ? (
                         <AwsBillingAccountSelect
-                          customerId={Number(editForm.CustomerID ?? order.CustomerID) || undefined}
                           value={saEditForm.PrimaryAccountID ?? ""}
                           onChange={(value) => setSa("PrimaryAccountID", value)}
                         />
