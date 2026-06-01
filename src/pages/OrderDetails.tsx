@@ -827,33 +827,40 @@ const OrderDetails = () => {
       <div className="flex gap-6 items-start">
         {/* Order sibling tabs — shown when ≥2 orders share the same Service No. */}
         {showTabs && (
-          <div
-            className="w-14 shrink-0 bg-white rounded-2xl p-2"
-            style={{
-              position: "sticky",
-              top: "1.5rem",
-              zIndex: 10,
-              border: "1px solid #dad4c8",
-              boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
-            }}
+          <TutorTooltip
+            text="These tabs show other orders that share the same Service No. Click another order to view its details."
+            position="right"
+            wrapperClass="w-14 shrink-0"
+            componentName="OrderDetails.SiblingOrders"
           >
-            {siblings.map((sibling, index) => {
-              const isActive = sibling.id === parsedId;
-              return (
-                <button
-                  key={sibling.id}
-                  onClick={() => navigate(`/orders/${sibling.id}`)}
-                  className="w-full rounded-xl py-2 text-xs font-medium text-center"
-                  style={{ background: isActive ? "#094cb2" : "transparent", color: isActive ? "white" : "#9f9b93" }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#faf9f7"; }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
-                >
-                  <div>Order</div>
-                  <div>{index + 1}</div>
-                </button>
-              );
-            })}
-          </div>
+            <div
+              className="bg-white rounded-2xl p-2"
+              style={{
+                position: "sticky",
+                top: "1.5rem",
+                zIndex: 10,
+                border: "1px solid #dad4c8",
+                boxShadow: "rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset",
+              }}
+            >
+              {siblings.map((sibling, index) => {
+                const isActive = sibling.id === parsedId;
+                return (
+                  <button
+                    key={sibling.id}
+                    onClick={() => navigate(`/orders/${sibling.id}`)}
+                    className="w-full rounded-xl py-2 text-xs font-medium text-center"
+                    style={{ background: isActive ? "#094cb2" : "transparent", color: isActive ? "white" : "#9f9b93" }}
+                    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#faf9f7"; }}
+                    onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <div>Order</div>
+                    <div>{index + 1}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </TutorTooltip>
         )}
 
         {/* Sticky sidebar */}

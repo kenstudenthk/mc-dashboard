@@ -42,6 +42,22 @@ import {
   CANONICAL_PROVIDERS,
 } from "../constants/cloudProviders";
 
+type TutorTooltipConfig = Omit<
+  React.ComponentProps<typeof TutorTooltip>,
+  "children"
+>;
+
+const renderFirstRowTutorTooltip = (
+  enabled: boolean,
+  config: TutorTooltipConfig,
+  children: React.ReactNode,
+) =>
+  enabled ? (
+    <TutorTooltip {...config}>{children}</TutorTooltip>
+  ) : (
+    <>{children}</>
+  );
+
 const formatDate = (iso: string): string => {
   if (!iso) return "—";
   try {
@@ -214,7 +230,8 @@ const ORDER_TYPE_OPTIONS = [
 const buildCustomerMap = (customers: Customer[]): Map<string, number> => {
   const map = new Map<string, number>();
   customers.forEach((c) => {
-    if (c.Title) map.set(c.Title.toLowerCase(), c.id);
+    const title = c.Title?.trim().toLowerCase();
+    if (title) map.set(title, c.id);
   });
   return map;
 };
@@ -851,21 +868,32 @@ const OrderRegistry = () => {
       const bVal = (b[sortKey] ?? "") as string;
       const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
       return sortDir === "asc" ? cmp : -cmp;
-    })
-    .sort((a, b) => {
-      const aPinned = pinnedIds.has(a.id) ? 1 : 0;
-      const bPinned = pinnedIds.has(b.id) ? 1 : 0;
-      return bPinned - aPinned;
     });
 
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
-  const pagedOrders = filteredOrders.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+  const pinnedOrders = filteredOrders.filter((order) => pinnedIds.has(order.id));
+  const unpinnedOrders = filteredOrders.filter(
+    (order) => !pinnedIds.has(order.id),
   );
+  const pinnedRowZIndex = (orderId: number) => {
+    const pinnedIndex = pinnedOrders.findIndex((order) => order.id === orderId);
+    return pinnedIndex === -1 ? undefined : 9 - pinnedIndex;
+  };
+  const totalPages = Math.max(1, Math.ceil(unpinnedOrders.length / PAGE_SIZE));
+  const unpinnedPageStart = (currentPage - 1) * PAGE_SIZE;
+  const pagedOrders = [
+    ...pinnedOrders,
+    ...unpinnedOrders.slice(
+      unpinnedPageStart,
+      unpinnedPageStart + PAGE_SIZE,
+    ),
+  ];
   const rangeStart =
-    filteredOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredOrders.length);
+    unpinnedOrders.length === 0 ? 0 : unpinnedPageStart + 1;
+  const rangeEnd = Math.min(unpinnedPageStart + PAGE_SIZE, unpinnedOrders.length);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   // Apply customer filter before computing tab counts so tab badges reflect the current customer scope
   const customerScopedOrders = allOrders.filter((o) => {
@@ -1068,16 +1096,21 @@ const OrderRegistry = () => {
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl rounded-tr-2xl border border-[#dad4c8] bg-white shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]">
             {/* Row 2: Search */}
             <div className="border-b border-[#dad4c8] bg-white px-4 py-3">
-              <TutorTooltip
-                text="Search for a specific order by typing the Service No, Customer Name, Account ID, or Account Name. Click the filter icon on the left to show additional filters."
-                position="bottom"
-                wrapperClass="relative w-full"
-              >
-                <div className="relative">
+              <div className="relative">
+                <TutorTooltip
+                  text={
+                    showFilters
+                      ? "Hide the advanced filters panel."
+                      : "Show advanced filters for provider, status, order type, and SRD date range."
+                  }
+                  position="bottom"
+                  wrapperClass="absolute left-2 top-1/2 z-10 -translate-y-1/2 inline-flex"
+                  componentName="OrderRegistry.FilterToggle"
+                >
                   <button
                     onClick={() => setShowFilters(!showFilters)}
                     title="Toggle filters"
-                    className={`absolute left-2 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+                    className={`flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
                       showFilters
                         ? "bg-[#0071e3]/10 text-[#0071e3]"
                         : "text-[#1d1d1f]/35 hover:bg-[#0071e3]/08 hover:text-[#0071e3]"
@@ -1090,6 +1123,13 @@ const OrderRegistry = () => {
                       </span>
                     )}
                   </button>
+                </TutorTooltip>
+                <TutorTooltip
+                  text="Search for a specific order by typing the Service No, Customer Name, Account ID, Case ID, provider, order type, or status."
+                  position="bottom"
+                  wrapperClass="relative w-full"
+                  componentName="OrderRegistry.Search"
+                >
                   <Search className="w-3.5 h-3.5 absolute left-12 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
                   <input
                     type="text"
@@ -1098,8 +1138,8 @@ const OrderRegistry = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-16 pr-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
                   />
-                </div>
-              </TutorTooltip>
+                </TutorTooltip>
+              </div>
             </div>
 
             {showFilters && (
@@ -1493,10 +1533,13 @@ const OrderRegistry = () => {
                   {loading ? (
                     <TableSkeleton />
                   ) : pagedOrders.length > 0 ? (
-                    pagedOrders.map((order) => {
+                    pagedOrders.map((order, index) => {
                       const isTerminated =
                         terminatedAccountIds.includes(order.AccountID) &&
                         order.OrderType !== "Termination";
+                      const customerId = customerMap.get(
+                        (order.CustomerName ?? "").trim().toLowerCase(),
+                      );
 
                       return (
                         <>
@@ -1517,16 +1560,26 @@ const OrderRegistry = () => {
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex flex-col gap-0.5 min-w-0">
-                                    <Link
-                                      to={`/orders/${order.id}`}
-                                      className={`text-xs font-semibold truncate ${
-                                        isTerminated
-                                          ? "text-red-600"
-                                          : "text-[#0071e3]"
-                                      }`}
-                                    >
-                                      {order.Title}
-                                    </Link>
+                                    {renderFirstRowTutorTooltip(
+                                      index === 0,
+                                      {
+                                        text: "Open this order's detail page.",
+                                        position: "right",
+                                        wrapperClass: "inline-block min-w-0",
+                                        componentName:
+                                          "OrderRegistry.MobileServiceNo",
+                                      },
+                                      <Link
+                                        to={`/orders/${order.id}`}
+                                        className={`text-xs font-semibold truncate ${
+                                          isTerminated
+                                            ? "text-red-600"
+                                            : "text-[#0071e3]"
+                                        }`}
+                                      >
+                                        {order.Title}
+                                      </Link>,
+                                    )}
                                     <span
                                       className={`text-sm truncate ${
                                         isTerminated
@@ -1538,16 +1591,17 @@ const OrderRegistry = () => {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <TutorTooltip
-                                      text={
-                                        pinnedIds.has(order.id)
+                                    {renderFirstRowTutorTooltip(
+                                      index === 0,
+                                      {
+                                        text: pinnedIds.has(order.id)
                                           ? "Unpin this order from the top of the list."
-                                          : "Pin this order to the top of the list."
-                                      }
-                                      position="bottom"
-                                      wrapperClass="inline-flex"
-                                      componentName="OrderRegistry.MobileActions"
-                                    >
+                                          : "Pin this order to the top of the list.",
+                                        position: "bottom",
+                                        wrapperClass: "inline-flex",
+                                        componentName:
+                                          "OrderRegistry.MobileActions",
+                                      },
                                       <button
                                         onClick={() => handlePinToggle(order.id)}
                                         className={`p-1 rounded-lg transition-colors ${
@@ -1561,8 +1615,8 @@ const OrderRegistry = () => {
                                         ) : (
                                           <Pin className="w-3.5 h-3.5" />
                                         )}
-                                      </button>
-                                    </TutorTooltip>
+                                      </button>,
+                                    )}
                                     <span
                                       className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${getStatusColor(
                                         order.Status,
@@ -1607,12 +1661,15 @@ const OrderRegistry = () => {
                                       className="relative"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <TutorTooltip
-                                        text="View or edit remarks for this order."
-                                        position="left"
-                                        wrapperClass="inline-flex"
-                                        componentName="OrderRegistry.MobileActions"
-                                      >
+                                      {renderFirstRowTutorTooltip(
+                                        index === 0,
+                                        {
+                                          text: "View or edit remarks for this order.",
+                                          position: "left",
+                                          wrapperClass: "inline-flex",
+                                          componentName:
+                                            "OrderRegistry.MobileActions",
+                                        },
                                         <button
                                           type="button"
                                           title="View remarks"
@@ -1626,17 +1683,20 @@ const OrderRegistry = () => {
                                           }`}
                                         >
                                           <MessageSquareText className="w-4 h-4" />
-                                        </button>
-                                      </TutorTooltip>
+                                        </button>,
+                                      )}
                                       {activeRemarkId === order.id &&
                                         renderRemarkPopover(order, "right")}
                                     </div>
-                                    <TutorTooltip
-                                      text="Open this order's detail page."
-                                      position="left"
-                                      wrapperClass="inline-flex"
-                                      componentName="OrderRegistry.MobileActions"
-                                    >
+                                    {renderFirstRowTutorTooltip(
+                                      index === 0,
+                                      {
+                                        text: "Open this order's detail page.",
+                                        position: "left",
+                                        wrapperClass: "inline-flex",
+                                        componentName:
+                                          "OrderRegistry.MobileActions",
+                                      },
                                       <Link
                                         to={`/orders/${order.id}`}
                                         className={`p-1.5 rounded-lg flex-shrink-0 ${
@@ -1646,8 +1706,8 @@ const OrderRegistry = () => {
                                         }`}
                                       >
                                         <Eye className="w-4 h-4" />
-                                      </Link>
-                                    </TutorTooltip>
+                                      </Link>,
+                                    )}
                                   </div>
                                 </div>
                                 <div className="mt-1 text-[10px] leading-none text-[#1d1d1f]/35">
@@ -1660,6 +1720,14 @@ const OrderRegistry = () => {
                           {/* ── Desktop table row (hidden on mobile) ── */}
                           <tr
                             key={order.id}
+                            style={
+                              pinnedIds.has(order.id)
+                                ? {
+                                    top: 56,
+                                    zIndex: pinnedRowZIndex(order.id),
+                                  }
+                                : undefined
+                            }
                             onClick={() =>
                               setSelectedOrderId(
                                 selectedOrderId === order.id ? null : order.id,
@@ -1669,7 +1737,7 @@ const OrderRegistry = () => {
                               isTerminated
                                 ? "bg-red-50/30 hover:bg-red-50/70"
                                 : pinnedIds.has(order.id)
-                                  ? "bg-[#f0fdfa] hover:bg-[#ccfbf1]"
+                                  ? "sticky bg-[#f0fdfa] shadow-[0_4px_12px_rgba(19,190,170,0.18)] hover:bg-[#ccfbf1]"
                                   : selectedOrderId === order.id
                                     ? "bg-[#eef6ff]"
                                     : "odd:bg-white even:bg-[#fcfaf7] hover:bg-[#fff7e8]"
@@ -1691,22 +1759,22 @@ const OrderRegistry = () => {
                                 handlePinToggle(order.id);
                               }}
                             >
-                              <TutorTooltip
-                                text={
-                                  pinnedIds.has(order.id)
+                              {renderFirstRowTutorTooltip(
+                                index === 0,
+                                {
+                                  text: pinnedIds.has(order.id)
                                     ? "Unpin this order from the top of the list."
-                                    : "Pin this order to the top of the list."
-                                }
-                                position="right"
-                                wrapperClass="inline-flex"
-                                componentName="OrderRegistry.Table.Actions"
-                              >
-                                {pinnedIds.has(order.id) ? (
+                                    : "Pin this order to the top of the list.",
+                                  position: "right",
+                                  wrapperClass: "inline-flex",
+                                  componentName: "OrderRegistry.Table.Actions",
+                                },
+                                pinnedIds.has(order.id) ? (
                                   <Pin className="w-3.5 h-3.5 fill-current text-red-500 rotate-90 mx-auto" />
                                 ) : (
                                   <Pin className="w-3.5 h-3.5 text-[#1d1d1f]/25 rotate-90 mx-auto transition-opacity" />
-                                )}
-                              </TutorTooltip>
+                                ),
+                              )}
                             </td>
                             <td
                               className={`${tableDataCellClass} text-xs font-semibold hover:underline ${
@@ -1714,28 +1782,46 @@ const OrderRegistry = () => {
                               }`}
                             >
                               <div className="flex min-h-9 flex-col justify-between gap-1">
-                                <Link to={`/orders/${order.id}`}>
-                                  {order.Title}
-                                </Link>
+                                {renderFirstRowTutorTooltip(
+                                  index === 0,
+                                  {
+                                    text: "Open this order's detail page.",
+                                    position: "right",
+                                    wrapperClass: "inline-block",
+                                    componentName:
+                                      "OrderRegistry.Table.ServiceNo",
+                                  },
+                                  <Link to={`/orders/${order.id}`}>
+                                    {order.Title}
+                                  </Link>,
+                                )}
                                 <span className="text-[10px] font-normal leading-none text-[#1d1d1f]/35">
                                   ID #{order.id}
                                 </span>
                               </div>
                             </td>
                             <td className={`${tableDataCellClass} min-w-[200px] text-sm font-medium`}>
-                              {customerMap.get(
-                                (order.CustomerName ?? "").toLowerCase(),
-                              ) ? (
-                                <Link
-                                  to={`/customers/${customerMap.get((order.CustomerName ?? "").toLowerCase())}`}
-                                  className={`hover:underline transition-colors ${
-                                    isTerminated
-                                      ? "text-red-500 hover:text-red-700"
-                                      : "text-[#1d1d1f]/70 hover:text-[#0071e3]"
-                                  }`}
-                                >
-                                  {order.CustomerName}
-                                </Link>
+                              {customerId ? (
+                                renderFirstRowTutorTooltip(
+                                  index === 0,
+                                  {
+                                    text: "Open this customer's profile page.",
+                                    position: "top",
+                                    wrapperClass: "inline-block",
+                                    componentName:
+                                      "OrderRegistry.Table.CustomerProfile",
+                                  },
+                                  <Link
+                                    to={`/customers/${customerId}`}
+                                    className={`hover:underline transition-colors ${
+                                      isTerminated
+                                        ? "text-red-500 hover:text-red-700"
+                                        : "text-[#1d1d1f]/70 hover:text-[#0071e3]"
+                                    }`}
+                                  >
+                                    {order.CustomerName}
+                                  </Link>,
+                                )
                               ) : (
                                 <span
                                   className={
@@ -1801,12 +1887,15 @@ const OrderRegistry = () => {
                                     <span className="text-[#1d1d1f]/25">—</span>
                                   )}
                                 </div>
-                                <TutorTooltip
-                                  text="Edit the Case ID and optional case link for this order."
-                                  position="top"
-                                  wrapperClass="inline-flex flex-shrink-0"
-                                  componentName="OrderRegistry.Table.Actions"
-                                >
+                                {renderFirstRowTutorTooltip(
+                                  index === 0,
+                                  {
+                                    text: "Edit the Case ID and optional case link for this order.",
+                                    position: "top",
+                                    wrapperClass: "inline-flex flex-shrink-0",
+                                    componentName:
+                                      "OrderRegistry.Table.Actions",
+                                  },
                                   <button
                                     type="button"
                                     title="Edit Case ID"
@@ -1814,8 +1903,8 @@ const OrderRegistry = () => {
                                     className="flex-shrink-0 rounded p-0.5 text-[#1d1d1f]/25 opacity-0 transition-all hover:bg-blue-50 hover:text-[#0071e3] group-hover/caseid:opacity-100"
                                   >
                                     <PencilLine className="h-3 w-3" />
-                                  </button>
-                                </TutorTooltip>
+                                  </button>,
+                                )}
                                 {caseIdEditId === order.id &&
                                   renderCaseIdPopover(order)}
                               </div>
@@ -1855,12 +1944,15 @@ const OrderRegistry = () => {
                                     <span className="text-[#1d1d1f]/25">—</span>
                                   )}
                                 </div>
-                                <TutorTooltip
-                                  text="Edit the CxS / WFM number and optional CRM link for this order."
-                                  position="top"
-                                  wrapperClass="inline-flex flex-shrink-0"
-                                  componentName="OrderRegistry.Table.Actions"
-                                >
+                                {renderFirstRowTutorTooltip(
+                                  index === 0,
+                                  {
+                                    text: "Edit the CxS / WFM number and optional CRM link for this order.",
+                                    position: "top",
+                                    wrapperClass: "inline-flex flex-shrink-0",
+                                    componentName:
+                                      "OrderRegistry.Table.Actions",
+                                  },
                                   <button
                                     type="button"
                                     title="Edit CRM URL"
@@ -1868,8 +1960,8 @@ const OrderRegistry = () => {
                                     className="flex-shrink-0 rounded p-0.5 text-[#1d1d1f]/25 opacity-0 transition-all hover:bg-blue-50 hover:text-[#0071e3] group-hover/cxs:opacity-100"
                                   >
                                     <PencilLine className="h-3 w-3" />
-                                  </button>
-                                </TutorTooltip>
+                                  </button>,
+                                )}
                                 {crmEditId === order.id && renderCrmPopover(order)}
                               </div>
                             </td>
@@ -1896,12 +1988,15 @@ const OrderRegistry = () => {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="relative inline-flex">
-                                <TutorTooltip
-                                  text="View or edit remarks for this order."
-                                  position="left"
-                                  wrapperClass="inline-flex"
-                                  componentName="OrderRegistry.Table.Actions"
-                                >
+                                {renderFirstRowTutorTooltip(
+                                  index === 0,
+                                  {
+                                    text: "View or edit remarks for this order.",
+                                    position: "left",
+                                    wrapperClass: "inline-flex",
+                                    componentName:
+                                      "OrderRegistry.Table.Actions",
+                                  },
                                   <button
                                     type="button"
                                     title="View remarks"
@@ -1915,8 +2010,8 @@ const OrderRegistry = () => {
                                     }`}
                                   >
                                     <MessageSquareText className="h-4 w-4" />
-                                  </button>
-                                </TutorTooltip>
+                                  </button>,
+                                )}
                                 {activeRemarkId === order.id &&
                                   renderRemarkPopover(order)}
                               </div>
@@ -1924,12 +2019,15 @@ const OrderRegistry = () => {
                             <td className={`${tableDataCellClass} text-right`}>
                               <div className="flex items-center justify-end gap-1.5">
                                 <div className="flex items-center gap-1.5 opacity-100 transition-opacity">
-                                  <TutorTooltip
-                                    text="Open this order's detail page."
-                                    position="top"
-                                    wrapperClass="inline-flex"
-                                    componentName="OrderRegistry.Table.Actions"
-                                  >
+                                  {renderFirstRowTutorTooltip(
+                                    index === 0,
+                                    {
+                                      text: "Open this order's detail page.",
+                                      position: "top",
+                                      wrapperClass: "inline-flex",
+                                      componentName:
+                                        "OrderRegistry.Table.Actions",
+                                    },
                                     <Link
                                       to={`/orders/${order.id}`}
                                       className={`p-1.5 rounded-lg transition-colors ${
@@ -1939,19 +2037,22 @@ const OrderRegistry = () => {
                                       }`}
                                     >
                                       <Eye className="w-4 h-4" />
-                                    </Link>
-                                  </TutorTooltip>
+                                    </Link>,
+                                  )}
                                   {/* Change Status */}
                                   <div
                                     className="relative"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <TutorTooltip
-                                      text="Open the status menu for this order."
-                                      position="top"
-                                      wrapperClass="inline-flex"
-                                      componentName="OrderRegistry.Table.Actions"
-                                    >
+                                    {renderFirstRowTutorTooltip(
+                                      index === 0,
+                                      {
+                                        text: "Open the status menu for this order.",
+                                        position: "top",
+                                        wrapperClass: "inline-flex",
+                                        componentName:
+                                          "OrderRegistry.Table.Actions",
+                                      },
                                       <button
                                         onClick={() =>
                                           setStatusDropdownId(
@@ -1969,8 +2070,8 @@ const OrderRegistry = () => {
                                         }`}
                                       >
                                         <ClipboardList className="w-4 h-4" />
-                                      </button>
-                                    </TutorTooltip>
+                                      </button>,
+                                    )}
                                     {statusDropdownId === order.id && (
                                       <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#1d1d1f]/10 rounded-xl shadow-lg py-1 min-w-[210px]">
                                         <p className="px-3 py-1.5 text-[10px] font-semibold text-[#1d1d1f]/35 uppercase tracking-wider">
@@ -2002,12 +2103,15 @@ const OrderRegistry = () => {
                                       </div>
                                     )}
                                   </div>
-                                  <TutorTooltip
-                                    text="Open more actions for this order when available."
-                                    position="top"
-                                    wrapperClass="inline-flex"
-                                    componentName="OrderRegistry.Table.Actions"
-                                  >
+                                  {renderFirstRowTutorTooltip(
+                                    index === 0,
+                                    {
+                                      text: "Open more actions for this order when available.",
+                                      position: "top",
+                                      wrapperClass: "inline-flex",
+                                      componentName:
+                                        "OrderRegistry.Table.Actions",
+                                    },
                                     <button
                                       className={`p-1.5 rounded-lg transition-colors ${
                                         isTerminated
@@ -2016,8 +2120,8 @@ const OrderRegistry = () => {
                                       }`}
                                     >
                                       <MoreHorizontal className="w-4 h-4" />
-                                    </button>
-                                  </TutorTooltip>
+                                    </button>,
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -2043,7 +2147,13 @@ const OrderRegistry = () => {
               <span>
                 {filteredOrders.length === 0
                   ? "No entries"
-                  : `Showing ${rangeStart}–${rangeEnd} of ${filteredOrders.length} entries`}
+                  : unpinnedOrders.length === 0
+                    ? `Showing ${pinnedOrders.length} pinned entries`
+                    : `Showing ${rangeStart}–${rangeEnd} of ${unpinnedOrders.length} entries${
+                        pinnedOrders.length > 0
+                          ? ` + ${pinnedOrders.length} pinned`
+                          : ""
+                      }`}
               </span>
               <div className="flex gap-1">
                 <button
