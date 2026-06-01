@@ -337,8 +337,12 @@ export const orderService = {
   },
 
   create: async (data: CreateOrderInput, userEmail: string): Promise<Order> => {
-    const { SAId, ...rest } = data;
-    const payload = SAId != null ? { ...rest, SA: Number(SAId) } : rest;
+    const { SAId, CloudChekr_Reminder, ...rest } = data;
+    const payload = {
+      ...rest,
+      ...(SAId != null && { SA: Number(SAId) }),
+      CloudChekr_Reminder: String(CloudChekr_Reminder ?? false),
+    };
     return call<Order>({ action: "CREATE", data: payload, userEmail });
   },
 
