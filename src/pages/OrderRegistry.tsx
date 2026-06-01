@@ -18,6 +18,9 @@ import {
   MessageSquareText,
   X,
   Check,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 import { TutorTooltip } from "../components/TutorTooltip";
 import { CloudProviderLogo } from "../components/CloudProviderLogo";
@@ -156,20 +159,40 @@ function TableSkeleton() {
 }
 
 function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
-  if (!active)
-    return (
-      <span className="ml-1 opacity-0 group-hover:opacity-40 text-[10px]">
-        ↕
-      </span>
-    );
+  const iconClass = "h-3.5 w-3.5";
+
   return (
-    <span className="ml-1 text-[#0071e3] text-[10px]">
-      {dir === "asc" ? "↑" : "↓"}
+    <span
+      className={`ml-2 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors ${
+        active
+          ? "bg-[#22d3c5] text-[#16130f] shadow-sm"
+          : "bg-white/10 text-white/55 ring-1 ring-white/15 group-hover:bg-white group-hover:text-[#16130f] group-hover:ring-white"
+      }`}
+    >
+      {active ? (
+        dir === "asc" ? (
+          <ArrowUp className={iconClass} />
+        ) : (
+          <ArrowDown className={iconClass} />
+        )
+      ) : (
+        <ArrowUpDown className={iconClass} />
+      )}
     </span>
   );
 }
 
 const PAGE_SIZE = 20;
+
+const tableHeaderCellClass =
+  "border-r border-white/10 px-3 py-3 last:border-r-0";
+
+const tableHeaderButtonClass = (active: boolean) =>
+  `group flex min-h-10 w-full cursor-pointer select-none items-center justify-between rounded-md px-2.5 text-left text-[11px] font-bold uppercase text-white transition-colors hover:bg-white/12 ${
+    active ? "bg-white/15 shadow-sm ring-1 ring-[#22d3c5]/70" : ""
+  }`;
+
+const tableDataCellClass = "border-r border-[#ece7df] px-3 py-3 last:border-r-0";
 
 const STATUS_OPTIONS = [
   "Processing",
@@ -1034,7 +1057,7 @@ const OrderRegistry = () => {
             >
               <Link
                 to="/orders/new"
-                className="mb-2 flex items-center gap-1.5 rounded-xl border border-black bg-black px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#333]"
+                className="mb-2 flex items-center gap-1.5 rounded-xl border border-[#0f9f90] bg-[#13beaa] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#0f9f90] focus:outline-none focus:ring-2 focus:ring-[#13beaa]/30"
               >
                 <Plus className="w-3.5 h-3.5" />
                 New Order
@@ -1046,26 +1069,18 @@ const OrderRegistry = () => {
             {/* Row 2: Search */}
             <div className="border-b border-[#dad4c8] bg-white px-4 py-3">
               <TutorTooltip
-                text="Search for a specific order by typing the Service No, Customer Name, Account ID, or Account Name. Click the filter icon on the right to show additional filters."
+                text="Search for a specific order by typing the Service No, Customer Name, Account ID, or Account Name. Click the filter icon on the left to show additional filters."
                 position="bottom"
                 wrapperClass="relative w-full"
               >
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
-                  <input
-                    type="text"
-                    placeholder="Search service no., customer, account, case, provider, type, or status..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-9 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-                  />
                   <button
                     onClick={() => setShowFilters(!showFilters)}
                     title="Toggle filters"
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+                    className={`absolute left-2 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
                       showFilters
-                        ? "text-[#0071e3]"
-                        : "text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-[#0071e3]/08"
+                        ? "bg-[#0071e3]/10 text-[#0071e3]"
+                        : "text-[#1d1d1f]/35 hover:bg-[#0071e3]/08 hover:text-[#0071e3]"
                     }`}
                   >
                     <Filter className="w-3.5 h-3.5" />
@@ -1075,6 +1090,14 @@ const OrderRegistry = () => {
                       </span>
                     )}
                   </button>
+                  <Search className="w-3.5 h-3.5 absolute left-12 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
+                  <input
+                    type="text"
+                    placeholder="Search service no., customer, account, case, provider, type, or status..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-16 pr-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+                  />
                 </div>
               </TutorTooltip>
             </div>
@@ -1301,11 +1324,11 @@ const OrderRegistry = () => {
             )}
 
             <div className="overflow-x-auto flex-1 overflow-y-auto">
-              <table className="w-full text-left">
+              <table className="w-full border-separate border-spacing-0 text-left">
                 <thead className="sticky top-0 z-10 hidden md:table-header-group">
-                  <tr className="h-11 border-b border-[#dad4c8] bg-[#f5f3ef]">
-                    <th className="w-6 p-0" />
-                    <th className="px-3 py-3">
+                  <tr className="h-14 border-y border-[#16130f] bg-[#24211c] shadow-[0_8px_18px_rgba(29,29,31,0.16)]">
+                    <th className="w-6 border-r border-white/10 bg-[#181612] p-0" />
+                    <th className={tableHeaderCellClass}>
                       <TutorTooltip
                         text="Sort by Service No. Click to toggle ascending/descending."
                         position="top"
@@ -1313,7 +1336,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="flex w-full cursor-pointer select-none items-center text-left text-xs font-semibold text-[#55534e] transition-colors hover:text-black"
+                          className={tableHeaderButtonClass(sortKey === "Title")}
                           onClick={() => handleSort("Title")}
                         >
                           Service No.
@@ -1324,7 +1347,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3 min-w-[200px]">
+                    <th className={`${tableHeaderCellClass} min-w-[200px]`}>
                       <TutorTooltip
                         text="Sort by Company Name."
                         position="top"
@@ -1332,7 +1355,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "CustomerName")}
                           onClick={() => handleSort("CustomerName")}
                         >
                           Company Name
@@ -1343,7 +1366,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3">
+                    <th className={tableHeaderCellClass}>
                       <TutorTooltip
                         text="Sort by Cloud Provider."
                         position="top"
@@ -1351,7 +1374,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "CloudProvider")}
                           onClick={() => handleSort("CloudProvider")}
                         >
                           Product Subscribe
@@ -1362,7 +1385,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3 w-[100px]">
+                    <th className={`${tableHeaderCellClass} w-[100px]`}>
                       <TutorTooltip
                         text="Sort by Account ID."
                         position="top"
@@ -1370,7 +1393,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "AccountID")}
                           onClick={() => handleSort("AccountID")}
                         >
                           Account ID
@@ -1381,7 +1404,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3">
+                    <th className={tableHeaderCellClass}>
                       <TutorTooltip
                         text="Sort by Case ID."
                         position="top"
@@ -1389,7 +1412,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "CaseID")}
                           onClick={() => handleSort("CaseID")}
                         >
                           Case ID
@@ -1400,7 +1423,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3">
+                    <th className={tableHeaderCellClass}>
                       <TutorTooltip
                         text="Sort by CxS / WFM No."
                         position="top"
@@ -1408,7 +1431,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "CxSRequestNo")}
                           onClick={() => handleSort("CxSRequestNo")}
                         >
                           CxS / WFM No.
@@ -1419,7 +1442,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3 w-[90px]">
+                    <th className={`${tableHeaderCellClass} w-[90px]`}>
                       <TutorTooltip
                         text="Sort by Service Ready Date."
                         position="top"
@@ -1427,7 +1450,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "SRD")}
                           onClick={() => handleSort("SRD")}
                         >
                           SRD
@@ -1435,7 +1458,7 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3 w-[110px]">
+                    <th className={`${tableHeaderCellClass} w-[110px]`}>
                       <TutorTooltip
                         text="Sort by Order Status."
                         position="top"
@@ -1443,7 +1466,7 @@ const OrderRegistry = () => {
                         componentName="OrderRegistry.Table.Header"
                       >
                         <button
-                          className="text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 whitespace-nowrap cursor-pointer select-none group hover:text-[#1d1d1f]/70 transition-colors w-full text-left flex items-center"
+                          className={tableHeaderButtonClass(sortKey === "Status")}
                           onClick={() => handleSort("Status")}
                         >
                           Status
@@ -1454,15 +1477,19 @@ const OrderRegistry = () => {
                         </button>
                       </TutorTooltip>
                     </th>
-                    <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
-                      Remarks
+                    <th className={tableHeaderCellClass}>
+                      <span className="flex min-h-10 items-center justify-end rounded-md px-2.5 text-right text-[11px] font-bold uppercase text-white">
+                        Remarks
+                      </span>
                     </th>
-                    <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-semibold text-[#1d1d1f]/40 text-right whitespace-nowrap">
-                      Actions
+                    <th className={tableHeaderCellClass}>
+                      <span className="flex min-h-10 items-center justify-end rounded-md px-2.5 text-right text-[11px] font-bold uppercase text-white">
+                        Actions
+                      </span>
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white">
                   {loading ? (
                     <TableSkeleton />
                   ) : pagedOrders.length > 0 ? (
@@ -1476,16 +1503,16 @@ const OrderRegistry = () => {
                           {/* ── Mobile card (hidden on md+) ── */}
                           <tr
                             key={`card-${order.id}`}
-                            className="md:hidden border-b border-[#1d1d1f]/04"
+                            className="md:hidden border-b border-[#d8d0c3]"
                           >
                             <td colSpan={11} className="px-4 py-3">
                               <div
-                                className={`rounded-xl border p-3 gap-2 flex flex-col ${
+                                className={`flex flex-col gap-3 rounded-xl border p-3 shadow-[0_1px_0_rgba(29,29,31,0.06)] ${
                                   isTerminated
-                                    ? "bg-red-50/40 border-red-100"
+                                    ? "border-red-200 bg-red-50/50"
                                     : pinnedIds.has(order.id)
-                                      ? "bg-blue-50/30 border-[#094cb2]/20 border-l-4 border-l-[#094cb2]"
-                                      : "bg-white border-[#1d1d1f]/06"
+                                      ? "border-[#22d3c5]/40 border-l-4 border-l-[#22d3c5] bg-[#f0fdfa]"
+                                      : "border-[#d8d0c3] bg-white"
                                 }`}
                               >
                                 <div className="flex items-start justify-between gap-2">
@@ -1501,10 +1528,10 @@ const OrderRegistry = () => {
                                       {order.Title}
                                     </Link>
                                     <span
-                                      className={`text-xs truncate ${
+                                      className={`text-sm truncate ${
                                         isTerminated
                                           ? "text-red-500"
-                                          : "text-[#1d1d1f]/70"
+                                          : "text-[#4b4740]"
                                       }`}
                                     >
                                       {order.CustomerName}
@@ -1545,9 +1572,9 @@ const OrderRegistry = () => {
                                     </span>
                                   </div>
                                 </div>
-                                <div className="flex items-center justify-between gap-2 mt-1">
-                                  <div className="flex flex-col gap-0.5">
-                                    <span className="text-[10px] text-[#1d1d1f]/40 uppercase tracking-wider label-text">
+                                <div className="grid grid-cols-[1fr_84px_auto] items-end gap-3 rounded-lg bg-[#faf8f4] px-3 py-2 ring-1 ring-[#ebe3d8]">
+                                  <div className="flex min-w-0 flex-col gap-1">
+                                    <span className="text-[10px] font-bold uppercase text-[#8b8579] label-text">
                                       Product
                                     </span>
                                     <CloudProviderLogo
@@ -1561,8 +1588,8 @@ const OrderRegistry = () => {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="flex flex-col gap-0.5 text-right">
-                                    <span className="text-[10px] text-[#1d1d1f]/40 uppercase tracking-wider label-text">
+                                  <div className="flex flex-col gap-1 text-right">
+                                    <span className="text-[10px] font-bold uppercase text-[#8b8579] label-text">
                                       SRD
                                     </span>
                                     <span
@@ -1638,19 +1665,27 @@ const OrderRegistry = () => {
                                 selectedOrderId === order.id ? null : order.id,
                               )
                             }
-                            className={`border-b border-[#1d1d1f]/04 transition-colors group hidden md:table-row cursor-pointer ${
+                            className={`group hidden cursor-pointer border-b border-[#e8e1d6] transition-colors md:table-row ${
                               isTerminated
-                                ? "bg-red-50/30 hover:bg-red-50/60 border-l-2 border-l-red-300"
+                                ? "bg-red-50/30 hover:bg-red-50/70"
                                 : pinnedIds.has(order.id)
-                                  ? "bg-blue-50/30 hover:bg-blue-50/60"
+                                  ? "bg-[#f0fdfa] hover:bg-[#ccfbf1]"
                                   : selectedOrderId === order.id
-                                    ? "bg-[#e8f0fe] border-l-2 border-l-[#0071e3]"
-                                    : "hover:bg-[#f0f5ff] hover:border-l-2 hover:border-l-[#0071e3]"
+                                    ? "bg-[#eef6ff]"
+                                    : "odd:bg-white even:bg-[#fcfaf7] hover:bg-[#fff7e8]"
                             }`}
                           >
                             {/* Pin column — outside data area */}
                             <td
-                              className="w-6 p-0 text-center"
+                              className={`w-6 border-r border-[#ece7df] p-0 text-center ${
+                                isTerminated
+                                  ? "border-l-4 border-l-red-400"
+                                  : pinnedIds.has(order.id)
+                                    ? "border-l-4 border-l-[#22d3c5]"
+                                    : selectedOrderId === order.id
+                                      ? "border-l-4 border-l-[#0071e3]"
+                                      : "border-l-4 border-l-transparent group-hover:border-l-[#f59e0b]"
+                              }`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handlePinToggle(order.id);
@@ -1674,7 +1709,7 @@ const OrderRegistry = () => {
                               </TutorTooltip>
                             </td>
                             <td
-                              className={`px-3 py-3 text-xs font-semibold hover:underline ${
+                              className={`${tableDataCellClass} text-xs font-semibold hover:underline ${
                                 isTerminated ? "text-red-600" : "text-[#0071e3]"
                               }`}
                             >
@@ -1687,7 +1722,7 @@ const OrderRegistry = () => {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-sm font-medium min-w-[200px]">
+                            <td className={`${tableDataCellClass} min-w-[200px] text-sm font-medium`}>
                               {customerMap.get(
                                 (order.CustomerName ?? "").toLowerCase(),
                               ) ? (
@@ -1713,7 +1748,7 @@ const OrderRegistry = () => {
                                 </span>
                               )}
                             </td>
-                            <td className="px-3 py-3">
+                            <td className={tableDataCellClass}>
                               <div className="flex items-center gap-2">
                                 <CloudProviderLogo
                                   provider={order.CloudProvider ?? ""}
@@ -1728,7 +1763,7 @@ const OrderRegistry = () => {
                               </div>
                             </td>
                             <td
-                              className={`px-3 py-3 font-mono text-xs truncate w-[100px] max-w-[100px] ${
+                              className={`${tableDataCellClass} w-[100px] max-w-[100px] truncate font-mono text-xs ${
                                 isTerminated
                                   ? "text-red-500"
                                   : "text-[#1d1d1f]/45"
@@ -1738,7 +1773,7 @@ const OrderRegistry = () => {
                               {order.AccountID ?? "—"}
                             </td>
                             <td
-                              className="px-3 py-3 text-xs max-w-[140px]"
+                              className={`${tableDataCellClass} max-w-[140px] text-xs`}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="relative flex items-center gap-1 group/caseid">
@@ -1786,7 +1821,7 @@ const OrderRegistry = () => {
                               </div>
                             </td>
                             <td
-                              className={`px-3 py-3 text-xs ${
+                              className={`${tableDataCellClass} text-xs ${
                                 isTerminated
                                   ? "text-red-500"
                                   : "text-[#1d1d1f]/55"
@@ -1839,7 +1874,7 @@ const OrderRegistry = () => {
                               </div>
                             </td>
                             <td
-                              className={`px-3 py-3 text-xs w-[90px] ${
+                              className={`${tableDataCellClass} w-[90px] text-xs ${
                                 isTerminated
                                   ? "text-red-500"
                                   : "text-[#1d1d1f]/45"
@@ -1847,7 +1882,7 @@ const OrderRegistry = () => {
                             >
                               {formatDate(order.SRD)}
                             </td>
-                            <td className="px-3 py-3">
+                            <td className={tableDataCellClass}>
                               <span
                                 className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusColor(
                                   order.Status,
@@ -1857,7 +1892,7 @@ const OrderRegistry = () => {
                               </span>
                             </td>
                             <td
-                              className="px-3 py-3 text-right"
+                              className={`${tableDataCellClass} text-right`}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="relative inline-flex">
@@ -1886,7 +1921,7 @@ const OrderRegistry = () => {
                                   renderRemarkPopover(order)}
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-right">
+                            <td className={`${tableDataCellClass} text-right`}>
                               <div className="flex items-center justify-end gap-1.5">
                                 <div className="flex items-center gap-1.5 opacity-100 transition-opacity">
                                   <TutorTooltip
