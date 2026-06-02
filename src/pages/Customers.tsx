@@ -9,6 +9,7 @@ import {
   X,
   AlertCircle,
   Plus,
+  ArrowUpDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TutorTooltip } from "../components/TutorTooltip";
@@ -41,8 +42,16 @@ const inputClass =
 const tableHeaderCellClass =
   "border-r border-white/10 px-3 py-3 text-[11px] font-bold uppercase text-white last:border-r-0";
 
+const tableHeaderButtonClass = (active: boolean) =>
+  `group flex min-h-10 w-full cursor-pointer select-none items-center justify-between rounded-md px-2.5 text-left text-[11px] font-bold uppercase text-white transition-colors hover:bg-white/12 ${
+    active ? "bg-white/15 shadow-sm ring-1 ring-[#8fd8a4]/70" : ""
+  }`;
+
 const tableDataCellClass =
   "border-r border-[#dce9df] px-3 py-3 last:border-r-0";
+
+type CustomerSortKey = "id" | "Title";
+type SortDirection = "asc" | "desc";
 
 const Customers = () => {
   const { userEmail } = usePermission();
@@ -58,6 +67,8 @@ const Customers = () => {
   const [tierFilter, setTierFilter] = useState("All");
   const [contactFilter, setContactFilter] = useState("All");
   const [relationshipFilter, setRelationshipFilter] = useState("All");
+  const [sortKey, setSortKey] = useState<CustomerSortKey>("id");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<CreateCustomerInput>(EMPTY_FORM);
@@ -110,8 +121,29 @@ const Customers = () => {
     setRelationshipFilter("All");
   };
 
-  const filtered = [...customers]
-    .sort((a, b) => b.id - a.id)
+  const handleSort = (key: CustomerSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((direction) => (direction === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection(key === "id" ? "desc" : "asc");
+  };
+
+  const renderSortIcon = (key: CustomerSortKey) =>
+    sortKey === key ? (
+      <span className="text-xs leading-none">
+        {sortDirection === "asc" ? "↑" : "↓"}
+      </span>
+    ) : (
+      <ArrowUpDown className="h-3 w-3 opacity-55" />
+    );
+
+  const getCustomerName = (customer: Customer) =>
+    customer.Title || customer.Company || `Customer #${customer.id}`;
+
+  const filtered = customers
     .filter((c) => {
       if (statusFilter !== "All" && c.Status !== statusFilter) return false;
       if (tierFilter !== "All" && (c.Tier ?? "Standard") !== tierFilter) {
@@ -147,6 +179,17 @@ const Customers = () => {
       }
 
       return true;
+    })
+    .sort((a, b) => {
+      const result =
+        sortKey === "id"
+          ? a.id - b.id
+          : getCustomerName(a).localeCompare(getCustomerName(b), undefined, {
+              sensitivity: "base",
+              numeric: true,
+            });
+
+      return sortDirection === "asc" ? result : -result;
     });
 
   return (
@@ -316,8 +359,25 @@ const Customers = () => {
           <table className="w-full border-separate border-spacing-0 text-left">
             <thead className="hidden md:table-header-group">
               <tr className="h-14 border-y border-[#15331f] bg-[#1f4a2d] shadow-[0_8px_18px_rgba(29,29,31,0.12)]">
+                <th className={`${tableHeaderCellClass} w-[90px]`}>
+                  <button
+                    type="button"
+                    onClick={() => handleSort("id")}
+                    className={tableHeaderButtonClass(sortKey === "id")}
+                  >
+                    <span>ID</span>
+                    {renderSortIcon("id")}
+                  </button>
+                </th>
                 <th className={tableHeaderCellClass}>
-                  Customer
+                  <button
+                    type="button"
+                    onClick={() => handleSort("Title")}
+                    className={tableHeaderButtonClass(sortKey === "Title")}
+                  >
+                    <span>Customer Name</span>
+                    {renderSortIcon("Title")}
+                  </button>
                 </th>
                 <th className={tableHeaderCellClass}>
                   Contact
@@ -340,7 +400,7 @@ const Customers = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
                   >
                     Loading customers…
@@ -349,7 +409,7 @@ const Customers = () => {
               ) : error ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-red-500 text-sm"
                   >
                     {error}
@@ -358,7 +418,7 @@ const Customers = () => {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-[#1d1d1f]/30 text-sm"
                   >
                     No customers found.
@@ -369,7 +429,7 @@ const Customers = () => {
                   <React.Fragment key={customer.id}>
                     {/* Mobile Card View */}
                     <tr className="md:hidden border-b border-[#1d1d1f]/04">
-                      <td colSpan={6} className="px-4 py-3">
+                      <td colSpan={7} className="px-4 py-3">
                         <TutorTooltip
                           text="This customer card summarizes contact details, status, ID, and quick profile access."
                           position="top"
@@ -388,15 +448,8 @@ const Customers = () => {
                                   to={`/customers/${customer.id}`}
                                   className="text-sm font-semibold text-[#0071e3] hover:underline"
                                 >
-                                  {customer.Title ||
-                                    customer.Company ||
-                                    `Customer #${customer.id}`}
+                                  {getCustomerName(customer)}
                                 </Link>
-                                {customer.PreviousName && (
-                                  <div className="mt-0.5 text-xs text-[#1d1d1f]/40">
-                                    Previous Name: {customer.PreviousName}
-                                  </div>
-                                )}
                               </div>
                             </div>
                             <span
@@ -413,7 +466,9 @@ const Customers = () => {
                           <div className="flex flex-col gap-1.5 bg-[#f5f5f7] p-2.5 rounded-lg">
                             <div className="flex items-center gap-2 text-xs text-[#1d1d1f]/70">
                               <Mail className="w-3.5 h-3.5 text-[#1d1d1f]/40" />
-                              <span className="truncate">{customer.Email || "—"}</span>
+                              <span className="truncate">
+                                {customer.Email || "—"}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-[#1d1d1f]/70">
                               <Phone className="w-3.5 h-3.5 text-[#1d1d1f]/40" />
@@ -422,9 +477,13 @@ const Customers = () => {
                           </div>
 
                           <div className="flex items-end justify-between gap-3 pt-1">
-                            <span className="text-[10px] leading-none text-[#1d1d1f]/35">
-                              ID #{customer.id}
-                            </span>
+                            {customer.PreviousName ? (
+                              <span className="text-[10px] leading-none text-[#1d1d1f]/35">
+                                Previous Name: {customer.PreviousName}
+                              </span>
+                            ) : (
+                              <span />
+                            )}
                             <TutorTooltip
                               text="Open this customer's full profile, including order history and notes."
                               position="left"
@@ -449,6 +508,9 @@ const Customers = () => {
                     <tr
                       className="hidden md:table-row bg-white transition-colors hover:bg-[#f3faf5] group [&>td]:border-b [&>td]:border-[#e7f1ea]"
                     >
+                    <td className={`${tableDataCellClass} w-[90px] font-mono text-xs font-semibold text-[#1d1d1f]/55`}>
+                      #{customer.id}
+                    </td>
                     <td className={tableDataCellClass}>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-semibold text-xs">
@@ -466,18 +528,13 @@ const Customers = () => {
                               to={`/customers/${customer.id}`}
                               className="text-sm font-medium text-[#0071e3] hover:underline"
                             >
-                              {customer.Title ||
-                                customer.Company ||
-                                `Customer #${customer.id}`}
+                              {getCustomerName(customer)}
                             </Link>
                             {customer.PreviousName && (
-                              <div className="text-xs text-[#1d1d1f]/40">
+                              <div className="text-[10px] leading-none text-[#1d1d1f]/35">
                                 Previous Name: {customer.PreviousName}
                               </div>
                             )}
-                            <div className="text-[10px] leading-none text-[#1d1d1f]/35">
-                              ID #{customer.id}
-                            </div>
                           </div>
                         </TutorTooltip>
                       </div>
