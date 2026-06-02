@@ -1,3 +1,5 @@
+import type { Role } from "../contexts/PermissionContext";
+
 const BASE_URL = import.meta.env.VITE_API_QUICK_LINKS_URL as string;
 
 export interface QuickLink {
@@ -5,12 +7,16 @@ export interface QuickLink {
   Title: string;
   URL: string;
   Description: string;
+  IsActive?: boolean;
+  VisibleRoles?: Role[];
 }
 
 export interface CreateQuickLinkInput {
   Title: string;
   URL: string;
   Description: string;
+  IsActive?: boolean;
+  VisibleRoles?: Role[];
 }
 
 // SharePoint Hyperlink columns return { Url: string, Description: string }
@@ -25,6 +31,31 @@ function normalizeSharePointUrl(val: unknown): string {
   return "";
 }
 
+function normalizeSharePointChoices(val: unknown): Role[] | undefined {
+  const choices =
+    Array.isArray(val)
+      ? val
+      : val !== null &&
+          typeof val === "object" &&
+          Array.isArray((val as Record<string, unknown>).results)
+        ? ((val as Record<string, unknown>).results as unknown[])
+        : undefined;
+  if (!choices) return undefined;
+  return choices
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item !== null && typeof item === "object") {
+        const obj = item as Record<string, unknown>;
+        if (typeof obj.Value === "string") return obj.Value;
+        if (typeof obj.value === "string") return obj.value;
+      }
+      return "";
+    })
+    .filter((role): role is Role =>
+      ["User", "Admin", "Global Admin", "Developer"].includes(role),
+    );
+}
+
 function withId(data: unknown): unknown {
   if (Array.isArray(data)) return data.map(withId);
   if (data !== null && typeof data === "object") {
@@ -32,6 +63,8 @@ function withId(data: unknown): unknown {
     const result: Record<string, unknown> = { ...obj };
     if ("ID" in obj) result.id = obj.ID;
     if ("URL" in obj) result.URL = normalizeSharePointUrl(obj.URL);
+    if ("IsActive" in obj) result.IsActive = obj.IsActive !== false;
+    if ("VisibleRoles" in obj) result.VisibleRoles = normalizeSharePointChoices(obj.VisibleRoles);
     return result;
   }
   return data;
@@ -48,7 +81,9 @@ async function call<T>(body: object): Promise<T> {
   });
   if (!res.ok)
     throw new Error(`Quick Links API error: ${res.status} ${res.statusText}`);
-  const json = await res.json();
+  const text = await res.text();
+  if (!text.trim()) return undefined as T;
+  const json = JSON.parse(text);
   if (json != null && typeof json === "object" && "success" in json) {
     if (!json.success) throw new Error(json.error?.message ?? "API error");
     if (Array.isArray(json.data?.value))
