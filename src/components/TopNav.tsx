@@ -16,6 +16,7 @@ import {
   Mail,
   Menu,
   MessageSquare,
+  Plus,
   Settings,
   Shield,
   Users,
@@ -259,6 +260,10 @@ const TopNav = () => {
 
   const currentPageInfo = getPageInfo(location.pathname);
   const currentPageLabel = currentPageInfo.label;
+  const isMoreActive = navGroups.some((group) =>
+    group.items.some((item) => isRouteActive(location.pathname, item.path)),
+  );
+  const isMoreOpen = openGroup === "More";
 
   useEffect(() => {
     setOpenGroup(null);
@@ -291,13 +296,13 @@ const TopNav = () => {
   }, []);
 
   return (
-    <header className="glass-panel sticky top-0 z-30 border-b border-[#dad4c8]">
+    <header className="sticky top-0 z-30 w-full border-b border-[#dad4c8] bg-[#fbfaf7]/95 shadow-[rgba(0,0,0,0.08)_0px_8px_28px] backdrop-blur-xl">
       <div
         ref={headerRef}
-        className="mx-auto w-full max-w-[min(100%,1600px)] px-4 md:px-6 xl:px-8"
+        className="w-full px-4 md:px-6 xl:px-8"
       >
-        <div className="flex min-h-16 items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-h-[72px] items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
             <TutorTooltip
               text="Return to the dashboard home page."
               position="bottom"
@@ -306,14 +311,19 @@ const TopNav = () => {
             >
               <Link
                 to="/"
-                className="flex shrink-0 items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
+                className="flex shrink-0 items-center gap-2.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
                 aria-label="Go to dashboard"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#000] bg-[#000] text-sm font-semibold text-white shadow-[rgb(0,0,0)_-3px_3px_0px_0px]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#1d1d1f] bg-[#fff] text-base font-semibold text-[#000] shadow-[rgb(251,189,65)_-4px_4px_0px_0px]">
                   MC
                 </span>
-                <span className="hidden text-base font-semibold text-[#000] sm:inline">
-                  Multi Cloud
+                <span className="hidden min-w-0 sm:block">
+                  <span className="block text-sm font-semibold leading-4 text-[#000]">
+                    Multi Cloud
+                  </span>
+                  <span className="block text-[11px] font-medium leading-4 text-[#8a867d]">
+                    Operations
+                  </span>
                 </span>
               </Link>
             </TutorTooltip>
@@ -324,9 +334,9 @@ const TopNav = () => {
               wrapperClass="hidden min-w-0 sm:block"
               componentName="TopNav.CurrentPage"
             >
-              <div className="hidden min-w-0 flex-col border-l border-[#dad4c8] pl-3 sm:flex">
+              <div className="hidden min-w-0 flex-col border-l border-[#dad4c8] pl-4 sm:flex">
                 <span className="label-text text-[#9f9b93]">Current page</span>
-                <span className="truncate text-sm font-semibold text-[#000]">
+                <span className="truncate text-base font-semibold text-[#000]">
                   {currentPageLabel}
                 </span>
               </div>
@@ -334,7 +344,7 @@ const TopNav = () => {
           </div>
 
           <nav
-            className="hidden flex-1 justify-center lg:flex"
+            className="hidden min-w-0 flex-1 justify-center lg:flex"
             aria-label="Primary navigation"
           >
             <TutorTooltip
@@ -343,7 +353,7 @@ const TopNav = () => {
               wrapperClass="inline-flex"
               componentName="TopNav.PrimaryNavigation"
             >
-              <div className="flex items-center gap-1 rounded-2xl border border-[#dad4c8] bg-white/80 p-1.5 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
+              <div className="flex items-center gap-1 rounded-2xl border border-[#dad4c8] bg-white/85 p-1.5 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
               {primaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isRouteActive(location.pathname, item.path);
@@ -352,92 +362,18 @@ const TopNav = () => {
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    className={`relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
+                    className={`relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#146ef5] xl:px-3.5 ${
                       isActive
-                        ? "bg-[#000] text-white shadow-[rgb(0,0,0)_-3px_3px_0px_0px]"
+                        ? "bg-[#fbbd41] text-[#000] shadow-[rgba(251,189,65,0.32)_0px_8px_20px]"
                         : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
                     {item.label}
                     {isActive && (
-                      <span className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-[#fbbd41]" />
+                      <span className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-[#9b6b00]" />
                     )}
                   </NavLink>
-                );
-              })}
-              {navGroups.map((group) => {
-                const isActive = group.items.some((item) =>
-                  isRouteActive(location.pathname, item.path),
-                );
-                const isOpen = openGroup === group.label;
-
-                return (
-                  <div key={group.label} className="relative">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenGroup(isOpen ? null : group.label)
-                      }
-                      className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
-                        isActive
-                          ? "bg-[#000] text-white shadow-[rgb(0,0,0)_-4px_4px_0px_0px]"
-                          : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
-                      }`}
-                      aria-controls={`nav-menu-${group.label.toLowerCase()}`}
-                      aria-expanded={isOpen}
-                      aria-haspopup="menu"
-                    >
-                      <span className={`h-2 w-2 rounded-full ${group.accent}`} />
-                      {group.label}
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 transition-transform ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {isOpen && (
-                      <div
-                        id={`nav-menu-${group.label.toLowerCase()}`}
-                        className="absolute left-1/2 top-full mt-3 w-80 -translate-x-1/2 rounded-3xl border border-[#dad4c8] bg-[#fff] p-2 shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]"
-                        role="menu"
-                      >
-                        <div className="px-3 py-2">
-                          <div className="label-text text-[#9f9b93]">
-                            {group.label}
-                          </div>
-                        </div>
-                        {group.items.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <NavLink
-                              key={item.path}
-                              to={item.path}
-                              className={({ isActive }) =>
-                                `flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
-                                  isActive
-                                    ? "bg-[#faf9f7] text-[#000]"
-                                    : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
-                                }`
-                              }
-                              role="menuitem"
-                            >
-                              <Icon className="mt-0.5 h-4 w-4 shrink-0" />
-                              <span className="min-w-0">
-                                <span className="block text-sm font-semibold">
-                                  {item.label}
-                                </span>
-                                <span className="block text-xs leading-5 text-[#9f9b93]">
-                                  {item.description}
-                                </span>
-                              </span>
-                            </NavLink>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
                 );
               })}
               </div>
@@ -446,44 +382,123 @@ const TopNav = () => {
 
           <div className="flex shrink-0 items-center gap-2">
             <TutorTooltip
-              text="Turn guided tool tips on or off for highlighted dashboard components."
+              text="Create a new cloud service order from anywhere in the dashboard."
               position="bottom"
-              wrapperClass="hidden sm:inline-flex"
-              componentName="TopNav.TutorModeToggle"
+              wrapperClass="hidden md:inline-flex"
+              componentName="TopNav.CreateOrder"
             >
-              <button
-                onClick={toggleTutorMode}
-                aria-pressed={isTutorMode}
-                className={`hidden items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
-                  isTutorMode
-                    ? "border-[#dad4c8] bg-[#c1b0ff] text-[#000]"
-                    : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white"
-                }`}
+              <Link
+                to="/orders/new"
+                className="hidden items-center gap-2 rounded-2xl border border-[#d99800] bg-[#fbbd41] px-3 py-2 text-sm font-semibold text-[#000] shadow-[rgba(251,189,65,0.3)_0px_8px_18px] transition-colors hover:bg-[#ffd56a] focus:outline-none focus:ring-2 focus:ring-[#146ef5] md:flex"
               >
-                <GraduationCap className="h-3.5 w-3.5" />
-                {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
-              </button>
+                <Plus className="h-4 w-4" />
+                <span className="hidden xl:inline">Create New Order</span>
+                <span className="xl:hidden">New Order</span>
+              </Link>
             </TutorTooltip>
 
-            <TutorTooltip
-              text="Turn Report Mode on or off. When on, highlighted components can open a prefilled feedback report."
-              position="bottom"
-              wrapperClass="hidden sm:inline-flex"
-              componentName="TopNav.ReportModeToggle"
-            >
+            <div className="relative hidden md:block">
               <button
-                onClick={toggleFeedbackMode}
-                aria-pressed={isFeedbackMode}
-                className={`hidden items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
-                  isFeedbackMode
-                    ? "border-[#dad4c8] bg-[#fbbd41] text-[#000]"
-                    : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white"
+                type="button"
+                onClick={() => {
+                  setOpenGroup(isMoreOpen ? null : "More");
+                  setIsAccountMenuOpen(false);
+                }}
+                className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
+                  isMoreActive || isMoreOpen
+                    ? "border-[#d99800] bg-[#fff2c8] text-[#000]"
+                    : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white hover:text-[#000]"
                 }`}
+                aria-controls="more-menu"
+                aria-expanded={isMoreOpen}
+                aria-haspopup="menu"
               >
-                <Flag className="h-3.5 w-3.5" />
-                {isFeedbackMode ? "Report: ON" : "Report: OFF"}
+                More
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    isMoreOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-            </TutorTooltip>
+
+              {isMoreOpen && (
+                <div
+                  id="more-menu"
+                  className="absolute right-0 top-full mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-[#dad4c8] bg-white p-2 shadow-[rgba(0,0,0,0.12)_0px_18px_40px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]"
+                  role="menu"
+                >
+                  {navGroups.map((group) => (
+                    <div
+                      key={group.label}
+                      className="border-b border-[#dad4c8] py-2 last:border-b-0"
+                    >
+                      <div className="mb-1 flex items-center gap-2 px-3">
+                        <span className={`h-2 w-2 rounded-full ${group.accent}`} />
+                        <span className="label-text text-[#9f9b93]">
+                          {group.label}
+                        </span>
+                      </div>
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) =>
+                              `flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
+                                isActive
+                                  ? "bg-[#fff2c8] text-[#000]"
+                                  : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
+                              }`
+                            }
+                            role="menuitem"
+                          >
+                            <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold">
+                                {item.label}
+                              </span>
+                              <span className="block text-xs leading-5 text-[#9f9b93]">
+                                {item.description}
+                              </span>
+                            </span>
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  ))}
+
+                  <div className="grid gap-2 pt-2 sm:grid-cols-2">
+                    <button
+                      onClick={toggleTutorMode}
+                      aria-pressed={isTutorMode}
+                      className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
+                        isTutorMode
+                          ? "bg-[#efeaff] text-[#000]"
+                          : "bg-[#faf9f7] text-[#55534e] hover:text-[#000]"
+                      }`}
+                      role="menuitem"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
+                    </button>
+                    <button
+                      onClick={toggleFeedbackMode}
+                      aria-pressed={isFeedbackMode}
+                      className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#146ef5] ${
+                        isFeedbackMode
+                          ? "bg-[#fff2c8] text-[#000]"
+                          : "bg-[#faf9f7] text-[#55534e] hover:text-[#000]"
+                      }`}
+                      role="menuitem"
+                    >
+                      <Flag className="h-4 w-4" />
+                      {isFeedbackMode ? "Report: ON" : "Report: OFF"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <TutorTooltip
               text="Notification entry point for new updates and alerts."
@@ -492,11 +507,11 @@ const TopNav = () => {
               componentName="TopNav.Notifications"
             >
               <button
-                className="relative rounded-xl p-2 text-[#55534e] transition-colors hover:bg-white/70 hover:text-[#000] focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
+                className="relative rounded-2xl border border-transparent p-2.5 text-[#55534e] transition-colors hover:border-[#dad4c8] hover:bg-white/80 hover:text-[#000] focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
                 aria-label="Notifications"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#fc7981]" />
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#fc7981]" />
               </button>
             </TutorTooltip>
 
@@ -513,7 +528,7 @@ const TopNav = () => {
                     setIsAccountMenuOpen((isOpen) => !isOpen);
                     setOpenGroup(null);
                   }}
-                  className="flex items-center gap-2.5 rounded-2xl p-1 transition-colors hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
+                  className="flex items-center gap-2.5 rounded-2xl border border-transparent bg-white/55 p-1 transition-colors hover:border-[#dad4c8] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
                   aria-controls="account-menu"
                   aria-expanded={isAccountMenuOpen}
                   aria-haspopup="menu"
@@ -526,7 +541,7 @@ const TopNav = () => {
                       {currentRole}
                     </span>
                   </span>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#000] text-xs font-semibold uppercase text-white">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fbbd41] text-xs font-semibold uppercase text-[#000]">
                     {userEmail ? userEmail[0] : "?"}
                   </span>
                   <ChevronDown
@@ -602,7 +617,7 @@ const TopNav = () => {
             >
               <button
                 onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
-                className="rounded-xl border border-[#dad4c8] bg-white/70 p-2 text-[#000] transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#146ef5] lg:hidden"
+                className="rounded-2xl border border-[#dad4c8] bg-white/85 p-3 text-[#000] transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#146ef5] lg:hidden"
                 aria-controls="mobile-navigation"
                 aria-label={
                   isMobileMenuOpen ? "Close navigation" : "Open navigation"
@@ -622,10 +637,25 @@ const TopNav = () => {
         {isMobileMenuOpen && (
             <nav
               id="mobile-navigation"
-              className="border-t border-[#dad4c8] py-4 lg:hidden"
+              className="border-t border-[#dad4c8] pb-5 pt-4 lg:hidden"
               aria-label="Mobile navigation"
             >
               <div className="grid gap-3">
+                <TutorTooltip
+                  text="Create a new cloud service order from anywhere in the dashboard."
+                  position="bottom"
+                  wrapperClass="block md:hidden"
+                  componentName="TopNav.MobileMenu.CreateOrder"
+                >
+                  <Link
+                    to="/orders/new"
+                    className="flex items-center justify-center gap-2 rounded-2xl border border-[#d99800] bg-[#fbbd41] px-4 py-3 text-sm font-semibold text-[#000] shadow-[rgba(251,189,65,0.24)_0px_8px_18px]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create New Order
+                  </Link>
+                </TutorTooltip>
+
                 <section className="rounded-3xl border border-[#dad4c8] bg-white/80 p-3">
                   <div className="mb-2 flex items-center gap-2 px-1">
                     <span className="h-2 w-2 rounded-full bg-[#fbbd41]" />
@@ -647,7 +677,7 @@ const TopNav = () => {
                             className={({ isActive }) =>
                               `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
                                 isActive
-                                  ? "bg-[#000] text-white"
+                                  ? "bg-[#fbbd41] text-[#000]"
                                   : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
                               }`
                             }
@@ -687,7 +717,7 @@ const TopNav = () => {
                               className={({ isActive }) =>
                                 `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
                                   isActive
-                                    ? "bg-[#000] text-white"
+                                     ? "bg-[#fbbd41] text-[#000]"
                                     : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
                                 }`
                               }
