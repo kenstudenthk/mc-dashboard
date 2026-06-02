@@ -28,6 +28,7 @@ const ServiceAccountCombobox = ({
   const [checkedAccount, setCheckedAccount] = useState<ServiceAccount | null>(
     null,
   );
+  const [checking, setChecking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,26 +74,37 @@ const ServiceAccountCombobox = ({
     setOpen(true);
   };
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     const trimmed = value.trim();
     if (!trimmed) return;
     onChange(trimmed, null);
 
-    const match = accounts.find(
-      (sa) =>
-        (!provider || sa.Provider === provider) &&
-        (sa.SecondaryID ?? "").trim().toLowerCase() === trimmed.toLowerCase(),
-    );
+    setChecking(true);
+    try {
+      const matches = await serviceAccountService.findBySecondaryId(trimmed);
+      const match = matches.find(
+        (sa) =>
+          (!provider || sa.Provider === provider) &&
+          (sa.SecondaryID ?? "").trim().toLowerCase() ===
+            trimmed.toLowerCase(),
+      );
 
-    if (match) {
-      onChange((match.SecondaryID ?? trimmed).trim(), match);
-      setCheckResult("found");
-      setCheckedAccount(match);
-    } else {
+      if (match) {
+        onChange((match.SecondaryID ?? trimmed).trim(), match);
+        setCheckResult("found");
+        setCheckedAccount(match);
+      } else {
+        setCheckResult("new");
+        setCheckedAccount(null);
+      }
+      setOpen(false);
+    } catch {
       setCheckResult("new");
       setCheckedAccount(null);
+      setOpen(false);
+    } finally {
+      setChecking(false);
     }
-    setOpen(false);
   };
 
   const handleUseAccount = () => {
@@ -139,12 +151,12 @@ const ServiceAccountCombobox = ({
         <button
           type="button"
           onClick={handleCheck}
-          disabled={!value.trim()}
+          disabled={!value.trim() || checking}
           title="Check if this Account ID exists"
           className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-[#094cb2] text-white text-xs font-medium rounded-lg hover:bg-[#0a3d8f] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <Search className="w-3.5 h-3.5" />
-          Check
+          {checking ? "Checking" : "Check"}
         </button>
       </div>
 
