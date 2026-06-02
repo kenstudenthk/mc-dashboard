@@ -1096,50 +1096,50 @@ const OrderRegistry = () => {
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl rounded-tr-2xl border border-[#dad4c8] bg-white shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]">
             {/* Row 2: Search */}
             <div className="border-b border-[#dad4c8] bg-white px-4 py-3">
-              <div className="relative">
-                <TutorTooltip
-                  text={
-                    showFilters
-                      ? "Hide the advanced filters panel."
-                      : "Show advanced filters for provider, status, order type, and SRD date range."
-                  }
-                  position="bottom"
-                  wrapperClass="absolute left-2 top-1/2 z-10 -translate-y-1/2 inline-flex"
-                  componentName="OrderRegistry.FilterToggle"
-                >
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    title="Toggle filters"
-                    className={`flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+              <TutorTooltip
+                text="Search for a specific order by typing the Service No, Customer Name, Account ID, Case ID, provider, order type, or status."
+                position="bottom"
+                wrapperClass="w-full"
+                componentName="OrderRegistry.Search"
+              >
+                <div className="relative flex items-center rounded-lg border border-[#1d1d1f]/06 bg-[#f5f5f7] transition-all focus-within:border-[#0071e3] focus-within:ring-2 focus-within:ring-[#0071e3]/20">
+                  <TutorTooltip
+                    text={
                       showFilters
-                        ? "bg-[#0071e3]/10 text-[#0071e3]"
-                        : "text-[#1d1d1f]/35 hover:bg-[#0071e3]/08 hover:text-[#0071e3]"
-                    }`}
+                        ? "Hide the advanced filters panel."
+                        : "Show advanced filters for provider, status, order type, and SRD date range."
+                    }
+                    position="bottom"
+                    wrapperClass="ml-1.5 inline-flex shrink-0"
+                    componentName="OrderRegistry.FilterToggle"
                   >
-                    <Filter className="w-3.5 h-3.5" />
-                    {activeFilterCount > 0 && (
-                      <span className="rounded-full bg-black px-1.5 py-0.5 text-[10px] leading-none text-white">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
-                </TutorTooltip>
-                <TutorTooltip
-                  text="Search for a specific order by typing the Service No, Customer Name, Account ID, Case ID, provider, order type, or status."
-                  position="bottom"
-                  wrapperClass="relative w-full"
-                  componentName="OrderRegistry.Search"
-                >
-                  <Search className="w-3.5 h-3.5 absolute left-12 top-1/2 -translate-y-1/2 text-[#1d1d1f]/30" />
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      title="Toggle filters"
+                      className={`flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+                        showFilters
+                          ? "bg-[#0071e3]/10 text-[#0071e3]"
+                          : "text-[#1d1d1f]/35 hover:bg-[#0071e3]/08 hover:text-[#0071e3]"
+                      }`}
+                    >
+                      <Filter className="h-3.5 w-3.5" />
+                      {activeFilterCount > 0 && (
+                        <span className="rounded-full bg-black px-1.5 py-0.5 text-[10px] leading-none text-white">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </button>
+                  </TutorTooltip>
                   <input
                     type="text"
                     placeholder="Search service no., customer, account, case, provider, type, or status..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-16 pr-3 py-1.5 text-sm bg-[#f5f5f7] border border-[#1d1d1f]/06 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+                    className="min-w-0 flex-1 bg-transparent py-1.5 pl-2 pr-9 text-sm focus:outline-none"
                   />
-                </TutorTooltip>
-              </div>
+                  <Search className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#1d1d1f]/30" />
+                </div>
+              </TutorTooltip>
             </div>
 
             {showFilters && (

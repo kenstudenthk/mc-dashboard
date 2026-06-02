@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { usePermission, Role } from "../contexts/PermissionContext";
 import { useTutor } from "../contexts/TutorContext";
+import { TutorTooltip } from "./TutorTooltip";
 
 type NavItem = {
   icon: typeof LayoutDashboard;
@@ -73,6 +74,109 @@ const primaryNavItems: NavItem[] = [
 const isRouteActive = (pathname: string, path: string) => {
   if (path === "/") return pathname === "/";
   return pathname === path || pathname.startsWith(`${path}/`);
+};
+
+const getPageInfo = (pathname: string) => {
+  if (pathname === "/") {
+    return {
+      label: "Dashboard",
+      purpose: "Live operational overview for order activity, priorities, and recent work.",
+    };
+  }
+  if (pathname === "/orders/new") {
+    return {
+      label: "Create New Order",
+      purpose: "Create a new cloud service order and capture order, customer, cloud service, and provisioning details.",
+    };
+  }
+  if (/^\/orders\/[^/]+$/.test(pathname)) {
+    return {
+      label: "Order Details",
+      purpose: "Review and update one order, including customer details, service fields, provisioning progress, timeline, and email actions.",
+    };
+  }
+  if (pathname === "/orders") {
+    return {
+      label: "Order Registry",
+      purpose: "Search, filter, export, and open cloud service orders by status, customer, provider, and delivery details.",
+    };
+  }
+  if (/^\/customers\/[^/]+$/.test(pathname)) {
+    return {
+      label: "Customer Profile",
+      purpose: "Review one customer account, related orders, contacts, and account activity.",
+    };
+  }
+  if (pathname === "/customers") {
+    return {
+      label: "Customers",
+      purpose: "Browse, search, filter, import, export, and open customer records.",
+    };
+  }
+  if (/^\/services\/[^/]+$/.test(pathname)) {
+    return {
+      label: "Service Details",
+      purpose: "Review provider-specific service account records, account IDs, login emails, references, and linked source orders.",
+    };
+  }
+  if (pathname === "/services") {
+    return {
+      label: "Services",
+      purpose: "Choose a cloud provider and view service account coverage across linked orders.",
+    };
+  }
+  if (pathname === "/reports") {
+    return {
+      label: "Reports",
+      purpose: "Analyze order volume, provider mix, service types, trends, status breakdowns, and top customers.",
+    };
+  }
+  if (pathname === "/quick-links") {
+    return {
+      label: "Useful Links",
+      purpose: "Open shared operational tools and external reference links.",
+    };
+  }
+  if (pathname === "/audit-log") {
+    return {
+      label: "Audit Log",
+      purpose: "Review system activity, permission changes, and important operational events.",
+    };
+  }
+  if (pathname === "/email-templates") {
+    return {
+      label: "Email Templates",
+      purpose: "Manage reusable customer email templates for order and service communications.",
+    };
+  }
+  if (pathname === "/settings") {
+    return {
+      label: "Settings",
+      purpose: "Manage dashboard preferences, access-related settings, and account configuration.",
+    };
+  }
+  if (pathname === "/help") {
+    return {
+      label: "Help & Support",
+      purpose: "Find guidance, support contacts, and answers for using the dashboard.",
+    };
+  }
+  if (pathname === "/feedback/new") {
+    return {
+      label: "Report Feedback",
+      purpose: "Submit a bug, idea, or other feedback item, optionally prefilled from Report Mode.",
+    };
+  }
+  if (pathname === "/feedback") {
+    return {
+      label: "Feedback",
+      purpose: "Review, filter, and update reported issues and requests.",
+    };
+  }
+  return {
+    label: "Dashboard",
+    purpose: "Use this dashboard page to manage Multi Cloud operations.",
+  };
 };
 
 const TopNav = () => {
@@ -153,13 +257,8 @@ const TopNav = () => {
     return groups;
   }, [hasPermission]);
 
-  const currentItem = [
-    ...primaryNavItems,
-    ...navGroups.flatMap((group) => group.items),
-  ].find((item) => isRouteActive(location.pathname, item.path));
-  const currentPageLabel = isRouteActive(location.pathname, "/settings")
-    ? "Settings"
-    : currentItem?.label ?? "Dashboard";
+  const currentPageInfo = getPageInfo(location.pathname);
+  const currentPageLabel = currentPageInfo.label;
 
   useEffect(() => {
     setOpenGroup(null);
@@ -193,35 +292,58 @@ const TopNav = () => {
 
   return (
     <header className="glass-panel sticky top-0 z-30 border-b border-[#dad4c8]">
-      <div ref={headerRef} className="px-4 md:px-6 lg:px-8">
+      <div
+        ref={headerRef}
+        className="mx-auto w-full max-w-[min(100%,1600px)] px-4 md:px-6 xl:px-8"
+      >
         <div className="flex min-h-16 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <Link
-              to="/"
-              className="flex shrink-0 items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
-              aria-label="Go to dashboard"
+            <TutorTooltip
+              text="Return to the dashboard home page."
+              position="bottom"
+              wrapperClass="inline-flex"
+              componentName="TopNav.Brand"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#000] bg-[#000] text-sm font-semibold text-white shadow-[rgb(0,0,0)_-3px_3px_0px_0px]">
-                MC
-              </span>
-              <span className="hidden text-base font-semibold text-[#000] sm:inline">
-                Multi Cloud
-              </span>
-            </Link>
+              <Link
+                to="/"
+                className="flex shrink-0 items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
+                aria-label="Go to dashboard"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#000] bg-[#000] text-sm font-semibold text-white shadow-[rgb(0,0,0)_-3px_3px_0px_0px]">
+                  MC
+                </span>
+                <span className="hidden text-base font-semibold text-[#000] sm:inline">
+                  Multi Cloud
+                </span>
+              </Link>
+            </TutorTooltip>
 
-            <div className="hidden min-w-0 flex-col border-l border-[#dad4c8] pl-3 sm:flex">
-              <span className="label-text text-[#9f9b93]">Current page</span>
-              <span className="truncate text-sm font-semibold text-[#000]">
-                {currentPageLabel}
-              </span>
-            </div>
+            <TutorTooltip
+              text={currentPageInfo.purpose}
+              position="bottom"
+              wrapperClass="hidden min-w-0 sm:block"
+              componentName="TopNav.CurrentPage"
+            >
+              <div className="hidden min-w-0 flex-col border-l border-[#dad4c8] pl-3 sm:flex">
+                <span className="label-text text-[#9f9b93]">Current page</span>
+                <span className="truncate text-sm font-semibold text-[#000]">
+                  {currentPageLabel}
+                </span>
+              </div>
+            </TutorTooltip>
           </div>
 
           <nav
             className="hidden flex-1 justify-center lg:flex"
             aria-label="Primary navigation"
           >
-            <div className="flex items-center gap-1 rounded-2xl border border-[#dad4c8] bg-white/80 p-1.5 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
+            <TutorTooltip
+              text="Primary navigation for the main dashboard work areas."
+              position="bottom"
+              wrapperClass="inline-flex"
+              componentName="TopNav.PrimaryNavigation"
+            >
+              <div className="flex items-center gap-1 rounded-2xl border border-[#dad4c8] bg-white/80 p-1.5 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
               {primaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isRouteActive(location.pathname, item.path);
@@ -318,73 +440,102 @@ const TopNav = () => {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            </TutorTooltip>
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              onClick={toggleTutorMode}
-              aria-pressed={isTutorMode}
-              className={`hidden items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
-                isTutorMode
-                  ? "border-[#dad4c8] bg-[#c1b0ff] text-[#000]"
-                  : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white"
-              }`}
+            <TutorTooltip
+              text="Turn guided tool tips on or off for highlighted dashboard components."
+              position="bottom"
+              wrapperClass="hidden sm:inline-flex"
+              componentName="TopNav.TutorModeToggle"
             >
-              <GraduationCap className="h-3.5 w-3.5" />
-              {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
-            </button>
+              <button
+                onClick={toggleTutorMode}
+                aria-pressed={isTutorMode}
+                className={`hidden items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
+                  isTutorMode
+                    ? "border-[#dad4c8] bg-[#c1b0ff] text-[#000]"
+                    : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white"
+                }`}
+              >
+                <GraduationCap className="h-3.5 w-3.5" />
+                {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
+              </button>
+            </TutorTooltip>
 
-            <button
-              onClick={toggleFeedbackMode}
-              aria-pressed={isFeedbackMode}
-              className={`hidden items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
-                isFeedbackMode
-                  ? "border-[#dad4c8] bg-[#fbbd41] text-[#000]"
-                  : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white"
-              }`}
+            <TutorTooltip
+              text="Turn Report Mode on or off. When on, highlighted components can open a prefilled feedback report."
+              position="bottom"
+              wrapperClass="hidden sm:inline-flex"
+              componentName="TopNav.ReportModeToggle"
             >
-              <Flag className="h-3.5 w-3.5" />
-              {isFeedbackMode ? "Report: ON" : "Report: OFF"}
-            </button>
+              <button
+                onClick={toggleFeedbackMode}
+                aria-pressed={isFeedbackMode}
+                className={`hidden items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
+                  isFeedbackMode
+                    ? "border-[#dad4c8] bg-[#fbbd41] text-[#000]"
+                    : "border-[#dad4c8] bg-white/70 text-[#55534e] hover:bg-white"
+                }`}
+              >
+                <Flag className="h-3.5 w-3.5" />
+                {isFeedbackMode ? "Report: ON" : "Report: OFF"}
+              </button>
+            </TutorTooltip>
 
-            <button
-              className="relative rounded-xl p-2 text-[#55534e] transition-colors hover:bg-white/70 hover:text-[#000] focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
-              aria-label="Notifications"
+            <TutorTooltip
+              text="Notification entry point for new updates and alerts."
+              position="bottom"
+              wrapperClass="inline-flex"
+              componentName="TopNav.Notifications"
             >
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#fc7981]" />
-            </button>
+              <button
+                className="relative rounded-xl p-2 text-[#55534e] transition-colors hover:bg-white/70 hover:text-[#000] focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
+                aria-label="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#fc7981]" />
+              </button>
+            </TutorTooltip>
 
             <div className="relative hidden border-l border-[#dad4c8] pl-3 md:block">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsAccountMenuOpen((isOpen) => !isOpen);
-                  setOpenGroup(null);
-                }}
-                className="flex items-center gap-2.5 rounded-2xl p-1 transition-colors hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
-                aria-controls="account-menu"
-                aria-expanded={isAccountMenuOpen}
-                aria-haspopup="menu"
+              <TutorTooltip
+                text="Open account actions, settings, help, role preview, and log out."
+                position="bottom"
+                wrapperClass="inline-flex"
+                componentName="TopNav.AccountMenu"
               >
-                <span className="hidden text-right xl:block">
-                  <span className="block max-w-40 truncate text-xs font-semibold text-[#000]">
-                    {userEmail || "Not signed in"}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAccountMenuOpen((isOpen) => !isOpen);
+                    setOpenGroup(null);
+                  }}
+                  className="flex items-center gap-2.5 rounded-2xl p-1 transition-colors hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#146ef5]"
+                  aria-controls="account-menu"
+                  aria-expanded={isAccountMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  <span className="hidden text-right xl:block">
+                    <span className="block max-w-40 truncate text-xs font-semibold text-[#000]">
+                      {userEmail || "Not signed in"}
+                    </span>
+                    <span className="block text-[10px] text-[#9f9b93]">
+                      {currentRole}
+                    </span>
                   </span>
-                  <span className="block text-[10px] text-[#9f9b93]">
-                    {currentRole}
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#000] text-xs font-semibold uppercase text-white">
+                    {userEmail ? userEmail[0] : "?"}
                   </span>
-                </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#000] text-xs font-semibold uppercase text-white">
-                  {userEmail ? userEmail[0] : "?"}
-                </span>
-                <ChevronDown
-                  className={`h-3.5 w-3.5 text-[#9f9b93] transition-transform ${
-                    isAccountMenuOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 text-[#9f9b93] transition-transform ${
+                      isAccountMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </TutorTooltip>
 
               {isAccountMenuOpen && (
                 <div
@@ -443,144 +594,200 @@ const TopNav = () => {
               )}
             </div>
 
-            <button
-              onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
-              className="rounded-xl border border-[#dad4c8] bg-white/70 p-2 text-[#000] transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#146ef5] lg:hidden"
-              aria-controls="mobile-navigation"
-              aria-label={
-                isMobileMenuOpen ? "Close navigation" : "Open navigation"
-              }
-              aria-expanded={isMobileMenuOpen}
+            <TutorTooltip
+              text="Open or close the mobile navigation menu."
+              position="bottom"
+              wrapperClass="inline-flex lg:hidden"
+              componentName="TopNav.MobileMenuToggle"
             >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
+              <button
+                onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
+                className="rounded-xl border border-[#dad4c8] bg-white/70 p-2 text-[#000] transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#146ef5] lg:hidden"
+                aria-controls="mobile-navigation"
+                aria-label={
+                  isMobileMenuOpen ? "Close navigation" : "Open navigation"
+                }
+                aria-expanded={isMobileMenuOpen}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </button>
+            </TutorTooltip>
           </div>
         </div>
 
         {isMobileMenuOpen && (
-          <nav
-            id="mobile-navigation"
-            className="border-t border-[#dad4c8] py-4 lg:hidden"
-            aria-label="Mobile navigation"
-          >
-            <div className="grid gap-3">
-              <section className="rounded-3xl border border-[#dad4c8] bg-white/80 p-3">
-                <div className="mb-2 flex items-center gap-2 px-1">
-                  <span className="h-2 w-2 rounded-full bg-[#fbbd41]" />
-                  <span className="label-text text-[#9f9b93]">Main</span>
-                </div>
-                <div className="grid gap-1 sm:grid-cols-2">
-                  {primaryNavItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <NavLink
-                        key={item.path}
-                        to={item.path}
-                        className={({ isActive }) =>
-                          `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
-                            isActive
-                              ? "bg-[#000] text-white"
-                              : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
-                          }`
-                        }
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        {item.label}
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              </section>
-              {navGroups.map((group) => (
-                <section
-                  key={group.label}
-                  className="rounded-3xl border border-[#dad4c8] bg-white/80 p-3"
-                >
+            <nav
+              id="mobile-navigation"
+              className="border-t border-[#dad4c8] py-4 lg:hidden"
+              aria-label="Mobile navigation"
+            >
+              <div className="grid gap-3">
+                <section className="rounded-3xl border border-[#dad4c8] bg-white/80 p-3">
                   <div className="mb-2 flex items-center gap-2 px-1">
-                    <span className={`h-2 w-2 rounded-full ${group.accent}`} />
-                    <span className="label-text text-[#9f9b93]">
-                      {group.label}
-                    </span>
+                    <span className="h-2 w-2 rounded-full bg-[#fbbd41]" />
+                    <span className="label-text text-[#9f9b93]">Main</span>
                   </div>
                   <div className="grid gap-1 sm:grid-cols-2">
-                    {group.items.map((item) => {
+                    {primaryNavItems.map((item) => {
                       const Icon = item.icon;
                       return (
-                        <NavLink
+                        <TutorTooltip
                           key={item.path}
-                          to={item.path}
-                          className={({ isActive }) =>
-                            `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
-                              isActive
-                                ? "bg-[#000] text-white"
-                                : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
-                            }`
-                          }
+                          text={item.description}
+                          position="bottom"
+                          wrapperClass="block"
+                          componentName={`TopNav.MobileMenu.${item.label}`}
                         >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          {item.label}
-                        </NavLink>
+                          <NavLink
+                            to={item.path}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
+                                isActive
+                                  ? "bg-[#000] text-white"
+                                  : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
+                              }`
+                            }
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            {item.label}
+                          </NavLink>
+                        </TutorTooltip>
                       );
                     })}
                   </div>
                 </section>
-              ))}
+                {navGroups.map((group) => (
+                  <section
+                    key={group.label}
+                    className="rounded-3xl border border-[#dad4c8] bg-white/80 p-3"
+                  >
+                    <div className="mb-2 flex items-center gap-2 px-1">
+                      <span className={`h-2 w-2 rounded-full ${group.accent}`} />
+                      <span className="label-text text-[#9f9b93]">
+                        {group.label}
+                      </span>
+                    </div>
+                    <div className="grid gap-1 sm:grid-cols-2">
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <TutorTooltip
+                            key={item.path}
+                            text={item.description}
+                            position="bottom"
+                            wrapperClass="block"
+                            componentName={`TopNav.MobileMenu.${item.label}`}
+                          >
+                            <NavLink
+                              to={item.path}
+                              className={({ isActive }) =>
+                                `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors ${
+                                  isActive
+                                    ? "bg-[#000] text-white"
+                                    : "text-[#55534e] hover:bg-[#faf9f7] hover:text-[#000]"
+                                }`
+                              }
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                              {item.label}
+                            </NavLink>
+                          </TutorTooltip>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
 
-              <div className="grid gap-2 rounded-3xl border border-dashed border-[#dad4c8] bg-[#faf9f7] p-3 sm:grid-cols-2">
-                <NavLink
-                  to="/settings"
-                  className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]"
-                >
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </NavLink>
-                {currentRole === "Developer" && (
-                  <label className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]">
-                    <Shield className="h-4 w-4 text-[#43089f]" />
-                    <span className="sr-only">Preview role</span>
-                    <select
-                      value={currentRole}
-                      onChange={(e) => setCurrentRole(e.target.value as Role)}
-                      className="w-full cursor-pointer border-none bg-transparent text-sm font-semibold text-[#55534e] focus:outline-none"
-                      aria-label="Preview role"
+                <div className="grid gap-2 rounded-3xl border border-dashed border-[#dad4c8] bg-[#faf9f7] p-3 sm:grid-cols-2">
+                  <TutorTooltip
+                    text="Open dashboard settings and account configuration."
+                    position="bottom"
+                    wrapperClass="block"
+                    componentName="TopNav.MobileMenu.Settings"
+                  >
+                    <NavLink
+                      to="/settings"
+                      className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]"
                     >
-                      <option value="User">User View</option>
-                      <option value="Admin">Admin View</option>
-                      <option value="Global Admin">Global Admin View</option>
-                      <option value="Developer">Developer View</option>
-                    </select>
-                  </label>
-                )}
-                <button
-                  onClick={toggleTutorMode}
-                  aria-pressed={isTutorMode}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]"
-                >
-                  <GraduationCap className="h-4 w-4" />
-                  {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
-                </button>
-                <button
-                  onClick={toggleFeedbackMode}
-                  aria-pressed={isFeedbackMode}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]"
-                >
-                  <Flag className="h-4 w-4" />
-                  {isFeedbackMode ? "Report: ON" : "Report: OFF"}
-                </button>
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#9d1c22] sm:col-span-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log Out
-                </button>
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </NavLink>
+                  </TutorTooltip>
+                  {currentRole === "Developer" && (
+                    <TutorTooltip
+                      text="Preview the dashboard as another role to check permission-based views."
+                      position="bottom"
+                      wrapperClass="block"
+                      componentName="TopNav.MobileMenu.RolePreview"
+                    >
+                      <label className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]">
+                        <Shield className="h-4 w-4 text-[#43089f]" />
+                        <span className="sr-only">Preview role</span>
+                        <select
+                          value={currentRole}
+                          onChange={(e) => setCurrentRole(e.target.value as Role)}
+                          className="w-full cursor-pointer border-none bg-transparent text-sm font-semibold text-[#55534e] focus:outline-none"
+                          aria-label="Preview role"
+                        >
+                          <option value="User">User View</option>
+                          <option value="Admin">Admin View</option>
+                          <option value="Global Admin">Global Admin View</option>
+                          <option value="Developer">Developer View</option>
+                        </select>
+                      </label>
+                    </TutorTooltip>
+                  )}
+                  <TutorTooltip
+                    text="Turn guided tool tips on or off for highlighted dashboard components."
+                    position="bottom"
+                    wrapperClass="block"
+                    componentName="TopNav.MobileMenu.TutorMode"
+                  >
+                    <button
+                      onClick={toggleTutorMode}
+                      aria-pressed={isTutorMode}
+                      className="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      {isTutorMode ? "Tutor: ON" : "Tutor: OFF"}
+                    </button>
+                  </TutorTooltip>
+                  <TutorTooltip
+                    text="Turn Report Mode on or off so highlighted components can open prefilled feedback reports."
+                    position="bottom"
+                    wrapperClass="block"
+                    componentName="TopNav.MobileMenu.ReportMode"
+                  >
+                    <button
+                      onClick={toggleFeedbackMode}
+                      aria-pressed={isFeedbackMode}
+                      className="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#55534e]"
+                    >
+                      <Flag className="h-4 w-4" />
+                      {isFeedbackMode ? "Report: ON" : "Report: OFF"}
+                    </button>
+                  </TutorTooltip>
+                  <TutorTooltip
+                    text="Sign out of the dashboard."
+                    position="top"
+                    wrapperClass="block sm:col-span-2"
+                    componentName="TopNav.MobileMenu.LogOut"
+                  >
+                    <button
+                      onClick={logout}
+                      className="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3 text-sm font-semibold text-[#9d1c22]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log Out
+                    </button>
+                  </TutorTooltip>
+                </div>
               </div>
-            </div>
-          </nav>
+            </nav>
         )}
       </div>
     </header>
