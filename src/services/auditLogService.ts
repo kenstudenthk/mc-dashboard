@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const URL = import.meta.env.VITE_API_AUDIT_LOGS_URL as string;
 
 export interface AuditLog {
@@ -34,7 +36,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`auditLogService error: ${res.status}`);
   const json = await res.json();

@@ -76,17 +76,16 @@ const ServiceAccountCombobox = ({
   const handleCheck = () => {
     const trimmed = value.trim();
     if (!trimmed) return;
+    onChange(trimmed, null);
 
     const match = accounts.find(
       (sa) =>
         (!provider || sa.Provider === provider) &&
-        (sa.SecondaryID ?? "").toLowerCase() === trimmed.toLowerCase(),
+        (sa.SecondaryID ?? "").trim().toLowerCase() === trimmed.toLowerCase(),
     );
 
     if (match) {
-      if (provider === "AWS") {
-        onChange(match.SecondaryID ?? trimmed, match);
-      }
+      onChange((match.SecondaryID ?? trimmed).trim(), match);
       setCheckResult("found");
       setCheckedAccount(match);
     } else {

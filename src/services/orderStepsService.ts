@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const URL = import.meta.env.VITE_API_ORDER_STEPS_URL as string;
 
 export interface OrderStep {
@@ -13,7 +15,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`orderStepsService error: ${res.status}`);
   const json = await res.json();

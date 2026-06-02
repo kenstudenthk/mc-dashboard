@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const URL = import.meta.env.VITE_API_ORDER_TIMELINE_URL as string;
 
 export interface TimelineEvent {
@@ -21,7 +23,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`orderTimelineService error: ${res.status}`);
   const json = await res.json();

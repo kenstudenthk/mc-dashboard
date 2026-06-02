@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const URL = import.meta.env.VITE_API_MASTER_ACCOUNT_URL as string;
 
 export interface MasterListAccount {
@@ -63,7 +65,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`masterListService error: ${res.status}`);
   const json = await res.json();

@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
 
 export interface FeedbackItem {
   id: string;
@@ -25,7 +26,9 @@ export interface CreateFeedbackInput {
 
 export const feedbackService = {
   async create(data: CreateFeedbackInput): Promise<void> {
-    const { error } = await supabase.from("feedback").insert(data);
+    const { error } = await supabase
+      .from("feedback")
+      .insert(trimTrailingWhitespaceDeep(data));
     if (error) throw new Error(error.message);
   },
 
@@ -44,7 +47,7 @@ export const feedbackService = {
   ): Promise<void> {
     const { error } = await supabase
       .from("feedback")
-      .update({ status })
+      .update(trimTrailingWhitespaceDeep({ status }))
       .eq("id", id);
     if (error) throw new Error(error.message);
   },

@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const URL = import.meta.env.VITE_API_ORDERS_URL as string;
 const PAGE_URL = import.meta.env.VITE_API_GET_PAGE_URL as string;
 
@@ -234,7 +236,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`orderService error: ${res.status}`);
   const json = await res.json();
@@ -250,21 +252,6 @@ async function call<T>(body: object): Promise<T> {
 
 async function findAll(): Promise<Order[]> {
   return call<Order[]>({ action: "GET_ALL" });
-}
-
-// Strips trailing whitespace/newlines that the SharePoint REST API (OData v3)
-// appends to text field values.
-function trimStrings<T>(data: T): T {
-  if (Array.isArray(data)) return data.map(trimStrings) as T;
-  if (data !== null && typeof data === "object") {
-    return Object.fromEntries(
-      Object.entries(data as Record<string, unknown>).map(([k, v]) => [
-        k,
-        typeof v === "string" ? v.trim() : trimStrings(v),
-      ]),
-    ) as T;
-  }
-  return data;
 }
 
 // Extracts the items array from OData v4 ({ value: [...] })
@@ -288,7 +275,9 @@ async function findPaginated(limit: number, offset: number): Promise<Order[]> {
   const res = await fetch(PAGE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "GET_PAGE", limit, offset }),
+    body: JSON.stringify(
+      trimTrailingWhitespaceDeep({ action: "GET_PAGE", limit, offset }),
+    ),
   });
   if (!res.ok) throw new Error(`orderService paginated error: ${res.status}`);
   const json = await res.json();
@@ -300,7 +289,7 @@ async function findPaginated(limit: number, offset: number): Promise<Order[]> {
   }
 
   const items = extractItems(raw) ?? (Array.isArray(raw) ? raw : []);
-  return withId(trimStrings(normalizeChoiceFields(items))) as Order[];
+  return withId(trimTrailingWhitespaceDeep(normalizeChoiceFields(items))) as Order[];
 }
 
 export const orderService = {

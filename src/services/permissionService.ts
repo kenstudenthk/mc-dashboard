@@ -1,4 +1,9 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const URL = import.meta.env.VITE_API_PERMISSIONS_URL as string;
+
+const stringifyBody = (body: object) =>
+  JSON.stringify(trimTrailingWhitespaceDeep(body));
 
 export type UserRole = "Developer" | "Global Admin" | "Admin" | "User";
 export type UserStatus = "Active" | "Pending" | "Inactive";
@@ -15,7 +20,7 @@ export async function getRole(email: string): Promise<UserRole> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "GET_ROLE", email }),
+    body: stringifyBody({ action: "GET_ROLE", email }),
   });
   if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
   const json = await res.json();
@@ -38,7 +43,7 @@ export async function getAllUsers(): Promise<SPUser[]> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "GET_ALL_USERS" }),
+    body: stringifyBody({ action: "GET_ALL_USERS" }),
   });
   if (!res.ok) throw new Error(`permissionService error: ${res.status}`);
   const json = await res.json();
@@ -72,7 +77,7 @@ export async function updateUser(
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    body: stringifyBody({
       action: "UPDATE_USER",
       data: {
         Id: id,
@@ -96,7 +101,7 @@ export async function createUser(
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    body: stringifyBody({
       action: "CREATE_USER",
       data: { Title: email, DisplayName: displayName, Role: role, Status: status },
     }),
@@ -108,7 +113,7 @@ export async function deleteUser(id: number): Promise<void> {
   const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    body: stringifyBody({
       action: "DELETE_USER",
       data: { Id: id },
     }),

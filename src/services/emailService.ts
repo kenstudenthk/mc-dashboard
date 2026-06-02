@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const API_URL = import.meta.env.VITE_API_EMAIL_URL as string;
 
 export interface EmailLog {
@@ -57,7 +59,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`emailService error: ${res.status}`);
   const json = await res.json();

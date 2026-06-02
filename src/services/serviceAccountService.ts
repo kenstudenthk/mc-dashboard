@@ -1,3 +1,5 @@
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const BASE_URL = import.meta.env.VITE_API_SERVICE_ACCOUNTS_URL as string;
 
 export interface ServiceAccount {
@@ -46,7 +48,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(BASE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`serviceAccountService error: ${res.status}`);
   const json = await res.json();

@@ -1,4 +1,5 @@
 import type { Role } from "../contexts/PermissionContext";
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
 
 const BASE_URL = import.meta.env.VITE_API_QUICK_LINKS_URL as string;
 
@@ -77,7 +78,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(BASE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok)
     throw new Error(`Quick Links API error: ${res.status} ${res.statusText}`);

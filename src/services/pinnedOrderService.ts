@@ -1,4 +1,6 @@
 // src/services/pinnedOrderService.ts
+import { trimTrailingWhitespaceDeep } from "../utils/trimData";
+
 const FLOW_URL = import.meta.env.VITE_API_PINNED_ORDER_URL as string;
 
 interface PinRecord {
@@ -9,7 +11,7 @@ async function call<T>(body: object): Promise<T> {
   const res = await fetch(FLOW_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(trimTrailingWhitespaceDeep(body)),
   });
   if (!res.ok) throw new Error(`pinnedOrderService: HTTP ${res.status}`);
   return res.json() as Promise<T>;
