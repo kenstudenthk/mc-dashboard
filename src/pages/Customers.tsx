@@ -38,6 +38,12 @@ const EMPTY_FORM: CreateCustomerInput = {
 const inputClass =
   "w-full px-3 py-2 bg-[#f5f5f7] border border-[#1d1d1f]/08 rounded-lg text-sm text-[#1d1d1f] placeholder:text-[#1d1d1f]/30 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all";
 
+const tableHeaderCellClass =
+  "border-r border-white/10 px-3 py-3 text-[11px] font-bold uppercase text-white last:border-r-0";
+
+const tableDataCellClass =
+  "border-r border-[#dce9df] px-3 py-3 last:border-r-0";
+
 const Customers = () => {
   const { userEmail } = usePermission();
   const { data, isLoading: loading, isError } = useCustomers();
@@ -172,8 +178,8 @@ const Customers = () => {
         </TutorTooltip>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-[#dad4c8] bg-[#faf9f7] p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="overflow-hidden rounded-2xl border border-[#dce9df] bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-[#dce9df] bg-[#f3faf5] p-4 lg:flex-row lg:items-center lg:justify-between">
           <TutorTooltip
             text="Search for a customer by their name, ID, email, or phone number."
             position="bottom"
@@ -187,103 +193,145 @@ const Customers = () => {
                 placeholder="Search customers, company, email, phone, status, or tier..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-[#dad4c8] bg-white py-2 pl-9 pr-4 text-sm text-[#1d1d1f] transition-all placeholder:text-[#1d1d1f]/30 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 lg:w-[28rem]"
+                className="w-full rounded-xl border border-[#dce9df] bg-white py-2 pl-9 pr-4 text-sm text-[#1d1d1f] transition-all placeholder:text-[#1d1d1f]/30 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 lg:w-[28rem]"
               />
             </div>
           </TutorTooltip>
-          <button
-            type="button"
-            onClick={() => setShowFilters((value) => !value)}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-[#dad4c8] bg-white px-3 py-2 text-sm font-semibold text-[#55534e] transition-colors hover:bg-[#f5f5f7]"
+          <TutorTooltip
+            text="Open filters to narrow customers by status, tier, missing contact details, or order relationship."
+            position="bottom"
+            wrapperClass="w-full lg:w-auto"
+            componentName="Customers.FilterToggle"
           >
-            <Filter className="w-3.5 h-3.5" />
-            Filter
-            {activeFilterCount > 0 && (
-              <span className="rounded-full bg-black px-1.5 py-0.5 text-[10px] leading-none text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setShowFilters((value) => !value)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#dce9df] bg-white px-3 py-2 text-sm font-semibold text-[#375244] transition-colors hover:bg-[#edf7f0] lg:w-auto"
+            >
+              <Filter className="w-3.5 h-3.5" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="rounded-full bg-black px-1.5 py-0.5 text-[10px] leading-none text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </TutorTooltip>
         </div>
 
         {showFilters && (
-          <div className="flex flex-wrap items-end gap-3 border-b border-[#dad4c8] bg-white p-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-[#dad4c8] bg-[#faf9f7] px-3 py-2 text-sm"
-              aria-label="Filter by status"
+          <div className="flex flex-wrap items-end gap-3 border-b border-[#dce9df] bg-white p-4">
+            <TutorTooltip
+              text="Choose whether to show all customers, active customers, or inactive customers."
+              position="bottom"
+              wrapperClass="w-full sm:w-auto"
+              componentName="Customers.StatusFilter"
             >
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-            <select
-              value={tierFilter}
-              onChange={(e) => setTierFilter(e.target.value)}
-              className="rounded-lg border border-[#dad4c8] bg-[#faf9f7] px-3 py-2 text-sm"
-              aria-label="Filter by tier"
-            >
-              <option value="All">All Tiers</option>
-              <option value="Standard">Standard</option>
-              <option value="Premium">Premium</option>
-              <option value="Enterprise">Enterprise</option>
-            </select>
-            <select
-              value={contactFilter}
-              onChange={(e) => setContactFilter(e.target.value)}
-              className="rounded-lg border border-[#dad4c8] bg-[#faf9f7] px-3 py-2 text-sm"
-              aria-label="Filter by missing contact details"
-            >
-              <option value="All">All Contact Records</option>
-              <option value="Missing Email">Missing Email</option>
-              <option value="Missing Phone">Missing Phone</option>
-            </select>
-            <select
-              value={relationshipFilter}
-              onChange={(e) => setRelationshipFilter(e.target.value)}
-              className="rounded-lg border border-[#dad4c8] bg-[#faf9f7] px-3 py-2 text-sm"
-              aria-label="Filter by order relationship"
-            >
-              <option value="All">All Relationships</option>
-              <option value="With Orders">With Orders</option>
-              <option value="No Orders">No Orders</option>
-            </select>
-            {activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="rounded-lg border border-[#dad4c8] bg-white px-3 py-2 text-xs font-semibold text-[#55534e] hover:bg-[#f5f5f7]"
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-lg border border-[#dce9df] bg-[#f3faf5] px-3 py-2 text-sm sm:w-auto"
+                aria-label="Filter by status"
               >
-                Clear All
-              </button>
+                <option value="All">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </TutorTooltip>
+            <TutorTooltip
+              text="Filter customers by their account tier."
+              position="bottom"
+              wrapperClass="w-full sm:w-auto"
+              componentName="Customers.TierFilter"
+            >
+              <select
+                value={tierFilter}
+                onChange={(e) => setTierFilter(e.target.value)}
+                className="w-full rounded-lg border border-[#dce9df] bg-[#f3faf5] px-3 py-2 text-sm sm:w-auto"
+                aria-label="Filter by tier"
+              >
+                <option value="All">All Tiers</option>
+                <option value="Standard">Standard</option>
+                <option value="Premium">Premium</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+            </TutorTooltip>
+            <TutorTooltip
+              text="Find records that are missing an email address or phone number."
+              position="bottom"
+              wrapperClass="w-full sm:w-auto"
+              componentName="Customers.ContactFilter"
+            >
+              <select
+                value={contactFilter}
+                onChange={(e) => setContactFilter(e.target.value)}
+                className="w-full rounded-lg border border-[#dce9df] bg-[#f3faf5] px-3 py-2 text-sm sm:w-auto"
+                aria-label="Filter by missing contact details"
+              >
+                <option value="All">All Contact Records</option>
+                <option value="Missing Email">Missing Email</option>
+                <option value="Missing Phone">Missing Phone</option>
+              </select>
+            </TutorTooltip>
+            <TutorTooltip
+              text="Show customers based on whether they already have orders."
+              position="bottom"
+              wrapperClass="w-full sm:w-auto"
+              componentName="Customers.RelationshipFilter"
+            >
+              <select
+                value={relationshipFilter}
+                onChange={(e) => setRelationshipFilter(e.target.value)}
+                className="w-full rounded-lg border border-[#dce9df] bg-[#f3faf5] px-3 py-2 text-sm sm:w-auto"
+                aria-label="Filter by order relationship"
+              >
+                <option value="All">All Relationships</option>
+                <option value="With Orders">With Orders</option>
+                <option value="No Orders">No Orders</option>
+              </select>
+            </TutorTooltip>
+            {activeFilterCount > 0 && (
+              <TutorTooltip
+                text="Reset all filters and return to the full customer list."
+                position="bottom"
+                wrapperClass="w-full sm:w-auto"
+                componentName="Customers.ClearFilters"
+              >
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="w-full rounded-lg border border-[#dce9df] bg-white px-3 py-2 text-xs font-semibold text-[#375244] hover:bg-[#edf7f0] sm:w-auto"
+                >
+                  Clear All
+                </button>
+              </TutorTooltip>
             )}
-            <span className="ml-auto text-xs font-semibold text-[#9f9b93]">
+            <span className="ml-auto text-xs font-semibold text-[#6d8676]">
               {filtered.length} results
             </span>
           </div>
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="hidden h-11 border-b border-[#dad4c8] bg-[#f5f3ef] md:table-row">
-                <th className="px-6 py-3.5 text-xs font-semibold text-[#55534e]">
+          <table className="w-full border-separate border-spacing-0 text-left">
+            <thead className="hidden md:table-header-group">
+              <tr className="h-14 border-y border-[#15331f] bg-[#1f4a2d] shadow-[0_8px_18px_rgba(29,29,31,0.12)]">
+                <th className={tableHeaderCellClass}>
                   Customer
                 </th>
-                <th className="px-6 py-3.5 text-xs font-semibold text-[#55534e]">
+                <th className={tableHeaderCellClass}>
                   Contact
                 </th>
-                <th className="px-6 py-3.5 text-xs font-semibold text-[#55534e]">
+                <th className={tableHeaderCellClass}>
                   Orders
                 </th>
-                <th className="px-6 py-3.5 text-xs font-semibold text-[#55534e]">
+                <th className={tableHeaderCellClass}>
                   Tier
                 </th>
-                <th className="px-6 py-3.5 text-xs font-semibold text-[#55534e]">
+                <th className={tableHeaderCellClass}>
                   Status
                 </th>
-                <th className="px-6 py-3.5 text-right text-xs font-semibold text-[#55534e]">
+                <th className={`${tableHeaderCellClass} text-right`}>
                   Actions
                 </th>
               </tr>
@@ -322,7 +370,12 @@ const Customers = () => {
                     {/* Mobile Card View */}
                     <tr className="md:hidden border-b border-[#1d1d1f]/04">
                       <td colSpan={6} className="px-4 py-3">
-                        <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-3">
+                        <TutorTooltip
+                          text="This customer card summarizes contact details, status, ID, and quick profile access."
+                          position="top"
+                          componentName="Customers.MobileCard"
+                        >
+                          <div className="rounded-xl border border-[#1d1d1f]/06 p-3 bg-white flex flex-col gap-3">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-sm shrink-0">
@@ -372,23 +425,31 @@ const Customers = () => {
                             <span className="text-[10px] leading-none text-[#1d1d1f]/35">
                               ID #{customer.id}
                             </span>
-                            <Link
-                              to={`/customers/${customer.id}`}
-                              className="px-3 py-1.5 text-xs font-medium text-[#0071e3] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+                            <TutorTooltip
+                              text="Open this customer's full profile, including order history and notes."
+                              position="left"
+                              wrapperClass="w-auto"
+                              componentName="Customers.MobileViewProfile"
                             >
-                              <Eye className="w-3.5 h-3.5" />
-                              View Profile
-                            </Link>
+                              <Link
+                                to={`/customers/${customer.id}`}
+                                className="px-3 py-1.5 text-xs font-medium text-[#0071e3] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                View Profile
+                              </Link>
+                            </TutorTooltip>
                           </div>
-                        </div>
+                          </div>
+                        </TutorTooltip>
                       </td>
                     </tr>
 
                     {/* Desktop Table Row */}
                     <tr
-                      className="hidden md:table-row border-b border-[#1d1d1f]/04 hover:bg-[#f5f5f7] transition-colors group"
+                      className="hidden md:table-row bg-white transition-colors hover:bg-[#f3faf5] group [&>td]:border-b [&>td]:border-[#e7f1ea]"
                     >
-                    <td className="px-6 py-4">
+                    <td className={tableDataCellClass}>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-semibold text-xs">
                           {(customer.Title || customer.Company || "??")
@@ -421,7 +482,7 @@ const Customers = () => {
                         </TutorTooltip>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className={tableDataCellClass}>
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-xs text-[#1d1d1f]/60">
                           <Mail className="w-3 h-3 text-[#1d1d1f]/30" />
@@ -433,13 +494,13 @@ const Customers = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-[#1d1d1f]/70">
+                    <td className={`${tableDataCellClass} text-sm font-semibold text-[#1d1d1f]/70`}>
                       {orderCountByCustomer[customer.id] ?? 0}
                     </td>
-                    <td className="px-6 py-4 text-sm text-[#1d1d1f]/60">
+                    <td className={`${tableDataCellClass} text-sm text-[#1d1d1f]/60`}>
                       {customer.Tier ?? "Standard"}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className={tableDataCellClass}>
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                           customer.Status === "Active"
@@ -450,17 +511,35 @@ const Customers = () => {
                         {customer.Status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className={`${tableDataCellClass} text-right`}>
                       <div className="flex items-center justify-end gap-1.5 opacity-100 transition-opacity">
-                        <Link
-                          to={`/customers/${customer.id}`}
-                          className="p-1.5 text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50 rounded-lg transition-colors"
+                        <TutorTooltip
+                          text="View this customer's full profile."
+                          position="left"
+                          wrapperClass="w-auto"
+                          componentName="Customers.ViewAction"
                         >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        <button className="p-1.5 text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7] rounded-lg transition-colors">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
+                          <Link
+                            to={`/customers/${customer.id}`}
+                            aria-label="View customer profile"
+                            className="p-1.5 text-[#1d1d1f]/35 hover:text-[#0071e3] hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </TutorTooltip>
+                        <TutorTooltip
+                          text="Open more actions for this customer when available."
+                          position="left"
+                          wrapperClass="w-auto"
+                          componentName="Customers.MoreActions"
+                        >
+                          <button
+                            aria-label="More customer actions"
+                            className="p-1.5 text-[#1d1d1f]/35 hover:text-[#1d1d1f] hover:bg-[#f5f5f7] rounded-lg transition-colors"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </TutorTooltip>
                       </div>
                     </td>
                   </tr>
@@ -480,16 +559,24 @@ const Customers = () => {
               <h2 className="text-[17px] font-semibold text-[#1d1d1f]">
                 Add Customer
               </h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setForm(EMPTY_FORM);
-                  setFormError(null);
-                }}
-                className="p-1.5 rounded-lg hover:bg-[#f5f5f7] text-[#1d1d1f]/40 transition-colors"
+              <TutorTooltip
+                text="Close this form and discard the unsaved customer draft."
+                position="left"
+                wrapperClass="w-auto"
+                componentName="Customers.ModalClose"
               >
-                <X className="w-4 h-4" />
-              </button>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setForm(EMPTY_FORM);
+                    setFormError(null);
+                  }}
+                  aria-label="Close add customer form"
+                  className="p-1.5 rounded-lg hover:bg-[#f5f5f7] text-[#1d1d1f]/40 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </TutorTooltip>
             </div>
 
             <div className="px-6 py-5 space-y-4">
@@ -500,38 +587,56 @@ const Customers = () => {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="label-text text-[#1d1d1f]/45">Name *</label>
-                  <input
-                    className={inputClass}
-                    value={form.Title}
-                    onChange={(e) => set("Title", e.target.value)}
-                    placeholder="Contact name"
-                  />
-                </div>
+                <TutorTooltip
+                  text="Enter the primary contact name. This field is required."
+                  position="top"
+                  componentName="Customers.NameField"
+                >
+                  <div className="space-y-1.5">
+                    <label className="label-text text-[#1d1d1f]/45">Name *</label>
+                    <input
+                      className={inputClass}
+                      value={form.Title}
+                      onChange={(e) => set("Title", e.target.value)}
+                      placeholder="Contact name"
+                    />
+                  </div>
+                </TutorTooltip>
+                <TutorTooltip
+                  text="Enter the customer's company name. This field is required."
+                  position="top"
+                  componentName="Customers.CompanyField"
+                >
+                  <div className="space-y-1.5">
+                    <label className="label-text text-[#1d1d1f]/45">
+                      Company *
+                    </label>
+                    <input
+                      className={inputClass}
+                      value={form.Company}
+                      onChange={(e) => set("Company", e.target.value)}
+                      placeholder="Company name"
+                    />
+                  </div>
+                </TutorTooltip>
+              </div>
+              <TutorTooltip
+                text="Use this when the customer or company was previously known by another name."
+                position="top"
+                componentName="Customers.PreviousNameField"
+              >
                 <div className="space-y-1.5">
                   <label className="label-text text-[#1d1d1f]/45">
-                    Company *
+                    Previous Name
                   </label>
                   <input
                     className={inputClass}
-                    value={form.Company}
-                    onChange={(e) => set("Company", e.target.value)}
-                    placeholder="Company name"
+                    value={form.PreviousName ?? ""}
+                    onChange={(e) => set("PreviousName", e.target.value)}
+                    placeholder="Previous company name"
                   />
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="label-text text-[#1d1d1f]/45">
-                  Previous Name
-                </label>
-                <input
-                  className={inputClass}
-                  value={form.PreviousName ?? ""}
-                  onChange={(e) => set("PreviousName", e.target.value)}
-                  placeholder="Previous company name"
-                />
-              </div>
+              </TutorTooltip>
               <div className="space-y-1.5">
                 <label className="label-text text-[#1d1d1f]/45">Email</label>
                 <input
@@ -552,62 +657,94 @@ const Customers = () => {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="label-text text-[#1d1d1f]/45">Status</label>
-                  <select
-                    className={inputClass}
-                    value={form.Status}
-                    onChange={(e) => set("Status", e.target.value)}
-                  >
-                    <option>Active</option>
-                    <option>Inactive</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="label-text text-[#1d1d1f]/45">Tier</label>
-                  <select
-                    className={inputClass}
-                    value={form.Tier}
-                    onChange={(e) => set("Tier", e.target.value)}
-                  >
-                    <option>Standard</option>
-                    <option>Premium</option>
-                    <option>Enterprise</option>
-                  </select>
-                </div>
+                <TutorTooltip
+                  text="Set whether this customer should be treated as active or inactive."
+                  position="top"
+                  componentName="Customers.FormStatus"
+                >
+                  <div className="space-y-1.5">
+                    <label className="label-text text-[#1d1d1f]/45">Status</label>
+                    <select
+                      className={inputClass}
+                      value={form.Status}
+                      onChange={(e) => set("Status", e.target.value)}
+                    >
+                      <option>Active</option>
+                      <option>Inactive</option>
+                    </select>
+                  </div>
+                </TutorTooltip>
+                <TutorTooltip
+                  text="Assign the customer tier used for account handling."
+                  position="top"
+                  componentName="Customers.FormTier"
+                >
+                  <div className="space-y-1.5">
+                    <label className="label-text text-[#1d1d1f]/45">Tier</label>
+                    <select
+                      className={inputClass}
+                      value={form.Tier}
+                      onChange={(e) => set("Tier", e.target.value)}
+                    >
+                      <option>Standard</option>
+                      <option>Premium</option>
+                      <option>Enterprise</option>
+                    </select>
+                  </div>
+                </TutorTooltip>
               </div>
-              <div className="space-y-1.5">
-                <label className="label-text text-[#1d1d1f]/45">
-                  Special Notes
-                </label>
-                <textarea
-                  className={`${inputClass} resize-none`}
-                  rows={3}
-                  value={form.SpecialNotes}
-                  onChange={(e) => set("SpecialNotes", e.target.value)}
-                  placeholder="Any special instructions…"
-                />
-              </div>
+              <TutorTooltip
+                text="Capture special instructions or handling notes for this customer."
+                position="top"
+                componentName="Customers.NotesField"
+              >
+                <div className="space-y-1.5">
+                  <label className="label-text text-[#1d1d1f]/45">
+                    Special Notes
+                  </label>
+                  <textarea
+                    className={`${inputClass} resize-none`}
+                    rows={3}
+                    value={form.SpecialNotes}
+                    onChange={(e) => set("SpecialNotes", e.target.value)}
+                    placeholder="Any special instructions…"
+                  />
+                </div>
+              </TutorTooltip>
             </div>
 
             <div className="px-6 py-4 border-t border-[#1d1d1f]/06 flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setForm(EMPTY_FORM);
-                  setFormError(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-[#1d1d1f]/60 bg-[#f5f5f7] rounded-lg hover:bg-[#e5e5e7] transition-colors"
+              <TutorTooltip
+                text="Cancel adding this customer and clear the form."
+                position="top"
+                wrapperClass="w-auto"
+                componentName="Customers.CancelAdd"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddCustomer}
-                disabled={submitting}
-                className="px-4 py-2 text-sm font-medium gradient-cta rounded-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setForm(EMPTY_FORM);
+                    setFormError(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-[#1d1d1f]/60 bg-[#f5f5f7] rounded-lg hover:bg-[#e5e5e7] transition-colors"
+                >
+                  Cancel
+                </button>
+              </TutorTooltip>
+              <TutorTooltip
+                text="Save this customer record after required fields are complete."
+                position="top"
+                wrapperClass="w-auto"
+                componentName="Customers.SaveCustomer"
               >
-                {submitting ? "Saving…" : "Save Customer"}
-              </button>
+                <button
+                  onClick={handleAddCustomer}
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium gradient-cta rounded-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {submitting ? "Saving…" : "Save Customer"}
+                </button>
+              </TutorTooltip>
             </div>
           </div>
         </div>
