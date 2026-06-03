@@ -1,7 +1,9 @@
 import type { Role } from "../contexts/PermissionContext";
 import { trimTrailingWhitespaceDeep } from "../utils/trimData";
 
-const URL = import.meta.env.VITE_API_PERMISSION_URL as string | undefined;
+const URL = import.meta.env.VITE_API_PERMISSION_SETTING_URL as
+  | string
+  | undefined;
 
 export type PermissionResourceType =
   | "Page"
@@ -112,7 +114,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 async function call<T>(body: object): Promise<T> {
   if (!URL) {
     throw new Error(
-      "PermissionRules API URL is not configured. Add VITE_API_PERMISSION_URL to your local .env file and restart npm run dev.",
+      "PermissionRules API URL is not configured. Add VITE_API_PERMISSION_SETTING_URL to your local .env file and restart npm run dev.",
     );
   }
 
