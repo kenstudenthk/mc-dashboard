@@ -1,15 +1,30 @@
 {
   "permissions": {
     "allow": [
-      "mcp__lean-ctx__ctx_read",
-      "mcp__lean-ctx__ctx_search",
-      "Bash(npm run lint *)",
-      "PowerShell(npm run lint *)",
-      "Bash(npx tsc --noEmit *)",
-      "PowerShell(npx tsc --noEmit *)",
-      "mcp__github__pull_request_read",
+      "Bash(npm run lint*)",
       "Bash(npm run build)",
-      "PowerShell(npm run build)"
+      "Bash(npm test)",
+      "Bash(npm run test*)",
+      "Bash(npm ci)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(grep -r*)",
+      "Bash(tail -n*)",
+      "Bash(mkdir -p run-logs)",
+      "Bash(echo * >> run-logs/*)",
+      "Bash(ls -t run-logs/*)",
+      "mcp__github__pull_request_read",
+      "mcp__github__issue_read",
+      "mcp__github__list_issues",
+      "mcp__github__add_issue_comment",
+      "mcp__github__create_pull_request",
+      "mcp__github__update_pull_request",
+      "mcp__github__enable_pr_auto_merge"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [{ "command": "bash .claude/hooks/audit-log.sh" }],
+    "SubagentStop": [{ "command": "bash .claude/hooks/audit-log.sh" }]
   }
 }
