@@ -30,13 +30,13 @@ The user has already created:
 - GitHub/Cloudflare variable:
 
 ```text
-VITE_API_PERMISSION_URL
+VITE_API_PERMISSION_SETTING_URL
 ```
 
 Important implementation note:
 
-- Current code uses `VITE_API_PERMISSIONS_URL` for the existing user/role service.
-- New permission-rule service should use `VITE_API_PERMISSION_URL`.
+- User role service should use `VITE_API_PERMISSION_URL` for `App_UserRoles`.
+- Permission-rule service should use `VITE_API_PERMISSION_SETTING_URL` for `PermissionRules`.
 - Do not rename the existing variable unless the existing user/role flow is also migrated.
 
 ## SharePoint List
@@ -248,7 +248,7 @@ src/services/permissionRuleService.ts
 It should use:
 
 ```text
-import.meta.env.VITE_API_PERMISSION_URL
+import.meta.env.VITE_API_PERMISSION_SETTING_URL
 ```
 
 Expected service methods:
