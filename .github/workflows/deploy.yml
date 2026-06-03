@@ -24,6 +24,8 @@ jobs:
           echo "VITE_API_ORDERS_URL='$VITE_API_ORDERS_URL'" > .env.production
           echo "VITE_API_CUSTOMERS_URL='$VITE_API_CUSTOMERS_URL'" >> .env.production
           echo "VITE_API_PERMISSIONS_URL='$VITE_API_PERMISSIONS_URL'" >> .env.production
+          echo "VITE_API_PERMISSION_URL='$VITE_API_PERMISSION_URL'" >> .env.production
+          echo "VITE_API_PERMISSION_SETTING_URL='$VITE_API_PERMISSION_SETTING_URL'" >> .env.production
           echo "VITE_API_ORDER_TIMELINE_URL='$VITE_API_ORDER_TIMELINE_URL'" >> .env.production
           echo "VITE_API_AUDIT_LOGS_URL='$VITE_API_AUDIT_LOGS_URL'" >> .env.production
           echo "VITE_API_QUICK_LINKS_URL='$VITE_API_QUICK_LINKS_URL'" >> .env.production
@@ -39,6 +41,8 @@ jobs:
           VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
           VITE_API_CUSTOMERS_URL: ${{ secrets.VITE_API_CUSTOMERS_URL }}
           VITE_API_PERMISSIONS_URL: ${{ secrets.VITE_API_PERMISSIONS_URL }}
+          VITE_API_PERMISSION_URL: ${{ secrets.VITE_API_PERMISSION_URL }}
+          VITE_API_PERMISSION_SETTING_URL: ${{ secrets.VITE_API_PERMISSION_SETTING_URL }}
           VITE_API_ORDER_TIMELINE_URL: ${{ secrets.VITE_API_ORDER_TIMELINE_URL }}
           VITE_API_AUDIT_LOGS_URL: ${{ secrets.VITE_API_AUDIT_LOGS_URL }}
           VITE_API_QUICK_LINKS_URL: ${{ secrets.VITE_API_QUICK_LINKS_URL }}
