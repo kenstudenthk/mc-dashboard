@@ -1,0 +1,11 @@
+# Auth / permissions / security — always require human review
+src/contexts/PermissionContext.tsx    @kenstudenthk
+src/services/authService.ts           @kenstudenthk
+src/services/permissionService.ts     @kenstudenthk
+src/lib/supabase.ts                   @kenstudenthk
+
+# Build / CI / deps
+.github/workflows/**                  @kenstudenthk
+package.json                          @kenstudenthk
+vite.config.ts                        @kenstudenthk
+tsconfig.json                         @kenstudenthk

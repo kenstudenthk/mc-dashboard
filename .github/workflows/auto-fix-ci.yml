@@ -1,0 +1,43 @@
+name: Auto Fix CI Failure
+on:
+  workflow_run:
+    workflows: ["Build & Deploy to Cloudflare Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  auto-fix-ci:
+    if: github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/fix-issue-log ci"
+          allowed_tools: "Bash,Read,Write,Edit,mcp__github__create_pull_request,mcp__github__update_pull_request,mcp__github__add_issue_comment,mcp__github__enable_pr_auto_merge"
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_ORDERS_URL: ${{ secrets.VITE_API_ORDERS_URL }}
+          VITE_API_CUSTOMERS_URL: ${{ secrets.VITE_API_CUSTOMERS_URL }}
+          VITE_API_GET_PAGE_URL: ${{ secrets.VITE_API_GET_PAGE_URL }}
+          VITE_API_ORDER_TIMELINE_URL: ${{ secrets.VITE_API_ORDER_TIMELINE_URL }}
+          VITE_API_AUDIT_LOGS_URL: ${{ secrets.VITE_API_AUDIT_LOGS_URL }}
+          VITE_API_QUICK_LINKS_URL: ${{ secrets.VITE_API_QUICK_LINKS_URL }}
+          VITE_API_PERMISSIONS_URL: ${{ secrets.VITE_API_PERMISSIONS_URL }}
+          VITE_API_SERVICE_ACCOUNTS_URL: ${{ secrets.VITE_API_SERVICE_ACCOUNTS_URL }}
+          VITE_API_MASTER_ACCOUNT_URL: ${{ secrets.VITE_API_MASTER_ACCOUNT_URL }}
+          VITE_API_ORDER_STEPS_URL: ${{ secrets.VITE_API_ORDER_STEPS_URL }}
+          VITE_API_EMAIL_TEMPLATES_URL: ${{ secrets.VITE_API_EMAIL_TEMPLATES_URL }}
+          VITE_API_EMAIL_URL: ${{ secrets.VITE_API_EMAIL_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
