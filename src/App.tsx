@@ -6,6 +6,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import OrderRegistry from './pages/OrderRegistry';
 import OrderDetails from './pages/OrderDetails';
@@ -59,22 +60,23 @@ function AppContent() {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/orders" element={<OrderRegistry />} />
-            <Route path="/orders/new" element={<NewOrder />} />
-            <Route path="/orders/:id" element={<OrderDetails />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/customers/:id" element={<CustomerProfile />} />
-            <Route path="/services" element={<ServiceCatalog />} />
-            <Route path="/services/:id" element={<ServiceDetails />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/quick-links" element={<QuickLinks />} />
-            <Route path="/audit-log" element={<AuditLog />} />
-            <Route path="/email-templates" element={<EmailTemplates />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/feedback/new" element={<FeedbackNew />} />
+            <Route path="/" element={<ProtectedRoute resourceKey="Dashboard" resourceName="Dashboard"><Dashboard /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute resourceKey="Orders" resourceName="Orders"><OrderRegistry /></ProtectedRoute>} />
+            <Route path="/orders/new" element={<ProtectedRoute resourceKey="NewOrder" resourceName="New Order"><NewOrder /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute resourceKey="OrderDetails" resourceName="Order Details"><OrderDetails /></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute resourceKey="Customers" resourceName="Customers"><Customers /></ProtectedRoute>} />
+            <Route path="/customers/:id" element={<ProtectedRoute resourceKey="CustomerProfile" resourceName="Customer Profile"><CustomerProfile /></ProtectedRoute>} />
+            <Route path="/services" element={<ProtectedRoute resourceKey="ServiceCatalog" resourceName="Service Catalog"><ServiceCatalog /></ProtectedRoute>} />
+            <Route path="/services/:id" element={<ProtectedRoute resourceKey="ServiceDetails" resourceName="Service Details"><ServiceDetails /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute resourceKey="Reports" resourceName="Reports"><Reports /></ProtectedRoute>} />
+            <Route path="/quick-links" element={<ProtectedRoute resourceKey="QuickLinks" resourceName="Quick Links"><QuickLinks /></ProtectedRoute>} />
+            <Route path="/audit-log" element={<ProtectedRoute resourceKey="AuditLog" resourceName="Audit Log"><AuditLog /></ProtectedRoute>} />
+            <Route path="/email-templates" element={<ProtectedRoute resourceKey="EmailTemplates" resourceName="Email Templates"><EmailTemplates /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute resourceKey="Settings" resourceName="Settings"><Settings /></ProtectedRoute>} />
+            <Route path="/settings/permissions" element={<ProtectedRoute resourceType="Function" resourceKey="Settings.Permissions" action="Manage" resourceName="Permission Settings"><Settings /></ProtectedRoute>} />
+            <Route path="/help" element={<ProtectedRoute resourceKey="Help" resourceName="Help"><Help /></ProtectedRoute>} />
+            <Route path="/feedback" element={<ProtectedRoute resourceKey="Feedback" resourceName="Feedback"><Feedback /></ProtectedRoute>} />
+            <Route path="/feedback/new" element={<ProtectedRoute resourceKey="FeedbackNew" resourceName="New Feedback"><FeedbackNew /></ProtectedRoute>} />
           </Routes>
         </Layout>
       </Router>

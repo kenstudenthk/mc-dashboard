@@ -11,30 +11,24 @@ interface SidebarProps {
 
 const Sidebar = ({ isDrawerOpen = false, onClose }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { hasPermission, logout } = usePermission();
+  const { can, logout } = usePermission();
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: FileText, label: 'Order Registry', path: '/orders' },
-    { icon: Users, label: 'Customers', path: '/customers' },
-    { icon: BriefcaseBusiness, label: 'Services', path: '/services' },
-    { icon: BarChart3, label: 'Reports', path: '/reports' },
-    { icon: ExternalLink, label: 'Useful Links', path: '/quick-links' },
-  ];
-
-  if (hasPermission('Admin')) {
-    navItems.push({ icon: ClipboardList, label: 'Audit Log', path: '/audit-log' });
-    navItems.push({ icon: Mail, label: 'Email Templates', path: '/email-templates' });
-  }
-
-  if (hasPermission('Developer')) {
-    navItems.push({ icon: MessageSquare, label: 'Feedback', path: '/feedback' });
-  }
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', resourceKey: 'Dashboard' },
+    { icon: FileText, label: 'Order Registry', path: '/orders', resourceKey: 'Orders' },
+    { icon: Users, label: 'Customers', path: '/customers', resourceKey: 'Customers' },
+    { icon: BriefcaseBusiness, label: 'Services', path: '/services', resourceKey: 'ServiceCatalog' },
+    { icon: BarChart3, label: 'Reports', path: '/reports', resourceKey: 'Reports' },
+    { icon: ExternalLink, label: 'Useful Links', path: '/quick-links', resourceKey: 'QuickLinks' },
+    { icon: ClipboardList, label: 'Audit Log', path: '/audit-log', resourceKey: 'AuditLog' },
+    { icon: Mail, label: 'Email Templates', path: '/email-templates', resourceKey: 'EmailTemplates' },
+    { icon: MessageSquare, label: 'Feedback', path: '/feedback', resourceKey: 'Feedback' },
+  ].filter((item) => can('Page', item.resourceKey, 'View'));
 
   const bottomNavItems = [
-    { icon: Settings, label: 'Settings', path: '/settings' },
-    { icon: HelpCircle, label: 'Help & Support', path: '/help' },
-  ];
+    { icon: Settings, label: 'Settings', path: '/settings', resourceKey: 'Settings' },
+    { icon: HelpCircle, label: 'Help & Support', path: '/help', resourceKey: 'Help' },
+  ].filter((item) => can('Page', item.resourceKey, 'View'));
 
   // On desktop: sticky sidebar, collapsible. On mobile: fixed drawer controlled by isDrawerOpen.
   const asideClasses = [
