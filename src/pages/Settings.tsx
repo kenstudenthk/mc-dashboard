@@ -25,6 +25,7 @@ import {
 import { authService } from "../services/authService";
 import {
   permissionRuleService,
+  CreatePermissionRuleInput,
   PermissionAction,
   PermissionResourceType,
   PermissionRule,
@@ -57,6 +58,41 @@ const permissionRoles: UserRole[] = [
   "Admin",
   "User",
 ];
+
+const defaultGlobalAdminPermissionRules: CreatePermissionRuleInput[] = [
+  "Dashboard",
+  "Orders",
+  "NewOrder",
+  "OrderDetails",
+  "Customers",
+  "CustomerProfile",
+  "ServiceCatalog",
+  "ServiceDetails",
+  "Reports",
+  "QuickLinks",
+  "AuditLog",
+  "EmailTemplates",
+  "Settings",
+  "Help",
+  "Feedback",
+  "FeedbackNew",
+].map((ResourceKey) => ({
+  ResourceType: "Page",
+  ResourceKey,
+  Action: "View",
+  AllowedRoles: ["Developer", "Global Admin"],
+  IsActive: true,
+  Description: "Default access for Developer and Global Admin.",
+}));
+
+defaultGlobalAdminPermissionRules.push({
+  ResourceType: "Function",
+  ResourceKey: "Settings.Permissions",
+  Action: "Manage",
+  AllowedRoles: ["Developer", "Global Admin"],
+  IsActive: true,
+  Description: "Allows Developer and Global Admin to manage permission rules.",
+});
 
 const Settings = () => {
   const location = useLocation();
@@ -107,6 +143,10 @@ const Settings = () => {
   >(null);
   const [showAddPermission, setShowAddPermission] = useState(false);
   const [permissionSaving, setPermissionSaving] = useState(false);
+  const [permissionSeedLoading, setPermissionSeedLoading] = useState(false);
+  const [permissionSeedStatus, setPermissionSeedStatus] = useState<string | null>(
+    null,
+  );
   const [permissionForm, setPermissionForm] = useState({
     ResourceType: "Page" as PermissionResourceType,
     ResourceKey: "",
@@ -376,6 +416,54 @@ const Settings = () => {
       );
     } finally {
       setPermissionSaving(false);
+    }
+  };
+
+  const handleSeedGlobalAdminPermissions = async () => {
+    if (
+      !window.confirm(
+        "Create missing default permission rules for Developer and Global Admin?",
+      )
+    ) {
+      return;
+    }
+
+    setPermissionSeedLoading(true);
+    setPermissionAdminError(null);
+    setPermissionSeedStatus(null);
+    try {
+      const activeKeys = new Set(
+        permissionAdminRules
+          .filter((rule) => rule.IsActive)
+          .map(
+            (rule) =>
+              `${rule.ResourceType}.${rule.ResourceKey}.${rule.Action}`,
+          ),
+      );
+      const missingRules = defaultGlobalAdminPermissionRules.filter(
+        (rule) =>
+          !activeKeys.has(
+            `${rule.ResourceType}.${rule.ResourceKey}.${rule.Action}`,
+          ),
+      );
+
+      for (const rule of missingRules) {
+        await permissionRuleService.create(rule, userEmail);
+      }
+
+      setPermissionSeedStatus(
+        missingRules.length === 0
+          ? "Default permissions already exist."
+          : `Created ${missingRules.length} default permission rules.`,
+      );
+      await loadPermissionAdminRules();
+      await refreshPermissionRules();
+    } catch (err: any) {
+      setPermissionAdminError(
+        err.message || "Failed to seed default permission rules.",
+      );
+    } finally {
+      setPermissionSeedLoading(false);
     }
   };
 
@@ -1269,13 +1357,25 @@ const Settings = () => {
                       functions, and sections.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPermission((value) => !value)}
-                    className="w-fit rounded-lg bg-[#0071e3] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#0077ed]"
-                  >
-                    {showAddPermission ? "Cancel" : "+ Add Rule"}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSeedGlobalAdminPermissions}
+                      disabled={permissionSaving || permissionSeedLoading}
+                      className="w-fit rounded-lg border border-[#0071e3]/25 bg-white px-4 py-2 text-[13px] font-medium text-[#0071e3] transition-colors hover:bg-blue-50 disabled:opacity-50"
+                    >
+                      {permissionSeedLoading
+                        ? "Adding..."
+                        : "Add Global Admin Defaults"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddPermission((value) => !value)}
+                      className="w-fit rounded-lg bg-[#0071e3] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#0077ed]"
+                    >
+                      {showAddPermission ? "Cancel" : "+ Add Rule"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1321,6 +1421,12 @@ const Settings = () => {
                 {permissionAdminError && (
                   <p className="rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-700">
                     {permissionAdminError}
+                  </p>
+                )}
+
+                {permissionSeedStatus && (
+                  <p className="rounded-lg bg-green-50 px-4 py-3 text-[13px] text-green-700">
+                    {permissionSeedStatus}
                   </p>
                 )}
 
