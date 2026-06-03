@@ -1,6 +1,7 @@
 import { trimTrailingWhitespaceDeep } from "../utils/trimData";
 
-const URL = import.meta.env.VITE_API_PERMISSIONS_URL as string;
+const URL = (import.meta.env.VITE_API_PERMISSION_URL ??
+  import.meta.env.VITE_API_PERMISSIONS_URL) as string;
 
 const stringifyBody = (body: object) =>
   JSON.stringify(trimTrailingWhitespaceDeep(body));
