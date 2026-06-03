@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { usePermission } from "../contexts/PermissionContext";
 import {
   Shield,
@@ -22,12 +23,55 @@ import {
   type UserStatus,
 } from "../services/permissionService";
 import { authService } from "../services/authService";
+import {
+  permissionRuleService,
+  PermissionAction,
+  PermissionResourceType,
+  PermissionRule,
+} from "../services/permissionRuleService";
 import { Trash2, Mail } from "lucide-react";
 
+const permissionResourceTypes: PermissionResourceType[] = [
+  "Page",
+  "Button",
+  "Field",
+  "Function",
+  "Section",
+];
+
+const permissionActions: PermissionAction[] = [
+  "View",
+  "Create",
+  "Edit",
+  "Delete",
+  "Export",
+  "Approve",
+  "Click",
+  "Use",
+  "Manage",
+];
+
+const permissionRoles: UserRole[] = [
+  "Developer",
+  "Global Admin",
+  "Admin",
+  "User",
+];
+
 const Settings = () => {
-  const { currentRole, userEmail, setUserEmail, hasPermission } =
+  const location = useLocation();
+  const {
+    currentRole,
+    userEmail,
+    setUserEmail,
+    hasPermission,
+    can,
+    refreshPermissionRules,
+  } =
     usePermission();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(
+    location.pathname === "/settings/permissions" ? "permissions" : "profile",
+  );
   const [profileEmail, setProfileEmail] = useState(userEmail || "");
   const [profileName, setProfileName] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
@@ -54,6 +98,24 @@ const Settings = () => {
   const [usersError, setUsersError] = useState<string | null>(null);
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
   const [resetSentIndex, setResetSentIndex] = useState<number | null>(null);
+  const [permissionAdminRules, setPermissionAdminRules] = useState<
+    PermissionRule[]
+  >([]);
+  const [permissionAdminLoading, setPermissionAdminLoading] = useState(false);
+  const [permissionAdminError, setPermissionAdminError] = useState<
+    string | null
+  >(null);
+  const [showAddPermission, setShowAddPermission] = useState(false);
+  const [permissionSaving, setPermissionSaving] = useState(false);
+  const [permissionForm, setPermissionForm] = useState({
+    ResourceType: "Page" as PermissionResourceType,
+    ResourceKey: "",
+    Action: "View" as PermissionAction,
+    AllowedRoles: ["Developer", "Global Admin"] as UserRole[],
+    IsActive: true,
+    Description: "",
+    SortOrder: "",
+  });
 
   useEffect(() => {
     if (activeTab === "team" || activeTab === "roles") {
@@ -63,6 +125,35 @@ const Settings = () => {
         .then(setUsers)
         .catch(() => setUsersError("Failed to load users. Please try again."))
         .finally(() => setUsersLoading(false));
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (location.pathname === "/settings/permissions") {
+      setActiveTab("permissions");
+    }
+  }, [location.pathname]);
+
+  const loadPermissionAdminRules = async () => {
+    setPermissionAdminLoading(true);
+    setPermissionAdminError(null);
+    try {
+      const rules = await permissionRuleService.findAll({
+        includeInactive: true,
+      });
+      setPermissionAdminRules(rules);
+    } catch (err: any) {
+      setPermissionAdminError(
+        err.message || "Failed to load permission rules.",
+      );
+    } finally {
+      setPermissionAdminLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "permissions") {
+      void loadPermissionAdminRules();
     }
   }, [activeTab]);
 
@@ -228,6 +319,110 @@ const Settings = () => {
     }
   };
 
+  const togglePermissionRole = (role: UserRole) => {
+    setPermissionForm((prev) => ({
+      ...prev,
+      AllowedRoles: prev.AllowedRoles.includes(role)
+        ? prev.AllowedRoles.filter((r) => r !== role)
+        : [...prev.AllowedRoles, role],
+    }));
+  };
+
+  const handleAddPermissionRule = async () => {
+    if (!permissionForm.ResourceKey || permissionForm.AllowedRoles.length === 0)
+      return;
+
+    const duplicate = permissionAdminRules.some(
+      (rule) =>
+        rule.IsActive &&
+        rule.ResourceType === permissionForm.ResourceType &&
+        rule.ResourceKey === permissionForm.ResourceKey &&
+        rule.Action === permissionForm.Action,
+    );
+    if (duplicate) {
+      setPermissionAdminError(
+        "An active rule already exists for this resource and action.",
+      );
+      return;
+    }
+
+    setPermissionSaving(true);
+    setPermissionAdminError(null);
+    try {
+      await permissionRuleService.create(
+        {
+          ...permissionForm,
+          SortOrder: permissionForm.SortOrder
+            ? Number(permissionForm.SortOrder)
+            : undefined,
+        },
+        userEmail,
+      );
+      setPermissionForm({
+        ResourceType: "Page",
+        ResourceKey: "",
+        Action: "View",
+        AllowedRoles: ["Developer", "Global Admin"],
+        IsActive: true,
+        Description: "",
+        SortOrder: "",
+      });
+      setShowAddPermission(false);
+      await loadPermissionAdminRules();
+      await refreshPermissionRules();
+    } catch (err: any) {
+      setPermissionAdminError(
+        err.message || "Failed to create permission rule.",
+      );
+    } finally {
+      setPermissionSaving(false);
+    }
+  };
+
+  const handleDisablePermissionRule = async (rule: PermissionRule) => {
+    if (
+      rule.ResourceType === "Function" &&
+      rule.ResourceKey === "Settings.Permissions" &&
+      rule.Action === "Manage"
+    ) {
+      const activeManagers = permissionAdminRules.filter(
+        (item) =>
+          item.IsActive &&
+          item.ResourceType === "Function" &&
+          item.ResourceKey === "Settings.Permissions" &&
+          item.Action === "Manage",
+      );
+      if (activeManagers.length <= 1) {
+        setPermissionAdminError(
+          "Cannot disable the last active permission-management rule.",
+        );
+        return;
+      }
+    }
+
+    if (
+      !window.confirm(
+        `Disable ${rule.Title || `${rule.ResourceType}.${rule.ResourceKey}.${rule.Action}`}?`,
+      )
+    ) {
+      return;
+    }
+
+    setPermissionSaving(true);
+    setPermissionAdminError(null);
+    try {
+      await permissionRuleService.disable(rule.id, userEmail);
+      await loadPermissionAdminRules();
+      await refreshPermissionRules();
+    } catch (err: any) {
+      setPermissionAdminError(
+        err.message || "Failed to disable permission rule.",
+      );
+    } finally {
+      setPermissionSaving(false);
+    }
+  };
+
   const displayUsers = userEmail
     ? [
         ...users
@@ -265,6 +460,17 @@ const Settings = () => {
       requiredRole: "Global Admin" as const,
     },
     {
+      id: "permissions",
+      label: "Permissions",
+      icon: Lock,
+      requiredRole: "Global Admin" as const,
+      requiredPermission: {
+        resourceType: "Function" as const,
+        resourceKey: "Settings.Permissions",
+        action: "Manage" as const,
+      },
+    },
+    {
       id: "system",
       label: "System Config",
       icon: SettingsIcon,
@@ -272,7 +478,15 @@ const Settings = () => {
     },
   ];
 
-  const visibleTabs = tabs.filter((tab) => hasPermission(tab.requiredRole));
+  const visibleTabs = tabs.filter((tab) =>
+    "requiredPermission" in tab
+      ? can(
+          tab.requiredPermission.resourceType,
+          tab.requiredPermission.resourceKey,
+          tab.requiredPermission.action,
+        )
+      : hasPermission(tab.requiredRole),
+  );
 
   const effectiveTab = visibleTabs.find((t) => t.id === activeTab)
     ? activeTab
@@ -396,14 +610,21 @@ const Settings = () => {
                 </div>
               </div>
               <div className="pt-2 flex items-center gap-4">
-                <button
-                  type="button"
-                  onClick={handleSaveProfile}
-                  className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors"
-                  style={{ letterSpacing: "-0.224px" }}
+                <TutorTooltip
+                  text="Save the email used to resolve your SharePoint role and refresh your current access level."
+                  position="top"
+                  wrapperClass="w-auto"
+                  componentName="Settings.Profile.SaveChanges"
                 >
-                  Save Changes
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveProfile}
+                    className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors"
+                    style={{ letterSpacing: "-0.224px" }}
+                  >
+                    Save Changes
+                  </button>
+                </TutorTooltip>
                 {profileSaved && (
                   <span
                     className="text-[13px] text-green-600 font-medium"
@@ -484,15 +705,22 @@ const Settings = () => {
                 </p>
               )}
               <div className="pt-2 flex items-center gap-4">
-                <button
-                  type="button"
-                  onClick={handleChangePassword}
-                  disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
-                  className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
-                  style={{ letterSpacing: "-0.224px" }}
+                <TutorTooltip
+                  text="Update your account password after entering the current password and matching new password fields."
+                  position="top"
+                  wrapperClass="w-auto"
+                  componentName="Settings.Profile.UpdatePassword"
                 >
-                  {passwordSaving ? "Updating…" : "Update Password"}
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleChangePassword}
+                    disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+                    className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
+                    style={{ letterSpacing: "-0.224px" }}
+                  >
+                    {passwordSaving ? "Updating…" : "Update Password"}
+                  </button>
+                </TutorTooltip>
                 {passwordSaved && (
                   <span className="text-[13px] text-green-600 font-medium" style={{ letterSpacing: "-0.12px" }}>
                     Password updated successfully.
@@ -569,14 +797,21 @@ const Settings = () => {
                 >
                   Team Management
                 </h2>
-                <button
-                  type="button"
-                  onClick={() => setShowAddUser((v) => !v)}
-                  className="px-4 py-1.5 bg-[#0071e3] text-white rounded-lg text-[13px] font-medium hover:bg-[#0077ed] transition-colors"
-                  style={{ letterSpacing: "-0.12px" }}
+                <TutorTooltip
+                  text="Open or close the form for creating a team member with an initial role and account status."
+                  position="left"
+                  wrapperClass="w-auto"
+                  componentName="Settings.Team.AddUserToggle"
                 >
-                  {showAddUser ? "Cancel" : "+ Add User"}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddUser((v) => !v)}
+                    className="px-4 py-1.5 bg-[#0071e3] text-white rounded-lg text-[13px] font-medium hover:bg-[#0077ed] transition-colors"
+                    style={{ letterSpacing: "-0.12px" }}
+                  >
+                    {showAddUser ? "Cancel" : "+ Add User"}
+                  </button>
+                </TutorTooltip>
               </div>
               <p
                 className="text-[13px] text-[#1d1d1f]/45"
@@ -649,22 +884,36 @@ const Settings = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleAddUser}
-                      disabled={addingUser || !newEmail || !newName}
-                      className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
-                      style={{ letterSpacing: "-0.224px" }}
+                    <TutorTooltip
+                      text="Create the user record and send an invitation email when the name and email are complete."
+                      position="top"
+                      wrapperClass="w-auto"
+                      componentName="Settings.Team.AddUserSubmit"
                     >
-                      {addingUser ? "Adding…" : "Add User"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowAddUser(false); setNewName(""); setNewEmail(""); setNewRole("User"); setNewStatus("Active"); }}
-                      className="text-[13px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
+                      <button
+                        type="button"
+                        onClick={handleAddUser}
+                        disabled={addingUser || !newEmail || !newName}
+                        className="px-5 py-2 bg-[#0071e3] text-white rounded-lg text-[14px] font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
+                        style={{ letterSpacing: "-0.224px" }}
+                      >
+                        {addingUser ? "Adding…" : "Add User"}
+                      </button>
+                    </TutorTooltip>
+                    <TutorTooltip
+                      text="Discard the new user form and reset the entered name, email, role, and status."
+                      position="top"
+                      wrapperClass="w-auto"
+                      componentName="Settings.Team.AddUserCancel"
                     >
-                      Cancel
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowAddUser(false); setNewName(""); setNewEmail(""); setNewRole("User"); setNewStatus("Active"); }}
+                        className="text-[13px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </TutorTooltip>
                   </div>
                 </div>
               )}
@@ -723,20 +972,27 @@ const Settings = () => {
                           </td>
                           <td className="py-3">
                             {editingTeamIndex === i ? (
-                              <select
-                                value={teamStatusEdits[i] ?? user.status}
-                                onChange={(e) =>
-                                  setTeamStatusEdits({
-                                    ...teamStatusEdits,
-                                    [i]: e.target.value as UserStatus,
-                                  })
-                                }
-                                className="bg-[#fafafc] border border-[rgba(0,0,0,0.08)] rounded-lg px-2 py-1 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                              <TutorTooltip
+                                text="Choose whether this team member is active, pending invitation, or inactive."
+                                position="top"
+                                wrapperClass="w-auto"
+                                componentName="Settings.Team.StatusSelect"
                               >
-                                <option value="Active">Active</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Inactive">Inactive</option>
-                              </select>
+                                <select
+                                  value={teamStatusEdits[i] ?? user.status}
+                                  onChange={(e) =>
+                                    setTeamStatusEdits({
+                                      ...teamStatusEdits,
+                                      [i]: e.target.value as UserStatus,
+                                    })
+                                  }
+                                  className="bg-[#fafafc] border border-[rgba(0,0,0,0.08)] rounded-lg px-2 py-1 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                                >
+                                  <option value="Active">Active</option>
+                                  <option value="Pending">Pending</option>
+                                  <option value="Inactive">Inactive</option>
+                                </select>
+                              </TutorTooltip>
                             ) : (
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
@@ -753,52 +1009,87 @@ const Settings = () => {
                             <div className="flex items-center justify-end gap-3">
                               {editingTeamIndex === i ? (
                                 <>
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingTeamIndex(null)}
-                                    className="text-[12px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
+                                  <TutorTooltip
+                                    text="Stop editing this member's status without saving changes."
+                                    position="top"
+                                    wrapperClass="w-auto"
+                                    componentName="Settings.Team.CancelStatusEdit"
                                   >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    type="button"
-                                    disabled={savingIndex === i}
-                                    onClick={() => handleSaveTeamStatus(i, user)}
-                                    className="text-[12px] text-[#0071e3] font-medium hover:underline disabled:opacity-50"
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingTeamIndex(null)}
+                                      className="text-[12px] text-[#1d1d1f]/45 hover:text-[#1d1d1f] transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </TutorTooltip>
+                                  <TutorTooltip
+                                    text="Save the selected status for this team member."
+                                    position="top"
+                                    wrapperClass="w-auto"
+                                    componentName="Settings.Team.SaveStatus"
                                   >
-                                    {savingIndex === i ? "Saving…" : "Save"}
-                                  </button>
+                                    <button
+                                      type="button"
+                                      disabled={savingIndex === i}
+                                      onClick={() => handleSaveTeamStatus(i, user)}
+                                      className="text-[12px] text-[#0071e3] font-medium hover:underline disabled:opacity-50"
+                                    >
+                                      {savingIndex === i ? "Saving…" : "Save"}
+                                    </button>
+                                  </TutorTooltip>
                                 </>
                               ) : (
                                 <>
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingTeamIndex(i)}
-                                    className="text-[12px] text-[#0071e3] hover:underline font-medium"
+                                  <TutorTooltip
+                                    text="Edit this team member's status."
+                                    position="top"
+                                    wrapperClass="w-auto"
+                                    componentName="Settings.Team.EditStatus"
                                   >
-                                    Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleResendInvitation(i, user)}
-                                    disabled={savingIndex === i}
-                                    className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1"
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingTeamIndex(i)}
+                                      className="text-[12px] text-[#0071e3] hover:underline font-medium"
+                                    >
+                                      Edit
+                                    </button>
+                                  </TutorTooltip>
+                                  <TutorTooltip
+                                    text="Send another invitation for pending users, or a password reset email for active users."
+                                    position="top"
+                                    wrapperClass="w-auto"
+                                    componentName="Settings.Team.ResendInvitation"
                                   >
-                                    <Mail className="w-3 h-3 text-[#0071e3]/60" />
-                                    {resetSentIndex === i ? (
-                                      <span className="text-green-600">Sent!</span>
-                                    ) : (
-                                      "Re-send"
-                                    )}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteUser(i, user)}
-                                    className="text-[12px] text-red-600 hover:underline font-medium flex items-center gap-1"
+                                    <button
+                                      type="button"
+                                      onClick={() => handleResendInvitation(i, user)}
+                                      disabled={savingIndex === i}
+                                      className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1"
+                                    >
+                                      <Mail className="w-3 h-3 text-[#0071e3]/60" />
+                                      {resetSentIndex === i ? (
+                                        <span className="text-green-600">Sent!</span>
+                                      ) : (
+                                        "Re-send"
+                                      )}
+                                    </button>
+                                  </TutorTooltip>
+                                  <TutorTooltip
+                                    text="Delete this user record after confirming the action. This is limited to Global Admins and Developers."
+                                    position="top"
+                                    wrapperClass="w-auto"
+                                    componentName="Settings.Team.DeleteUser"
                                   >
-                                    <Trash2 className="w-3 h-3 text-red-600/60" />
-                                    Delete
-                                  </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteUser(i, user)}
+                                      className="text-[12px] text-red-600 hover:underline font-medium flex items-center gap-1"
+                                    >
+                                      <Trash2 className="w-3 h-3 text-red-600/60" />
+                                      Delete
+                                    </button>
+                                  </TutorTooltip>
                                 </>
                               )}
                             </div>
@@ -880,55 +1171,76 @@ const Settings = () => {
                             </span>
                           </td>
                           <td className="py-3">
-                            <select
-                              value={roleEdits[i] ?? user.role}
-                              onChange={(e) =>
-                                setRoleEdits({
-                                  ...roleEdits,
-                                  [i]: e.target.value as UserRole,
-                                })
-                              }
-                              className="bg-[#fafafc] border border-[rgba(0,0,0,0.08)] rounded-lg px-2.5 py-1.5 text-[13px] text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                            <TutorTooltip
+                              text="Select a system-wide role to stage for this user before saving."
+                              position="top"
+                              wrapperClass="w-auto"
+                              componentName="Settings.Roles.RoleSelect"
                             >
-                              <option value="User">User</option>
-                              <option value="Admin">Admin</option>
-                              <option value="Global Admin">Global Admin</option>
-                              <option value="Developer">Developer</option>
-                            </select>
+                              <select
+                                value={roleEdits[i] ?? user.role}
+                                onChange={(e) =>
+                                  setRoleEdits({
+                                    ...roleEdits,
+                                    [i]: e.target.value as UserRole,
+                                  })
+                                }
+                                className="bg-[#fafafc] border border-[rgba(0,0,0,0.08)] rounded-lg px-2.5 py-1.5 text-[13px] text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                              >
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Global Admin">Global Admin</option>
+                                <option value="Developer">Developer</option>
+                              </select>
+                            </TutorTooltip>
                           </td>
                           <td className="py-3 text-right">
                             <div className="flex flex-col items-end gap-2">
                               {roleEdits[i] && roleEdits[i] !== user.role && (
+                                <TutorTooltip
+                                  text="Apply the selected system role to this user."
+                                  position="left"
+                                  wrapperClass="w-auto"
+                                  componentName="Settings.Roles.SaveRole"
+                                >
+                                  <button
+                                    type="button"
+                                    disabled={savingIndex === i}
+                                    onClick={() => handleSaveRole(i, user)}
+                                    className="text-[12px] bg-[#0071e3] text-white px-3 py-1 rounded-lg font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
+                                  >
+                                    {roleSavedIndex === i
+                                      ? "Saved!"
+                                      : savingIndex === i
+                                        ? "Saving…"
+                                        : "Save Role"}
+                                  </button>
+                                </TutorTooltip>
+                              )}
+                              <TutorTooltip
+                                text="Send this user a password reset email without changing their role."
+                                position="left"
+                                wrapperClass="w-auto"
+                                componentName="Settings.Roles.ResetPassword"
+                              >
                                 <button
                                   type="button"
                                   disabled={savingIndex === i}
-                                  onClick={() => handleSaveRole(i, user)}
-                                  className="text-[12px] bg-[#0071e3] text-white px-3 py-1 rounded-lg font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50"
+                                  onClick={() =>
+                                    handleResetPassword(i, user.email)
+                                  }
+                                  className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1.5 disabled:opacity-50"
                                 >
-                                  {roleSavedIndex === i
-                                    ? "Saved!"
-                                    : savingIndex === i
-                                      ? "Saving…"
-                                      : "Save Role"}
+                                  {resetSentIndex === i ? (
+                                    <span className="text-green-600 font-semibold">Email Sent!</span>
+                                  ) : (
+                                    <>
+                                      <Key className="w-3 h-3" />
+                                      {savingIndex === i ? "Sending..." : "Reset Password"}
+                                    </>
+                                  )}
                                 </button>
-                              )}
-                              <button
-                                type="button"
-                                disabled={savingIndex === i}
-                                onClick={() =>
-                                  handleResetPassword(i, user.email)
-                                }
-                                className="text-[12px] text-[#0071e3] hover:underline font-medium flex items-center gap-1.5 disabled:opacity-50"
-                              >
-                                {resetSentIndex === i ? (
-                                  <span className="text-green-600 font-semibold">Email Sent!</span>
-                                ) : (
-                                  <>
-                                    <Key className="w-3 h-3" />
-                                    {savingIndex === i ? "Sending..." : "Reset Password"}
-                                  </>
-                                )}
-                              </button>
+                              </TutorTooltip>
                             </div>
                           </td>
                         </tr>
@@ -937,6 +1249,320 @@ const Settings = () => {
                   </table>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Permissions */}
+          {effectiveTab === "permissions" && (
+            <div className="space-y-5">
+              <div className="card p-7 space-y-5">
+                <div className="flex flex-col gap-4 border-b border-[#1d1d1f]/06 pb-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2
+                      className="text-[17px] font-semibold text-[#1d1d1f]"
+                      style={{ letterSpacing: "-0.374px" }}
+                    >
+                      Permissions
+                    </h2>
+                    <p className="mt-1 text-[13px] text-[#1d1d1f]/45">
+                      Control role access to dashboard pages, buttons, fields,
+                      functions, and sections.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPermission((value) => !value)}
+                    className="w-fit rounded-lg bg-[#0071e3] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#0077ed]"
+                  >
+                    {showAddPermission ? "Cancel" : "+ Add Rule"}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {[
+                    {
+                      label: "Active Rules",
+                      value: permissionAdminRules.filter((rule) => rule.IsActive)
+                        .length,
+                    },
+                    {
+                      label: "Disabled",
+                      value: permissionAdminRules.filter(
+                        (rule) => !rule.IsActive,
+                      ).length,
+                    },
+                    {
+                      label: "Resources",
+                      value: new Set(
+                        permissionAdminRules.map(
+                          (rule) => `${rule.ResourceType}:${rule.ResourceKey}`,
+                        ),
+                      ).size,
+                    },
+                    {
+                      label: "Roles",
+                      value: permissionRoles.length,
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-xl bg-[#f5f5f7] p-4"
+                    >
+                      <div className="text-[11px] font-semibold uppercase text-[#1d1d1f]/40">
+                        {item.label}
+                      </div>
+                      <div className="mt-1 text-2xl font-semibold text-[#1d1d1f]">
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {permissionAdminError && (
+                  <p className="rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-700">
+                    {permissionAdminError}
+                  </p>
+                )}
+
+                {showAddPermission && (
+                  <div className="rounded-xl bg-[#f5f5f7] p-5">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
+                          Resource Type
+                        </label>
+                        <select
+                          value={permissionForm.ResourceType}
+                          onChange={(e) =>
+                            setPermissionForm((prev) => ({
+                              ...prev,
+                              ResourceType: e.target
+                                .value as PermissionResourceType,
+                            }))
+                          }
+                          className="w-full rounded-[11px] border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2.5 text-[14px]"
+                        >
+                          {permissionResourceTypes.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
+                          Resource Key
+                        </label>
+                        <input
+                          value={permissionForm.ResourceKey}
+                          onChange={(e) =>
+                            setPermissionForm((prev) => ({
+                              ...prev,
+                              ResourceKey: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. Reports"
+                          className="w-full rounded-[11px] border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2.5 text-[14px]"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
+                          Action
+                        </label>
+                        <select
+                          value={permissionForm.Action}
+                          onChange={(e) =>
+                            setPermissionForm((prev) => ({
+                              ...prev,
+                              Action: e.target.value as PermissionAction,
+                            }))
+                          }
+                          className="w-full rounded-[11px] border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2.5 text-[14px]"
+                        >
+                          {permissionActions.map((action) => (
+                            <option key={action} value={action}>
+                              {action}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5 md:col-span-3">
+                        <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
+                          Allowed Roles
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {permissionRoles.map((role) => (
+                            <label
+                              key={role}
+                              className={`cursor-pointer rounded-lg border px-3 py-2 text-[13px] font-medium ${
+                                permissionForm.AllowedRoles.includes(role)
+                                  ? "border-[#0071e3] bg-blue-50 text-[#094cb2]"
+                                  : "border-[#1d1d1f]/10 bg-white text-[#1d1d1f]/55"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={permissionForm.AllowedRoles.includes(
+                                  role,
+                                )}
+                                onChange={() => togglePermissionRole(role)}
+                                className="sr-only"
+                              />
+                              {role}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
+                          Description
+                        </label>
+                        <input
+                          value={permissionForm.Description}
+                          onChange={(e) =>
+                            setPermissionForm((prev) => ({
+                              ...prev,
+                              Description: e.target.value,
+                            }))
+                          }
+                          placeholder="Explain why this rule exists"
+                          className="w-full rounded-[11px] border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2.5 text-[14px]"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
+                          Sort Order
+                        </label>
+                        <input
+                          type="number"
+                          value={permissionForm.SortOrder}
+                          onChange={(e) =>
+                            setPermissionForm((prev) => ({
+                              ...prev,
+                              SortOrder: e.target.value,
+                            }))
+                          }
+                          placeholder="10"
+                          className="w-full rounded-[11px] border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2.5 text-[14px]"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 rounded-lg bg-white px-4 py-3 text-[13px] text-[#1d1d1f]/60">
+                      {permissionForm.AllowedRoles.join(", ") || "No roles"} can{" "}
+                      {permissionForm.Action.toLowerCase()}{" "}
+                      {permissionForm.ResourceKey || "this resource"}.
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleAddPermissionRule}
+                        disabled={
+                          permissionSaving ||
+                          !permissionForm.ResourceKey ||
+                          permissionForm.AllowedRoles.length === 0
+                        }
+                        className="rounded-lg bg-[#0071e3] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#0077ed] disabled:opacity-50"
+                      >
+                        {permissionSaving ? "Saving..." : "Save Rule"}
+                      </button>
+                      <span className="font-mono text-[12px] text-[#1d1d1f]/40">
+                        {permissionForm.ResourceType}.
+                        {permissionForm.ResourceKey || "ResourceKey"}.
+                        {permissionForm.Action}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {permissionAdminLoading ? (
+                  <p className="py-5 text-[13px] text-[#1d1d1f]/40">
+                    Loading permission rules...
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-[#1d1d1f]/06">
+                          <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                            Resource
+                          </th>
+                          <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                            Action
+                          </th>
+                          <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                            Roles
+                          </th>
+                          <th className="pb-2.5 label-text text-[#1d1d1f]/35">
+                            Status
+                          </th>
+                          <th className="pb-2.5 label-text text-[#1d1d1f]/35 text-right">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {permissionAdminRules.map((rule) => (
+                          <tr
+                            key={rule.id || rule.Title}
+                            className="border-b border-[#1d1d1f]/04 last:border-0"
+                          >
+                            <td className="py-3">
+                              <div className="text-[13px] font-medium text-[#1d1d1f]">
+                                {rule.ResourceKey}
+                              </div>
+                              <div className="text-[11px] text-[#1d1d1f]/40">
+                                {rule.ResourceType}
+                              </div>
+                            </td>
+                            <td className="py-3 text-[13px] text-[#1d1d1f]/65">
+                              {rule.Action}
+                            </td>
+                            <td className="py-3">
+                              <div className="flex flex-wrap gap-1.5">
+                                {rule.AllowedRoles.map((role) => (
+                                  <span
+                                    key={role}
+                                    className="rounded-md bg-[#f5f5f7] px-2 py-0.5 text-[11px] font-medium text-[#1d1d1f]/60"
+                                  >
+                                    {role}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-3">
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                  rule.IsActive
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {rule.IsActive ? "Active" : "Disabled"}
+                              </span>
+                            </td>
+                            <td className="py-3 text-right">
+                              {rule.IsActive ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDisablePermissionRule(rule)}
+                                  disabled={permissionSaving}
+                                  className="text-[12px] font-medium text-red-600 hover:underline disabled:opacity-50"
+                                >
+                                  Disable
+                                </button>
+                              ) : (
+                                <span className="text-[12px] text-[#1d1d1f]/30">
+                                  Disabled
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

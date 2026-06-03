@@ -31,6 +31,7 @@ type NavItem = {
   label: string;
   path: string;
   description: string;
+  resourceKey: string;
 };
 
 type NavGroup = {
@@ -45,30 +46,35 @@ const primaryNavItems: NavItem[] = [
     label: "Dashboard",
     path: "/",
     description: "Live activity and priority work",
+    resourceKey: "Dashboard",
   },
   {
     icon: FileText,
     label: "Order Registry",
     path: "/orders",
     description: "Orders, status, and delivery details",
+    resourceKey: "Orders",
   },
   {
     icon: Users,
     label: "Customers",
     path: "/customers",
     description: "Customer records and profiles",
+    resourceKey: "Customers",
   },
   {
     icon: BriefcaseBusiness,
     label: "Services",
     path: "/services",
     description: "Provider service account pages",
+    resourceKey: "ServiceCatalog",
   },
   {
     icon: BarChart3,
     label: "Reports",
     path: "/reports",
     description: "Performance and operational reporting",
+    resourceKey: "Reports",
   },
 ];
 
@@ -182,7 +188,7 @@ const getPageInfo = (pathname: string) => {
 
 const TopNav = () => {
   const location = useLocation();
-  const { currentRole, setCurrentRole, userEmail, hasPermission, logout } =
+  const { currentRole, setCurrentRole, userEmail, can, logout } =
     usePermission();
   const { isTutorMode, toggleTutorMode, isFeedbackMode, toggleFeedbackMode } =
     useTutor();
@@ -202,8 +208,9 @@ const TopNav = () => {
             label: "Useful Links",
             path: "/quick-links",
             description: "Shared tools and external references",
+            resourceKey: "QuickLinks",
           },
-        ],
+        ].filter((item) => can("Page", item.resourceKey, "View")),
       },
       {
         label: "Support",
@@ -214,38 +221,35 @@ const TopNav = () => {
             label: "Help & Support",
             path: "/help",
             description: "Guides and contact options",
+            resourceKey: "Help",
           },
-        ],
+        ].filter((item) => can("Page", item.resourceKey, "View")),
       },
     ];
 
-    const adminItems: NavItem[] = [];
-
-    if (hasPermission("Admin")) {
-      adminItems.push(
-        {
-          icon: ClipboardList,
-          label: "Audit Log",
-          path: "/audit-log",
-          description: "System events and change history",
-        },
-        {
-          icon: Mail,
-          label: "Email Templates",
-          path: "/email-templates",
-          description: "Reusable customer message templates",
-        },
-      );
-    }
-
-    if (hasPermission("Developer")) {
-      adminItems.push({
+    const adminItems: NavItem[] = [
+      {
+        icon: ClipboardList,
+        label: "Audit Log",
+        path: "/audit-log",
+        description: "System events and change history",
+        resourceKey: "AuditLog",
+      },
+      {
+        icon: Mail,
+        label: "Email Templates",
+        path: "/email-templates",
+        description: "Reusable customer message templates",
+        resourceKey: "EmailTemplates",
+      },
+      {
         icon: MessageSquare,
         label: "Feedback",
         path: "/feedback",
         description: "Review reported issues and requests",
-      });
-    }
+        resourceKey: "Feedback",
+      },
+    ].filter((item) => can("Page", item.resourceKey, "View"));
 
     if (adminItems.length > 0) {
       groups.splice(2, 0, {
@@ -255,8 +259,16 @@ const TopNav = () => {
       });
     }
 
-    return groups;
-  }, [hasPermission]);
+    return groups.filter((group) => group.items.length > 0);
+  }, [can]);
+
+  const visiblePrimaryNavItems = useMemo(
+    () =>
+      primaryNavItems.filter((item) =>
+        can("Page", item.resourceKey, "View"),
+      ),
+    [can],
+  );
 
   const currentPageInfo = getPageInfo(location.pathname);
   const currentPageLabel = currentPageInfo.label;
@@ -354,7 +366,7 @@ const TopNav = () => {
               componentName="TopNav.PrimaryNavigation"
             >
               <div className="flex items-center gap-1 rounded-2xl border border-[#dad4c8] bg-white/85 p-1.5 shadow-[rgba(0,0,0,0.08)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset]">
-              {primaryNavItems.map((item) => {
+                {visiblePrimaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isRouteActive(location.pathname, item.path);
 
@@ -662,7 +674,7 @@ const TopNav = () => {
                     <span className="label-text text-[#9f9b93]">Main</span>
                   </div>
                   <div className="grid gap-1 sm:grid-cols-2">
-                    {primaryNavItems.map((item) => {
+              {visiblePrimaryNavItems.map((item) => {
                       const Icon = item.icon;
                       return (
                         <TutorTooltip

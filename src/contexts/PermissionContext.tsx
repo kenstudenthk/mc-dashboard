@@ -1,5 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 import { getRole } from "../services/permissionService";
+import {
+  permissionRuleService,
+  PermissionAction,
+  PermissionResourceType,
+  PermissionRule,
+} from "../services/permissionRuleService";
 import { supabase } from "../lib/supabase";
 
 export type Role = "User" | "Admin" | "Global Admin" | "Developer";
@@ -19,8 +31,25 @@ interface PermissionContextType {
   setCurrentRole: (role: Role) => void;
   setUserEmail: (email: string) => void;
   hasPermission: (requiredRole: Role) => boolean;
+  permissionRules: PermissionRule[];
+  permissionLoading: boolean;
+  permissionError: string | null;
+  refreshPermissionRules: () => Promise<void>;
+  can: (
+    resourceType: PermissionResourceType,
+    resourceKey: string,
+    action: PermissionAction,
+  ) => boolean;
+  canAny: (rules: PermissionCheck[]) => boolean;
+  canAll: (rules: PermissionCheck[]) => boolean;
   logout: () => void;
   clearPasswordRecovery: () => void;
+}
+
+export interface PermissionCheck {
+  resourceType: PermissionResourceType;
+  resourceKey: string;
+  action: PermissionAction;
 }
 
 const roleHierarchy: Record<Role, number> = {
@@ -47,6 +76,29 @@ export const PermissionProvider = ({
   const [loggedOut, setLoggedOut] = useState(false);
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [permissionRules, setPermissionRules] = useState<PermissionRule[]>([]);
+  const [permissionLoading, setPermissionLoading] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+
+  const refreshPermissionRules = useCallback(async () => {
+    setPermissionLoading(true);
+    setPermissionError(null);
+    try {
+      const rules = await permissionRuleService.findAll({
+        includeInactive: false,
+      });
+      setPermissionRules(rules);
+    } catch (error) {
+      setPermissionRules([]);
+      setPermissionError(
+        error instanceof Error
+          ? error.message
+          : "Permission rules failed to load.",
+      );
+    } finally {
+      setPermissionLoading(false);
+    }
+  }, []);
 
   function authorizeSession(email: string, metaRole?: string) {
     setUserEmail(email);
@@ -63,6 +115,7 @@ export const PermissionProvider = ({
         : "User";
       setCurrentRole(role);
       setIsAuthorized(true);
+      void refreshPermissionRules();
       return;
     }
 
@@ -71,6 +124,7 @@ export const PermissionProvider = ({
         if (VALID_ROLES.includes(role as Role)) {
           applyRole(role, setCurrentRole);
           setIsAuthorized(true);
+          void refreshPermissionRules();
         } else {
           setIsAuthorized(false);
         }
@@ -84,6 +138,7 @@ export const PermissionProvider = ({
           : "User";
         setCurrentRole(role);
         setIsAuthorized(true);
+        void refreshPermissionRules();
       });
   }
 
@@ -150,7 +205,10 @@ export const PermissionProvider = ({
     setUserEmail(email);
     if (email) {
       getRole(email)
-        .then((role) => applyRole(role, setCurrentRole))
+        .then((role) => {
+          applyRole(role, setCurrentRole);
+          void refreshPermissionRules();
+        })
         .catch(() => {});
     }
   };
@@ -158,6 +216,29 @@ export const PermissionProvider = ({
   const hasPermission = (requiredRole: Role) => {
     return roleHierarchy[currentRole] >= roleHierarchy[requiredRole];
   };
+
+  const can = (
+    resourceType: PermissionResourceType,
+    resourceKey: string,
+    action: PermissionAction,
+  ) => {
+    if (currentRole === "Developer") return true;
+
+    return permissionRules.some(
+      (rule) =>
+        rule.IsActive &&
+        rule.ResourceType === resourceType &&
+        rule.ResourceKey === resourceKey &&
+        rule.Action === action &&
+        rule.AllowedRoles.includes(currentRole),
+    );
+  };
+
+  const canAny = (rules: PermissionCheck[]) =>
+    rules.some((rule) => can(rule.resourceType, rule.resourceKey, rule.action));
+
+  const canAll = (rules: PermissionCheck[]) =>
+    rules.every((rule) => can(rule.resourceType, rule.resourceKey, rule.action));
 
   const logout = () => {
     supabase.auth.signOut().then(() => {
@@ -183,6 +264,13 @@ export const PermissionProvider = ({
         setCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
+        permissionRules,
+        permissionLoading,
+        permissionError,
+        refreshPermissionRules,
+        can,
+        canAny,
+        canAll,
         logout,
         clearPasswordRecovery,
       }}
