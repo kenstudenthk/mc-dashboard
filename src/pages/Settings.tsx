@@ -59,40 +59,81 @@ const permissionRoles: UserRole[] = [
   "User",
 ];
 
-const defaultGlobalAdminPermissionRules: CreatePermissionRuleInput[] = [
-  "Dashboard",
-  "Orders",
-  "NewOrder",
-  "OrderDetails",
-  "Customers",
-  "CustomerProfile",
-  "ServiceCatalog",
-  "ServiceDetails",
-  "Reports",
-  "QuickLinks",
-  "AuditLog",
-  "EmailTemplates",
-  "Settings",
-  "Help",
-  "Feedback",
-  "FeedbackNew",
-].map((ResourceKey) => ({
-  ResourceType: "Page",
-  ResourceKey,
-  Action: "View",
-  AllowedRoles: ["Developer", "Global Admin"],
-  IsActive: true,
-  Description: "Default access for Developer and Global Admin.",
-}));
+const defaultPermissionRoles: UserRole[] = ["Developer", "Global Admin"];
 
-defaultGlobalAdminPermissionRules.push({
-  ResourceType: "Function",
-  ResourceKey: "Settings.Permissions",
-  Action: "Manage",
-  AllowedRoles: ["Developer", "Global Admin"],
-  IsActive: true,
-  Description: "Allows Developer and Global Admin to manage permission rules.",
-});
+const pagePermissionDefinitions: Array<
+  Pick<CreatePermissionRuleInput, "ResourceKey" | "Description">
+> = [
+  { ResourceKey: "Dashboard", Description: "View the dashboard overview." },
+  { ResourceKey: "Orders", Description: "View the order registry list." },
+  { ResourceKey: "NewOrder", Description: "Open the new order page." },
+  { ResourceKey: "OrderDetails", Description: "View order detail records." },
+  { ResourceKey: "Customers", Description: "View the customers page." },
+  {
+    ResourceKey: "CustomerProfile",
+    Description: "View individual customer profiles.",
+  },
+  {
+    ResourceKey: "ServiceCatalog",
+    Description: "View the service catalog page.",
+  },
+  {
+    ResourceKey: "ServiceDetails",
+    Description: "View individual service detail pages.",
+  },
+  { ResourceKey: "Reports", Description: "View reports." },
+  { ResourceKey: "QuickLinks", Description: "View quick links." },
+  { ResourceKey: "AuditLog", Description: "View audit log records." },
+  {
+    ResourceKey: "EmailTemplates",
+    Description: "View email template management.",
+  },
+  { ResourceKey: "Settings", Description: "View the settings page." },
+  { ResourceKey: "Help", Description: "View help and support." },
+  { ResourceKey: "Feedback", Description: "View feedback records." },
+  { ResourceKey: "FeedbackNew", Description: "Open the new feedback page." },
+];
+
+const defaultGlobalAdminPermissionRules: CreatePermissionRuleInput[] = [
+  ...pagePermissionDefinitions.map(({ ResourceKey, Description }) => ({
+    ResourceType: "Page" as const,
+    ResourceKey,
+    Action: "View" as const,
+    AllowedRoles: defaultPermissionRoles,
+    IsActive: true,
+    Description,
+  })),
+  {
+    ResourceType: "Function",
+    ResourceKey: "Settings.Permissions",
+    Action: "Manage",
+    AllowedRoles: defaultPermissionRoles,
+    IsActive: true,
+    Description: "Manage permission rules in Settings.",
+  },
+];
+
+const permissionActionMeanings: Record<PermissionAction, string> = {
+  View: "Can open or see the resource.",
+  Create: "Can create a new record or item.",
+  Edit: "Can change an existing record or item.",
+  Delete: "Can remove or disable a record or item.",
+  Export: "Can export data from the resource.",
+  Approve: "Can approve a workflow or request.",
+  Click: "Can use a specific button.",
+  Use: "Can use a feature or tool.",
+  Manage: "Can administer a function or settings area.",
+};
+
+const permissionResourceMeanings: Record<string, string> = {
+  ...Object.fromEntries(
+    pagePermissionDefinitions.map(({ ResourceKey, Description }) => [
+      `Page.${ResourceKey}`,
+      Description,
+    ]),
+  ),
+  "Function.Settings.Permissions": "Manage the permission settings function.",
+};
 
 const Settings = () => {
   const location = useLocation();
@@ -147,6 +188,9 @@ const Settings = () => {
   const [permissionSeedStatus, setPermissionSeedStatus] = useState<string | null>(
     null,
   );
+  const [editingPermissionRuleId, setEditingPermissionRuleId] = useState<
+    number | null
+  >(null);
   const [permissionForm, setPermissionForm] = useState({
     ResourceType: "Page" as PermissionResourceType,
     ResourceKey: "",
@@ -156,6 +200,19 @@ const Settings = () => {
     Description: "",
     SortOrder: "",
   });
+
+  const resetPermissionForm = () => {
+    setPermissionForm({
+      ResourceType: "Page",
+      ResourceKey: "",
+      Action: "View",
+      AllowedRoles: ["Developer", "Global Admin"],
+      IsActive: true,
+      Description: "",
+      SortOrder: "",
+    });
+    setEditingPermissionRuleId(null);
+  };
 
   useEffect(() => {
     if (activeTab === "team" || activeTab === "roles") {
@@ -368,12 +425,13 @@ const Settings = () => {
     }));
   };
 
-  const handleAddPermissionRule = async () => {
+  const handleSavePermissionRule = async () => {
     if (!permissionForm.ResourceKey || permissionForm.AllowedRoles.length === 0)
       return;
 
     const duplicate = permissionAdminRules.some(
       (rule) =>
+        rule.id !== editingPermissionRuleId &&
         rule.IsActive &&
         rule.ResourceType === permissionForm.ResourceType &&
         rule.ResourceKey === permissionForm.ResourceKey &&
@@ -389,34 +447,48 @@ const Settings = () => {
     setPermissionSaving(true);
     setPermissionAdminError(null);
     try {
-      await permissionRuleService.create(
-        {
-          ...permissionForm,
-          SortOrder: permissionForm.SortOrder
-            ? Number(permissionForm.SortOrder)
-            : undefined,
-        },
-        userEmail,
-      );
-      setPermissionForm({
-        ResourceType: "Page",
-        ResourceKey: "",
-        Action: "View",
-        AllowedRoles: ["Developer", "Global Admin"],
-        IsActive: true,
-        Description: "",
-        SortOrder: "",
-      });
+      const payload = {
+        ...permissionForm,
+        SortOrder: permissionForm.SortOrder
+          ? Number(permissionForm.SortOrder)
+          : undefined,
+      };
+      if (editingPermissionRuleId != null) {
+        await permissionRuleService.update(
+          editingPermissionRuleId,
+          payload,
+          userEmail,
+        );
+      } else {
+        await permissionRuleService.create(payload, userEmail);
+      }
+      resetPermissionForm();
       setShowAddPermission(false);
       await loadPermissionAdminRules();
       await refreshPermissionRules();
     } catch (err: any) {
       setPermissionAdminError(
-        err.message || "Failed to create permission rule.",
+        err.message || "Failed to save permission rule.",
       );
     } finally {
       setPermissionSaving(false);
     }
+  };
+
+  const handleEditPermissionRule = (rule: PermissionRule) => {
+    setPermissionForm({
+      ResourceType: rule.ResourceType,
+      ResourceKey: rule.ResourceKey,
+      Action: rule.Action,
+      AllowedRoles: rule.AllowedRoles,
+      IsActive: rule.IsActive,
+      Description: rule.Description ?? "",
+      SortOrder: rule.SortOrder == null ? "" : String(rule.SortOrder),
+    });
+    setEditingPermissionRuleId(rule.id);
+    setShowAddPermission(true);
+    setPermissionAdminError(null);
+    setPermissionSeedStatus(null);
   };
 
   const handleSeedGlobalAdminPermissions = async () => {
@@ -579,6 +651,19 @@ const Settings = () => {
   const effectiveTab = visibleTabs.find((t) => t.id === activeTab)
     ? activeTab
     : "profile";
+
+  const groupedPermissionAdminRules = permissionAdminRules.reduce(
+    (groups, rule) => {
+      const typeGroup = groups[rule.ResourceType] ?? {};
+      const resourceGroup = typeGroup[rule.ResourceKey] ?? [];
+      groups[rule.ResourceType] = {
+        ...typeGroup,
+        [rule.ResourceKey]: [...resourceGroup, rule],
+      };
+      return groups;
+    },
+    {} as Record<PermissionResourceType, Record<string, PermissionRule[]>>,
+  );
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -1370,7 +1455,10 @@ const Settings = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowAddPermission((value) => !value)}
+                      onClick={() => {
+                        resetPermissionForm();
+                        setShowAddPermission((value) => !value);
+                      }}
                       className="w-fit rounded-lg bg-[#0071e3] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#0077ed]"
                     >
                       {showAddPermission ? "Cancel" : "+ Add Rule"}
@@ -1432,6 +1520,25 @@ const Settings = () => {
 
                 {showAddPermission && (
                   <div className="rounded-xl bg-[#f5f5f7] p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[13px] font-semibold text-[#1d1d1f]">
+                          {editingPermissionRuleId == null
+                            ? "New Permission Rule"
+                            : "Edit Permission Rule"}
+                        </p>
+                        <p className="mt-0.5 text-[12px] text-[#1d1d1f]/45">
+                          {editingPermissionRuleId == null
+                            ? "Create a SharePoint rule for one resource action."
+                            : "Update roles, status, description, or sort order."}
+                        </p>
+                      </div>
+                      {editingPermissionRuleId != null && (
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-[#094cb2]">
+                          Editing ID {editingPermissionRuleId}
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold uppercase text-[#1d1d1f]/45">
@@ -1552,6 +1659,20 @@ const Settings = () => {
                           className="w-full rounded-[11px] border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2.5 text-[14px]"
                         />
                       </div>
+                      <label className="flex items-center gap-2 text-[13px] font-medium text-[#1d1d1f]/65 md:col-span-3">
+                        <input
+                          type="checkbox"
+                          checked={permissionForm.IsActive}
+                          onChange={(e) =>
+                            setPermissionForm((prev) => ({
+                              ...prev,
+                              IsActive: e.target.checked,
+                            }))
+                          }
+                          className="h-4 w-4 rounded border-[#1d1d1f]/20 text-[#0071e3]"
+                        />
+                        Active rule
+                      </label>
                     </div>
                     <div className="mt-4 rounded-lg bg-white px-4 py-3 text-[13px] text-[#1d1d1f]/60">
                       {permissionForm.AllowedRoles.join(", ") || "No roles"} can{" "}
@@ -1561,7 +1682,7 @@ const Settings = () => {
                     <div className="mt-4 flex items-center gap-3">
                       <button
                         type="button"
-                        onClick={handleAddPermissionRule}
+                        onClick={handleSavePermissionRule}
                         disabled={
                           permissionSaving ||
                           !permissionForm.ResourceKey ||
@@ -1569,7 +1690,21 @@ const Settings = () => {
                         }
                         className="rounded-lg bg-[#0071e3] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#0077ed] disabled:opacity-50"
                       >
-                        {permissionSaving ? "Saving..." : "Save Rule"}
+                        {permissionSaving
+                          ? "Saving..."
+                          : editingPermissionRuleId == null
+                            ? "Save Rule"
+                            : "Update Rule"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetPermissionForm();
+                          setShowAddPermission(false);
+                        }}
+                        className="text-[13px] font-medium text-[#1d1d1f]/45 transition-colors hover:text-[#1d1d1f]"
+                      >
+                        Cancel
                       </button>
                       <span className="font-mono text-[12px] text-[#1d1d1f]/40">
                         {permissionForm.ResourceType}.
@@ -1607,67 +1742,156 @@ const Settings = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {permissionAdminRules.map((rule) => (
-                          <tr
-                            key={rule.id || rule.Title}
-                            className="border-b border-[#1d1d1f]/04 last:border-0"
-                          >
-                            <td className="py-3">
-                              <div className="text-[13px] font-medium text-[#1d1d1f]">
-                                {rule.ResourceKey}
-                              </div>
-                              <div className="text-[11px] text-[#1d1d1f]/40">
-                                {rule.ResourceType}
-                              </div>
-                            </td>
-                            <td className="py-3 text-[13px] text-[#1d1d1f]/65">
-                              {rule.Action}
-                            </td>
-                            <td className="py-3">
-                              <div className="flex flex-wrap gap-1.5">
-                                {rule.AllowedRoles.map((role) => (
-                                  <span
-                                    key={role}
-                                    className="rounded-md bg-[#f5f5f7] px-2 py-0.5 text-[11px] font-medium text-[#1d1d1f]/60"
-                                  >
-                                    {role}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                            <td className="py-3">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                  rule.IsActive
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-gray-100 text-gray-500"
-                                }`}
-                              >
-                                {rule.IsActive ? "Active" : "Disabled"}
-                              </span>
-                            </td>
-                            <td className="py-3 text-right">
-                              {rule.IsActive ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDisablePermissionRule(rule)}
-                                  disabled={permissionSaving}
-                                  className="text-[12px] font-medium text-red-600 hover:underline disabled:opacity-50"
+                        {Object.entries(groupedPermissionAdminRules).map(
+                          ([resourceType, resourceGroups]) => (
+                            <React.Fragment key={resourceType}>
+                              <tr>
+                                <td
+                                  colSpan={5}
+                                  className="bg-[#f5f5f7] px-3 py-2 text-[11px] font-semibold uppercase text-[#1d1d1f]/45"
                                 >
-                                  Disable
-                                </button>
-                              ) : (
-                                <span className="text-[12px] text-[#1d1d1f]/30">
-                                  Disabled
-                                </span>
+                                  {resourceType}
+                                </td>
+                              </tr>
+                              {Object.entries(resourceGroups).map(
+                                ([resourceKey, rules]) =>
+                                  rules.map((rule, index) => (
+                                    <tr
+                                      key={rule.id || rule.Title}
+                                      className="border-b border-[#1d1d1f]/04 last:border-0"
+                                    >
+                                      <td className="py-3">
+                                        {index === 0 && (
+                                          <>
+                                            <div className="text-[13px] font-medium text-[#1d1d1f]">
+                                              {resourceKey}
+                                            </div>
+                                            <div className="max-w-[280px] text-[11px] text-[#1d1d1f]/40">
+                                              {permissionResourceMeanings[
+                                                `${resourceType}.${resourceKey}`
+                                              ] || "Custom permission resource."}
+                                            </div>
+                                          </>
+                                        )}
+                                      </td>
+                                      <td className="py-3">
+                                        <div className="text-[13px] text-[#1d1d1f]/65">
+                                          {rule.Action}
+                                        </div>
+                                        <div className="text-[11px] text-[#1d1d1f]/35">
+                                          {permissionActionMeanings[rule.Action]}
+                                        </div>
+                                      </td>
+                                      <td className="py-3">
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {rule.AllowedRoles.map((role) => (
+                                            <span
+                                              key={role}
+                                              className="rounded-md bg-[#f5f5f7] px-2 py-0.5 text-[11px] font-medium text-[#1d1d1f]/60"
+                                            >
+                                              {role}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </td>
+                                      <td className="py-3">
+                                        <span
+                                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                            rule.IsActive
+                                              ? "bg-green-100 text-green-700"
+                                              : "bg-gray-100 text-gray-500"
+                                          }`}
+                                        >
+                                          {rule.IsActive
+                                            ? "Active"
+                                            : "Disabled"}
+                                        </span>
+                                      </td>
+                                      <td className="py-3 text-right">
+                                        <div className="flex justify-end gap-3">
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleEditPermissionRule(rule)
+                                            }
+                                            disabled={permissionSaving}
+                                            className="text-[12px] font-medium text-[#0071e3] hover:underline disabled:opacity-50"
+                                          >
+                                            Edit
+                                          </button>
+                                          {rule.IsActive ? (
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleDisablePermissionRule(rule)
+                                              }
+                                              disabled={permissionSaving}
+                                              className="text-[12px] font-medium text-red-600 hover:underline disabled:opacity-50"
+                                            >
+                                              Disable
+                                            </button>
+                                          ) : (
+                                            <span className="text-[12px] text-[#1d1d1f]/30">
+                                              Disabled
+                                            </span>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )),
                               )}
-                            </td>
-                          </tr>
-                        ))}
+                            </React.Fragment>
+                          ),
+                        )}
                       </tbody>
                     </table>
                   </div>
                 )}
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className="rounded-xl bg-[#f5f5f7] p-4">
+                    <h3 className="text-[13px] font-semibold text-[#1d1d1f]">
+                      Current App Resources
+                    </h3>
+                    <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+                      {defaultGlobalAdminPermissionRules.map((rule) => (
+                        <div
+                          key={`${rule.ResourceType}.${rule.ResourceKey}.${rule.Action}`}
+                          className="rounded-lg bg-white px-3 py-2"
+                        >
+                          <div className="font-mono text-[12px] text-[#1d1d1f]/70">
+                            {rule.ResourceType}.{rule.ResourceKey}.
+                            {rule.Action}
+                          </div>
+                          <div className="mt-0.5 text-[11px] text-[#1d1d1f]/45">
+                            {rule.Description}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-[#f5f5f7] p-4">
+                    <h3 className="text-[13px] font-semibold text-[#1d1d1f]">
+                      Action Meanings
+                    </h3>
+                    <div className="mt-3 space-y-2">
+                      {permissionActions.map((action) => (
+                        <div
+                          key={action}
+                          className="flex gap-3 rounded-lg bg-white px-3 py-2"
+                        >
+                          <span className="w-16 shrink-0 text-[12px] font-semibold text-[#1d1d1f]/70">
+                            {action}
+                          </span>
+                          <span className="text-[12px] text-[#1d1d1f]/45">
+                            {permissionActionMeanings[action]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
