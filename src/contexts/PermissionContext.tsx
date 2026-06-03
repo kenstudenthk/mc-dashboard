@@ -106,7 +106,8 @@ export const PermissionProvider = ({
     // If the Power Automate permissions URL isn't configured (e.g. local dev or
     // Cloudflare Pages without the env var), skip the network call and fall back
     // to the role stored in Supabase user_metadata.
-    const paUrl = import.meta.env.VITE_API_PERMISSIONS_URL as
+    const paUrl = (import.meta.env.VITE_API_PERMISSION_URL ??
+      import.meta.env.VITE_API_PERMISSIONS_URL) as
       | string
       | undefined;
     if (!paUrl) {
