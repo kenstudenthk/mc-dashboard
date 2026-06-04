@@ -33,6 +33,11 @@ export interface PermissionRule {
   IsActive: boolean;
   Description?: string;
   SortOrder?: number;
+  PermissionGroup?: string;
+  DisplayName?: string;
+  UpdatedByEmail?: string;
+  UpdatedAt?: string;
+  Version?: number;
 }
 
 export interface PermissionLookup {
@@ -47,6 +52,11 @@ export interface CreatePermissionRuleInput extends PermissionLookup {
   IsActive: boolean;
   Description?: string;
   SortOrder?: number;
+  PermissionGroup?: string;
+  DisplayName?: string;
+  UpdatedByEmail?: string;
+  UpdatedAt?: string;
+  Version?: number;
 }
 
 function normalizeChoice(value: unknown): string {
@@ -81,8 +91,21 @@ function normalizeBoolean(value: unknown): boolean {
   return value !== false;
 }
 
+function normalizeOptionalString(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  const normalized = normalizeChoice(value);
+  return normalized || String(value);
+}
+
+function normalizeOptionalNumber(value: unknown): number | undefined {
+  if (value == null || value === "") return undefined;
+  const numberValue = Number(value);
+  return Number.isNaN(numberValue) ? undefined : numberValue;
+}
+
 function normalizeRule(item: unknown): PermissionRule {
   const obj = item as Record<string, unknown>;
+  const editor = obj.Editor as Record<string, unknown> | undefined;
   return {
     id: Number(obj.ID ?? obj.Id ?? obj.id ?? 0),
     Title: String(obj.Title ?? ""),
@@ -93,7 +116,14 @@ function normalizeRule(item: unknown): PermissionRule {
     IsActive: normalizeBoolean(obj.IsActive),
     Description:
       obj.Description == null ? undefined : String(obj.Description),
-    SortOrder: obj.SortOrder == null ? undefined : Number(obj.SortOrder),
+    SortOrder: normalizeOptionalNumber(obj.SortOrder),
+    PermissionGroup: normalizeOptionalString(obj.PermissionGroup),
+    DisplayName: normalizeOptionalString(obj.DisplayName),
+    UpdatedByEmail: normalizeOptionalString(
+      obj.UpdatedByEmail ?? editor?.Email ?? editor?.EMail,
+    ),
+    UpdatedAt: normalizeOptionalString(obj.UpdatedAt ?? obj.Modified),
+    Version: normalizeOptionalNumber(obj.Version),
   };
 }
 

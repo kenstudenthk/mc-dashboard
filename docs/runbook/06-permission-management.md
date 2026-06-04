@@ -21,6 +21,20 @@ Reason:
 - It should not compete with operational pages such as Orders, Customers, Reports, or Services.
 - A future admin shortcut can be added to navigation if usage becomes frequent.
 
+## Current V2 Implementation Scope
+
+The active implementation is intentionally simpler than a full permission health dashboard.
+
+- Keep SharePoint as the source of saved permission rules.
+- Keep one row-level status per rule: `Active`, `Disabled`, `Creating`, `Pending Update`, `Pending Disable`, `Failed`, or `Pending Create Failed`.
+- Use optimistic UI updates so the permission page responds immediately while Power Automate and SharePoint finish the write.
+- If a write fails, restore the previous saved values, show `Failed`, and expose `Retry`.
+- Do not add full `Missing`, `Orphan`, `Duplicate`, or auto-fix dashboards in this phase.
+- Future pages/functions must be added to the permission definitions in `src/pages/Settings.tsx`, then created in SharePoint with `Add Global Admin Defaults` or a manual rule.
+- Default new app rules must start with `Developer` and `Global Admin` only unless the business explicitly grants wider access.
+- When a protected page/function is removed from the app, disable its SharePoint rule instead of hard deleting it.
+- Developer emergency access remains in code through the `Developer` role bypass, so operations are not blocked if SharePoint permission data is broken.
+
 ## Current Setup To Respect
 
 The user has already created:

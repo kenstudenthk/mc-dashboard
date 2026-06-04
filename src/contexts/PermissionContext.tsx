@@ -17,8 +17,29 @@ import { supabase } from "../lib/supabase";
 export type Role = "User" | "Admin" | "Global Admin" | "Developer";
 
 const VALID_ROLES: Role[] = ["User", "Admin", "Global Admin", "Developer"];
+const LOCAL_ROLE_PREVIEW_KEY = "mc-dashboard:local-role-preview";
 const applyRole = (raw: string, set: (r: Role) => void) => {
   if (VALID_ROLES.includes(raw as Role)) set(raw as Role);
+};
+
+const canUseLocalRolePreview = () =>
+  import.meta.env.DEV &&
+  typeof window !== "undefined" &&
+  ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+const getLocalRolePreview = (): Role | null => {
+  if (!canUseLocalRolePreview()) return null;
+
+  const roleParam = new URLSearchParams(window.location.search).get(
+    "previewRole",
+  );
+  if (roleParam && VALID_ROLES.includes(roleParam as Role)) {
+    localStorage.setItem(LOCAL_ROLE_PREVIEW_KEY, roleParam);
+    return roleParam as Role;
+  }
+
+  const storedRole = localStorage.getItem(LOCAL_ROLE_PREVIEW_KEY);
+  return VALID_ROLES.includes(storedRole as Role) ? (storedRole as Role) : null;
 };
 
 interface PermissionContextType {
@@ -68,7 +89,9 @@ export const PermissionProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [currentRole, setCurrentRole] = useState<Role>("Global Admin");
+  const [currentRole, setCurrentRole] = useState<Role>(
+    () => getLocalRolePreview() ?? "Global Admin",
+  );
   const [userEmail, setUserEmail] = useState<string>(
     () => localStorage.getItem("userEmail") ?? "",
   );
@@ -79,6 +102,10 @@ export const PermissionProvider = ({
   const [permissionRules, setPermissionRules] = useState<PermissionRule[]>([]);
   const [permissionLoading, setPermissionLoading] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+
+  const setResolvedRole = (role: Role) => {
+    setCurrentRole(getLocalRolePreview() ?? role);
+  };
 
   const refreshPermissionRules = useCallback(async () => {
     setPermissionLoading(true);
@@ -114,7 +141,7 @@ export const PermissionProvider = ({
       const role: Role = VALID_ROLES.includes(metaRole as Role)
         ? (metaRole as Role)
         : "User";
-      setCurrentRole(role);
+      setResolvedRole(role);
       setIsAuthorized(true);
       void refreshPermissionRules();
       return;
@@ -123,7 +150,7 @@ export const PermissionProvider = ({
     getRole(email)
       .then((role) => {
         if (VALID_ROLES.includes(role as Role)) {
-          applyRole(role, setCurrentRole);
+          setResolvedRole(role as Role);
           setIsAuthorized(true);
           void refreshPermissionRules();
         } else {
@@ -137,7 +164,7 @@ export const PermissionProvider = ({
         const role: Role = VALID_ROLES.includes(metaRole as Role)
           ? (metaRole as Role)
           : "User";
-        setCurrentRole(role);
+        setResolvedRole(role);
         setIsAuthorized(true);
         void refreshPermissionRules();
       });
@@ -207,11 +234,20 @@ export const PermissionProvider = ({
     if (email) {
       getRole(email)
         .then((role) => {
-          applyRole(role, setCurrentRole);
+          if (VALID_ROLES.includes(role as Role)) {
+            setResolvedRole(role as Role);
+          }
           void refreshPermissionRules();
         })
         .catch(() => {});
     }
+  };
+
+  const handleSetCurrentRole = (role: Role) => {
+    if (canUseLocalRolePreview()) {
+      localStorage.setItem(LOCAL_ROLE_PREVIEW_KEY, role);
+    }
+    setCurrentRole(role);
   };
 
   const hasPermission = (requiredRole: Role) => {
@@ -262,7 +298,7 @@ export const PermissionProvider = ({
         loggedOut,
         forcePasswordChange,
         isPasswordRecovery,
-        setCurrentRole,
+        setCurrentRole: handleSetCurrentRole,
         setUserEmail: handleSetUserEmail,
         hasPermission,
         permissionRules,
