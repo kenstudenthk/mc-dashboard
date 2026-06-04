@@ -47,7 +47,10 @@ const PROVIDER_ALIASES: Record<string, CanonicalProvider> = {
  */
 export function normalizeCloudProvider(raw: string): CanonicalProvider | string {
   if (!raw) return raw;
-  return PROVIDER_ALIASES[raw.toLowerCase().trim()] ?? raw;
+  // Collapse internal runs of whitespace (incl. tabs/newlines) so messy
+  // SharePoint display names still match the alias map — see issue #64.
+  const key = raw.toLowerCase().trim().replace(/\s+/g, " ");
+  return PROVIDER_ALIASES[key] ?? raw;
 }
 
 /** Options array for dropdowns — values match what SPO stores */
