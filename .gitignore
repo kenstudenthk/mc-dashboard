@@ -19,3 +19,6 @@ CLAUDE.local.md
 
 run-logs/
 logs/
+
+# Data exports (may contain credentials)
+spo-export.csv

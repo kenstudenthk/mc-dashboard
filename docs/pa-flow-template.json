@@ -1,0 +1,79 @@
+{
+  "flowName": "SPO-Date-Correction-Batch-Update",
+  "description": "Batch update SPO List with corrected dates (add 1 day to SRD, OrderReceiveDate, CxCompleteDate)",
+  "triggerType": "manual",
+  "steps": [
+    {
+      "name": "Parse_corrected_CSV",
+      "type": "action",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "shared_office365"
+          }
+        },
+        "method": "post",
+        "path": "/codeless/v1.0/parseTextToTable",
+        "body": {
+          "text": "@triggerBody()?['file']?['contentBytes']",
+          "delimiter": ",",
+          "firstRowAsHeaders": true
+        }
+      },
+      "description": "Parse CSV: corrected-dates.csv"
+    },
+    {
+      "name": "Apply_to_each_row",
+      "type": "foreach",
+      "foreach": "@body('Parse_corrected_CSV')?['Table1']",
+      "actions": {
+        "Update_SPO_Item": {
+          "type": "action",
+          "inputs": {
+            "host": {
+              "connection": {
+                "name": "shared_office365"
+              }
+            },
+            "method": "patch",
+            "path": "/datasets/sites/@{encodeURIComponent(variables('SiteId'))}/lists/@{encodeURIComponent(variables('ListId'))}/items/@{encodeURIComponent(items('Apply_to_each_row')?['ID'])}",
+            "body": {
+              "SRD": "@items('Apply_to_each_row')?['SRD']",
+              "OrderReceiveDate": "@items('Apply_to_each_row')?['OrderReceiveDate']",
+              "CxCompleteDate": "@items('Apply_to_each_row')?['CxCompleteDate']"
+            }
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 10
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Send_completion_notification",
+      "type": "action",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "shared_office365"
+          }
+        },
+        "method": "post",
+        "path": "/mail/SendEmail",
+        "body": {
+          "to": "@triggerBody()?['email']",
+          "subject": "✅ SPO Date Correction Complete",
+          "body": "Updated @{length(body('Parse_corrected_CSV')?['Table1'])} items with corrected dates (+1 day)"
+        }
+      }
+    }
+  ],
+  "notes": [
+    "Replace {SiteId} with your SharePoint site ID",
+    "Replace {ListId} with your target list ID",
+    "Column names must match exactly: SRD, OrderReceiveDate, CxCompleteDate",
+    "Concurrency set to 10 for faster processing"
+  ]
+}

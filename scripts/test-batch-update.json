@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-06-08T04:13:40.471Z",
+  "totalRecords": 3,
+  "userEmail": "kk1214@kkhome.uk",
+  "requests": [
+    {
+      "action": "update",
+      "userEmail": "kk1214@kkhome.uk",
+      "data": {
+        "Title": "CL554098",
+        "CustomerID": "1292",
+        "CustomerName": "WING FUNG REALTY",
+        "SRD": "2020-02-25",
+        "OrderReceiveDate": "2020-02-25",
+        "CxSCompleteDate": "2020-02-25",
+        "CloudProvider": "AWS",
+        "Status": "Completed",
+        "Id": "1"
+      }
+    },
+    {
+      "action": "update",
+      "userEmail": "kk1214@kkhome.uk",
+      "data": {
+        "Title": "CL544006",
+        "CustomerID": "1292",
+        "CustomerName": "WING FUNG REALTY",
+        "SRD": "2020-09-19",
+        "OrderReceiveDate": "2020-10-20",
+        "CxSCompleteDate": "2020-10-20",
+        "CloudProvider": "Alibaba",
+        "Status": "Completed",
+        "Id": "2"
+      }
+    },
+    {
+      "action": "update",
+      "userEmail": "kk1214@kkhome.uk",
+      "data": {
+        "Title": "CL555555",
+        "CustomerID": "1500",
+        "CustomerName": "TEST COMPANY",
+        "SRD": "2021-05-16",
+        "OrderReceiveDate": "2021-05-16",
+        "CxSCompleteDate": "2021-05-16",
+        "CloudProvider": "Azure",
+        "Status": "In Progress",
+        "Id": "3"
+      }
+    }
+  ]
+}

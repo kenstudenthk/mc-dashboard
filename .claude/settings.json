@@ -24,7 +24,7 @@
     ]
   },
   "hooks": {
-    "PostToolUse": [{ "command": "bash .claude/hooks/audit-log.sh" }],
-    "SubagentStop": [{ "command": "bash .claude/hooks/audit-log.sh" }]
+    "PostToolUse": [{ "matcher": "", "hooks": [{ "type": "command", "command": "bash .claude/hooks/audit-log.sh" }] }],
+    "SubagentStop": [{ "matcher": "", "hooks": [{ "type": "command", "command": "bash .claude/hooks/audit-log.sh" }] }]
   }
 }
