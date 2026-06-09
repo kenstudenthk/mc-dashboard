@@ -113,7 +113,6 @@ const ORDER_STRING_FIELDS = new Set([
   "OrderReceiveDate",
   "CxSCompleteDate",
   "ContactPerson",
-  "ContactPerson2",
   "ContactNo",
   "ContactEmail",
   "ContactNo2",
@@ -341,10 +340,14 @@ export const orderService = {
     userEmail: string,
   ): Promise<Order> => {
     const sanitized = sanitizeUpdateData(data);
-    return call<Order>({
+    const result = await call<Order>({
       action: "UPDATE",
       data: { id, ...sanitized },
       userEmail,
     });
+    if (!result || !result.id || !result.Title) {
+      throw new Error("PA flow returned an incomplete order after update — no data was lost, please retry.");
+    }
+    return result;
   },
 };
