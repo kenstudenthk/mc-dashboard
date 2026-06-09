@@ -259,7 +259,11 @@ const OrderRegistry = () => {
   const [srdTo, setSrdTo] = useState("");
   const srdTodayParam = searchParams.get("srdToday") === "true";
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    return isNaN(p) || p < 1 ? 1 : p;
+  });
+  const [pageInputValue, setPageInputValue] = useState("");
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [statusDropdownId, setStatusDropdownId] = useState<number | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
@@ -307,6 +311,14 @@ const OrderRegistry = () => {
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("page");
+        return next;
+      },
+      { replace: true },
+    );
   }, [
     activeTab,
     providerFilter,
@@ -738,6 +750,21 @@ const OrderRegistry = () => {
     } catch {
       setPinnedIds(prev);
     }
+  };
+
+  const goToPage = (page: number, total?: number) => {
+    const max = total ?? totalPages;
+    const clamped = Math.max(1, Math.min(page, max));
+    setCurrentPage(clamped);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (clamped === 1) next.delete("page");
+        else next.set("page", String(clamped));
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const handleSort = (key: SortKey) => {
@@ -2155,9 +2182,9 @@ const OrderRegistry = () => {
                           : ""
                       }`}
               </span>
-              <div className="flex gap-1">
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
                 >
@@ -2191,7 +2218,7 @@ const OrderRegistry = () => {
                       ) : (
                         <button
                           key={item}
-                          onClick={() => setCurrentPage(item as number)}
+                          onClick={() => goToPage(item as number)}
                           className={`px-3 py-1 rounded-lg text-xs font-medium ${
                             currentPage === item
                               ? "bg-[#0071e3] text-white"
@@ -2207,14 +2234,36 @@ const OrderRegistry = () => {
                   {currentPage}/{totalPages}
                 </span>
                 <button
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
+                  onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 border border-[#1d1d1f]/08 rounded-lg hover:bg-[#f5f5f7] disabled:opacity-40 text-[#1d1d1f]/60"
                 >
                   Next
                 </button>
+                <span className="hidden sm:flex items-center gap-1 ml-2 text-xs text-[#1d1d1f]/50">
+                  Go to
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={pageInputValue}
+                    onChange={(e) => setPageInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const n = parseInt(pageInputValue, 10);
+                        if (!isNaN(n)) goToPage(n);
+                        setPageInputValue("");
+                      }
+                    }}
+                    onBlur={() => {
+                      const n = parseInt(pageInputValue, 10);
+                      if (!isNaN(n)) goToPage(n);
+                      setPageInputValue("");
+                    }}
+                    placeholder={String(currentPage)}
+                    className="w-12 px-1.5 py-1 border border-[#1d1d1f]/08 rounded-lg text-center text-xs text-[#1d1d1f] focus:outline-none focus:border-[#0071e3] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
+                </span>
               </div>
             </div>
           </div>

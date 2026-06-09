@@ -453,6 +453,12 @@ const OrderDetails = () => {
       ContactNo2: order.ContactNo2 ?? "",
       ContactEmail2: order.ContactEmail2 ?? "",
       BillingAddress: order.BillingAddress ?? "",
+      BillingAccount: order.BillingAccount ?? "",
+      AccountName: order.AccountName ?? "",
+      AccountLoginEmail: order.AccountLoginEmail ?? "",
+      Password: order.Password ?? "",
+      OtherAccountInfo: order.OtherAccountInfo ?? "",
+      CRMURL: order.CRMURL ?? "",
       Remark: order.Remark ?? "",
     });
     setSaEditForm({
@@ -628,13 +634,13 @@ const OrderDetails = () => {
             position="bottom"
             componentName="OrderDetails/BackToOrders"
           >
-            <Link
-              to="/orders"
+            <button
+              onClick={() => navigate(-1)}
               className="p-2 rounded-xl transition-colors hover:bg-white"
               style={{ background: "#faf9f7", border: "1px solid #dad4c8" }}
             >
               <ArrowLeft className="w-4 h-4" style={{ color: "#9f9b93" }} />
-            </Link>
+            </button>
           </TutorTooltip>
           <div>
             <div className="flex items-center gap-3">

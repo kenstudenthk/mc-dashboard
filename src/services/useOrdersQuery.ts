@@ -77,6 +77,7 @@ export function useInvalidateOrders() {
   return () => {
     queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
     queryClient.invalidateQueries({ queryKey: ORDERS_INITIAL_KEY });
+    queryClient.invalidateQueries({ queryKey: ['order'] });
   };
 }
 
