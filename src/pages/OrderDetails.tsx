@@ -844,11 +844,11 @@ const OrderDetails = () => {
           <TutorTooltip
             text="These tabs show other orders that share the same Service No. Click another order to view its details."
             position="right"
-            wrapperClass="w-14 shrink-0"
+            wrapperClass="w-14 shrink-0 self-start"
             componentName="OrderDetails.SiblingOrders"
           >
             <div
-              className="bg-white rounded-2xl p-2"
+              className="w-14 shrink-0 self-start bg-white rounded-2xl p-2"
               style={{
                 position: "sticky",
                 top: "1.5rem",
@@ -861,6 +861,7 @@ const OrderDetails = () => {
                 const isActive = sibling.id === parsedId;
                 return (
                   <button
+                    type="button"
                     key={sibling.id}
                     onClick={() => navigate(`/orders/${sibling.id}`)}
                     className="w-full rounded-xl py-2 text-xs font-medium text-center"
